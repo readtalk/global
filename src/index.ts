@@ -27,13 +27,34 @@ export default {
 			return Response.redirect(url.toString());
 		}
 
-		// ===== CALLBACK: tukar code dengan token, redirect ke frontend =====
+		// ===== CALLBACK: tukar code dengan token dari OpenAuth =====
 		if (url.pathname === "/callback") {
 			const code = url.searchParams.get("code");
-			// TODO: Tukar code dengan JWT token menggunakan OpenAuth
-			// Sementara, redirect ke frontend dengan token dummy
-			const token = "dummy-jwt-token-" + Date.now();
-			return Response.redirect(url.origin + "/?token=" + token);
+			if (!code) {
+				return new Response("Missing code", { status: 400 });
+			}
+
+			try {
+				// Tukar code dengan token menggunakan OpenAuth
+				const tokenResponse = await fetch(url.origin + "/api/token", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						code,
+						client_id: "your-client-id",
+						redirect_uri: url.origin + "/callback",
+					}),
+				});
+
+				if (!tokenResponse.ok) {
+					throw new Error("Failed to exchange code");
+				}
+
+				const { access_token } = await tokenResponse.json();
+				return Response.redirect(url.origin + "/?token=" + access_token);
+			} catch (err) {
+				return new Response("Token exchange failed", { status: 500 });
+			}
 		}
 
 		// ===== API /me: verifikasi token dan return user =====
@@ -49,10 +70,18 @@ export default {
 			}
 
 			try {
-				// TODO: Verifikasi JWT token dengan OpenAuth
-				// const payload = await verifyJWT(token, env.JWT_SECRET);
-				// Sementara, return dummy user
-				const payload = { id: "user-123", email: "user@example.com" };
+				// Verifikasi token menggunakan OpenAuth
+				const verifyResponse = await fetch(url.origin + "/api/verify", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ token }),
+				});
+
+				if (!verifyResponse.ok) {
+					throw new Error("Invalid token");
+				}
+
+				const payload = await verifyResponse.json();
 				return Response.json({ user: payload });
 			} catch (err) {
 				return new Response(JSON.stringify({ error: "Invalid token" }), {
