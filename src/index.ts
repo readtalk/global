@@ -8,6 +8,9 @@ import { PasswordUI } from "@openauthjs/openauth/ui/password";
 import { createSubjects } from "@openauthjs/openauth/subject";
 import { object, string } from "valibot";
 
+// This value should be shared between the OpenAuth server Worker and other
+// client Workers that you connect to it, so the types and schema validation are
+// consistent.
 const subjects = createSubjects({
 	user: object({
 		id: string(),
@@ -15,83 +18,28 @@ const subjects = createSubjects({
 });
 
 export default {
-	async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+	fetch(request: Request, env: Env, ctx: ExecutionContext) {
+		// This top section is just for demo purposes. In a real setup another
+		// application would redirect the user to this Worker to be authenticated,
+		// and after signing in or registering the user would be redirected back to
+		// the application they came from. In our demo setup there is no other
+		// application, so this Worker needs to do the initial redirect and handle
+		// the callback redirect on completion.
 		const url = new URL(request.url);
-
-		// ===== ROOT: redirect ke authorize =====
 		if (url.pathname === "/") {
 			url.searchParams.set("redirect_uri", url.origin + "/callback");
 			url.searchParams.set("client_id", "your-client-id");
 			url.searchParams.set("response_type", "code");
 			url.pathname = "/authorize";
 			return Response.redirect(url.toString());
+		} else if (url.pathname === "/callback") {
+			return Response.json({
+				message: "OAuth flow complete!",
+				params: Object.fromEntries(url.searchParams.entries()),
+			});
 		}
 
-		// ===== CALLBACK: tukar code dengan token dari OpenAuth =====
-		if (url.pathname === "/callback") {
-			const code = url.searchParams.get("code");
-			if (!code) {
-				return new Response("Missing code", { status: 400 });
-			}
-
-			try {
-				// Tukar code dengan token menggunakan OpenAuth
-				const tokenResponse = await fetch(url.origin + "/api/token", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						code,
-						client_id: "your-client-id",
-						redirect_uri: url.origin + "/callback",
-					}),
-				});
-
-				if (!tokenResponse.ok) {
-					throw new Error("Failed to exchange code");
-				}
-
-				const { access_token } = await tokenResponse.json();
-				return Response.redirect(url.origin + "/?token=" + access_token);
-			} catch (err) {
-				return new Response("Token exchange failed", { status: 500 });
-			}
-		}
-
-		// ===== API /me: verifikasi token dan return user =====
-		if (url.pathname === "/api/me") {
-			const authHeader = request.headers.get("Authorization");
-			const token = authHeader?.split(" ")[1];
-
-			if (!token) {
-				return new Response(JSON.stringify({ error: "Unauthorized" }), {
-					status: 401,
-					headers: { "Content-Type": "application/json" },
-				});
-			}
-
-			try {
-				// Verifikasi token menggunakan OpenAuth
-				const verifyResponse = await fetch(url.origin + "/api/verify", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ token }),
-				});
-
-				if (!verifyResponse.ok) {
-					throw new Error("Invalid token");
-				}
-
-				const payload = await verifyResponse.json();
-				return Response.json({ user: payload });
-			} catch (err) {
-				return new Response(JSON.stringify({ error: "Invalid token" }), {
-					status: 401,
-					headers: { "Content-Type": "application/json" },
-				});
-			}
-		}
-
-		// ===== OPENAUTH ISSUER =====
+		// The real OpenAuth server code starts here:
 		return issuer({
 			storage: CloudflareStorage({
 				namespace: env.AUTH_KV as CloudflareStorageOptions["namespace"],
@@ -100,7 +48,11 @@ export default {
 			providers: {
 				password: PasswordProvider(
 					PasswordUI({
+						// eslint-disable-next-line @typescript-eslint/require-await
 						sendCode: async (email, code) => {
+							// This is where you would email the verification code to the
+							// user, e.g. using Resend:
+							// https://resend.com/docs/send-with-cloudflare-workers
 							console.log(`Sending code ${code} to ${email}`);
 						},
 						copy: {
@@ -135,7 +87,7 @@ async function getOrCreateUser(env: Env, email: string): Promise<string> {
 		VALUES (?)
 		ON CONFLICT (email) DO UPDATE SET email = email
 		RETURNING id;
-		`
+		`,
 	)
 		.bind(email)
 		.first<{ id: string }>();
