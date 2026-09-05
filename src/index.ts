@@ -62,7 +62,7 @@ export default {
 				),
 			},
 			theme: {
-				title: "myAuth",
+				title: "Authentication",
 				primary: "#FFFFFF",
 				favicon: "https://workers.cloudflare.com//favicon.ico",
 				logo: {
