@@ -32,7 +32,7 @@ export default {
 			url.searchParams.set("response_type", "code");
 			url.pathname = "/authorize";
 			return Response.redirect(url.toString());
-		} else if (url.pathname === "/callback") {
+		} else if (url.pathname === "/") {
 			return Response.json({
 				message: "OAuth flow complete!",
 				params: Object.fromEntries(url.searchParams.entries()),
