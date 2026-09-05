@@ -42,7 +42,7 @@ export default {
 		// The real OpenAuth server code starts here:
 		return issuer({
 			storage: CloudflareStorage({
-				namespace: env.AUTH_STORAGE as CloudflareStorageOptions["namespace"],
+				namespace: env.AUTH_KV as CloudflareStorageOptions["namespace"],
 			}),
 			subjects,
 			providers: {
@@ -63,7 +63,7 @@ export default {
 			},
 			theme: {
 				title: "myAuth",
-				primary: "#0051c3",
+				primary: "#FFFFFF",
 				favicon: "https://workers.cloudflare.com//favicon.ico",
 				logo: {
 					dark: "https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/db1e5c92-d3a6-4ea9-3e72-155844211f00/public",
