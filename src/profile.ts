@@ -1,10 +1,10 @@
-// src/renderDashboard.ts
-export function renderDashboard(email: string, userId: string) {
+// src/profile.ts
+export function ProfileHTML(email: string, userId: string) {
 	return `
     <!DOCTYPE html>
     <html>
       <head>
-        <title>Dashboard</title>
+        <title>Profile</title>
         <link rel="stylesheet" type="text/css" href="https://static.integrations.cloudflare.com/styles.css">
       </head>
       <body>
