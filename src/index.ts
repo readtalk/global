@@ -12,8 +12,9 @@ const subjects = createSubjects({
 });
 
 export default {
-	fetch(request: Request, env: Env, ctx: ExecutionContext) {
+	async fetch(request: Request, env: Env, ctx: ExecutionContext) {
 		const url = new URL(request.url);
+
 		if (url.pathname === "/") {
 			url.searchParams.set("redirect_uri", url.origin + "/callback");
 			url.searchParams.set("client_id", "readtalk");
@@ -25,9 +26,39 @@ export default {
 		if (url.pathname === "/callback") {
 			const code = url.searchParams.get("code");
 			if (code) {
-				return new Response(renderDashboard("user@example.com"), {
-					headers: { "Content-Type": "text/html" }
-				});
+				try {
+					const tokenResponse = await fetch("https://global.readtalk.workers.dev/token", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({
+							client_id: "readtalk",
+							code: code,
+							grant_type: "authorization_code"
+						})
+					});
+					const tokenData = await tokenResponse.json();
+					if (tokenData.access_token) {
+						const userResponse = await fetch("https://global.readtalk.workers.dev/me", {
+							headers: { "Authorization": `Bearer ${tokenData.access_token}` }
+						});
+						const userData = await userResponse.json();
+						if (userData.user) {
+							const sessionId = crypto.randomUUID();
+							await env.AUTH_KV.put(sessionId, JSON.stringify({
+								userId: userData.user.id,
+								email: userData.user.email
+							}), { expirationTtl: 86400 });
+							return new Response(renderDashboard(userData.user.email, userData.user.id), {
+								headers: {
+									"Content-Type": "text/html",
+									"Set-Cookie": `session=${sessionId}; Path=/; HttpOnly; Secure; SameSite=Lax`
+								}
+							});
+						}
+					}
+				} catch (error) {
+					console.error("Token exchange error:", error);
+				}
 			}
 			return Response.json({
 				message: "OAuth flow complete!",
@@ -36,12 +67,32 @@ export default {
 		}
 
 		if (url.pathname === "/dashboard") {
-			return new Response(renderDashboard("user@example.com"), {
+			const cookie = request.headers.get("Cookie");
+			const token = cookie?.split("session=")[1]?.split(";")[0];
+
+			if (!token) {
+				return Response.redirect("/authorize");
+			}
+
+			const sessionData = await env.AUTH_KV.get(token);
+			if (!sessionData) {
+				return Response.redirect("/authorize");
+			}
+
+			const session = JSON.parse(sessionData);
+			return new Response(renderDashboard(session.email, session.userId), {
 				headers: { "Content-Type": "text/html" }
 			});
 		}
 
 		if (url.pathname === "/logout" && request.method === "POST") {
+			const cookie = request.headers.get("Cookie");
+			const token = cookie?.split("session=")[1]?.split(";")[0];
+
+			if (token) {
+				await env.AUTH_KV.delete(token);
+			}
+
 			return Response.redirect("/");
 		}
 
@@ -57,7 +108,10 @@ export default {
 							console.log(`Sending code ${code} to ${email}`);
 						},
 						copy: {
-							input_code: "Code (check Worker logs)",
+							title: "READTalk Auth",
+							button_text: "Continue",
+							input_code: "Verification code",
+							input_email: "Email address",
 						},
 					}),
 				),
@@ -72,8 +126,9 @@ export default {
 				},
 			},
 			success: async (ctx, value) => {
+				const userId = await getOrCreateUser(env, value.email);
 				return ctx.subject("user", {
-					id: await getOrCreateUser(env, value.email),
+					id: userId,
 				});
 			},
 		}).fetch(request, env, ctx);
@@ -98,7 +153,7 @@ async function getOrCreateUser(env: Env, email: string): Promise<string> {
 	return result.id;
 }
 
-function renderDashboard(email: string) {
+function renderDashboard(email: string, userId: string) {
 	return `
     <!DOCTYPE html>
     <html>
@@ -111,8 +166,9 @@ function renderDashboard(email: string) {
           <h1>Welcome, ${email}!</h1>
         </header>
         <main>
-          <p>You are logged in to READTalk Authentication.</p>
-          <form action="/logout" method="POST">
+          <p><strong>User ID:</strong> ${userId}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <form action="/" method="POST">
             <button type="submit">Logout</button>
           </form>
         </main>
