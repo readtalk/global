@@ -8,7 +8,7 @@ import { PasswordProvider } from "@openauthjs/openauth/provider/password";
 import { PasswordUI } from "@openauthjs/openauth/ui/password";
 import { createSubjects } from "@openauthjs/openauth/subject";
 import { object, string } from "valibot";
-import { renderDashboard } from "./renderDashboard";
+import { ProfileHTML } from "./profile";
 
 const subjects = createSubjects({
 	user: object({
@@ -21,57 +21,14 @@ export default {
 		const url = new URL(request.url);
 
 		if (url.pathname === "/") {
-			url.searchParams.set("redirect_uri", url.origin + "/callback");
+			url.searchParams.set("redirect_uri", url.origin + "/profile");
 			url.searchParams.set("client_id", "readtalk");
 			url.searchParams.set("response_type", "code");
 			url.pathname = "/authorize";
 			return Response.redirect(url.toString());
 		}
 
-		if (url.pathname === "/callback") {
-			const code = url.searchParams.get("code");
-			if (code) {
-				try {
-					const tokenResponse = await fetch("https://global.readtalk.workers.dev/token", {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({
-							client_id: "readtalk",
-							code: code,
-							grant_type: "authorization_code"
-						})
-					});
-					const tokenData = await tokenResponse.json();
-					if (tokenData.access_token) {
-						const userResponse = await fetch("https://global.readtalk.workers.dev/me", {
-							headers: { "Authorization": `Bearer ${tokenData.access_token}` }
-						});
-						const userData = await userResponse.json();
-						if (userData.user) {
-							const sessionId = crypto.randomUUID();
-							await env.AUTH_KV.put(sessionId, JSON.stringify({
-								userId: userData.user.id,
-								email: userData.user.email
-							}), { expirationTtl: 86400 });
-							return new Response(renderDashboard(userData.user.email, userData.user.id), {
-								headers: {
-									"Content-Type": "text/html",
-									"Set-Cookie": `session=${sessionId}; Path=/; HttpOnly; Secure; SameSite=Lax`
-								}
-							});
-						}
-					}
-				} catch (error) {
-					console.error("Token exchange error:", error);
-				}
-			}
-			return Response.json({
-				message: "OAuth flow complete!",
-				params: Object.fromEntries(url.searchParams.entries()),
-			});
-		}
-
-		if (url.pathname === "/dashboard") {
+		if (url.pathname === "/profile") {
 			const cookie = request.headers.get("Cookie");
 			const token = cookie?.split("session=")[1]?.split(";")[0];
 
@@ -85,7 +42,7 @@ export default {
 			}
 
 			const session = JSON.parse(sessionData);
-			return new Response(renderDashboard(session.email, session.userId), {
+			return new Response(ProfileHTML(session.email, session.userId), {
 				headers: { "Content-Type": "text/html" }
 			});
 		}
@@ -98,7 +55,9 @@ export default {
 				await env.AUTH_KV.delete(token);
 			}
 
-			return Response.redirect("/");
+			const redirectUrl = new URL(url);
+			redirectUrl.pathname = "/";
+			return Response.redirect(redirectUrl.toString());
 		}
 
 		return issuer({
@@ -132,9 +91,15 @@ export default {
 			},
 			success: async (ctx, value) => {
 				const userId = await getOrCreateUser(env, value.email);
-				return ctx.subject("user", {
-					id: userId,
-				});
+				const sessionId = crypto.randomUUID();
+				await env.AUTH_KV.put(sessionId, JSON.stringify({
+					userId: userId,
+					email: value.email
+				}), { expirationTtl: 86400 });
+
+				const url = new URL(ctx.url);
+				url.pathname = "/profile";
+				return Response.redirect(url.toString(), 302);
 			},
 		}).fetch(request, env, ctx);
 	},
