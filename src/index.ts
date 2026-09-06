@@ -4,7 +4,6 @@ import { PasswordProvider } from "@openauthjs/openauth/provider/password";
 import { PasswordUI } from "@openauthjs/openauth/ui/password";
 import { createSubjects } from "@openauthjs/openauth/subject";
 import { object, string } from "valibot";
-import { renderDashboard } from "./renderDashboard";
 
 interface Env {
 	AUTH_KV: KVNamespace;
@@ -43,6 +42,58 @@ export default {
 			return handleMe(request, env);
 		}
 
+		if (url.pathname === "/") {
+			const redirectUrl = new URL(url);
+			redirectUrl.pathname = "/authorize";
+			redirectUrl.searchParams.set("redirect_uri", url.origin + "/callback");
+			redirectUrl.searchParams.set("client_id", "readtalk");
+			redirectUrl.searchParams.set("response_type", "code");
+			return Response.redirect(redirectUrl.toString());
+		}
+
+		if (url.pathname === "/callback") {
+			const code = url.searchParams.get("code");
+			if (code) {
+				try {
+					const tokenResponse = await fetch("https://global.readtalk.workers.dev/token", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({
+							client_id: "readtalk",
+							code: code,
+							grant_type: "authorization_code"
+						})
+					});
+					const tokenData = await tokenResponse.json();
+					if (tokenData.access_token) {
+						const userResponse = await fetch("https://global.readtalk.workers.dev/me", {
+							headers: { "Authorization": `Bearer ${tokenData.access_token}` }
+						});
+						const userData = await userResponse.json();
+						if (userData.user) {
+							const sessionId = crypto.randomUUID();
+							await env.AUTH_KV.put(sessionId, JSON.stringify({
+								userId: userData.user.id,
+								email: userData.user.email
+							}), { expirationTtl: 86400 });
+							return new Response(renderDashboard(userData.user.email), {
+								headers: {
+									"Content-Type": "text/html",
+									"Set-Cookie": `session=${sessionId}; Path=/; HttpOnly; Secure; SameSite=Lax`
+								}
+							});
+						}
+					}
+				} catch (error) {
+					console.error("Token exchange error:", error);
+				}
+			}
+			return Response.json({
+				message: "OAuth flow complete!",
+				params: Object.fromEntries(url.searchParams.entries()),
+			});
+		}
+
 		if (url.pathname === "/dashboard") {
 			const cookie = request.headers.get("Cookie");
 			const token = cookie?.split("session=")[1]?.split(";")[0];
@@ -71,22 +122,6 @@ export default {
 			}
 
 			return Response.redirect("/");
-		}
-
-		if (url.pathname === "/") {
-			const redirectUrl = new URL(url);
-			redirectUrl.pathname = "/authorize";
-			redirectUrl.searchParams.set("redirect_uri", url.origin + "/callback");
-			redirectUrl.searchParams.set("client_id", "readtalk");
-			redirectUrl.searchParams.set("response_type", "code");
-			return Response.redirect(redirectUrl.toString());
-		}
-
-		if (url.pathname === "/callback") {
-			return Response.json({
-				message: "OAuth flow complete!",
-				params: Object.fromEntries(url.searchParams.entries()),
-			});
 		}
 
 		return issuer({
@@ -262,4 +297,27 @@ async function getOrCreateUser(env: Env, email: string): Promise<string> {
 		console.error("Database error:", error);
 		throw new Error(`Unable to process user: ${email}`);
 	}
+}
+
+function renderDashboard(email: string) {
+	return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Dashboard</title>
+        <link rel="stylesheet" type="text/css" href="https://static.integrations.cloudflare.com/styles.css">
+      </head>
+      <body>
+        <header>
+          <h1>Welcome, ${email}!</h1>
+        </header>
+        <main>
+          <p>You are logged in to READTalk Authentication.</p>
+          <form action="/logout" method="POST">
+            <button type="submit">Logout</button>
+          </form>
+        </main>
+      </body>
+    </html>
+  `;
 }
