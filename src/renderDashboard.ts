@@ -1,4 +1,5 @@
-export function renderDashboard(email: string) {
+// src/renderDashboard.ts
+export function renderDashboard(email: string, userId: string) {
 	return `
     <!DOCTYPE html>
     <html>
@@ -11,7 +12,8 @@ export function renderDashboard(email: string) {
           <h1>Welcome, ${email}!</h1>
         </header>
         <main>
-          <p>You are logged in to READTalk Authentication.</p>
+          <p><strong>User ID:</strong> ${userId}</p>
+          <p><strong>Email:</strong> ${email}</p>
           <form action="/logout" method="POST">
             <button type="submit">Logout</button>
           </form>
