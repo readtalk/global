@@ -1,9 +1,14 @@
+// src/index.ts
 import { issuer } from "@openauthjs/openauth";
-import { CloudflareStorage } from "@openauthjs/openauth/storage/cloudflare";
+import {
+	CloudflareStorage,
+	type CloudflareStorageOptions,
+} from "@openauthjs/openauth/storage/cloudflare";
 import { PasswordProvider } from "@openauthjs/openauth/provider/password";
 import { PasswordUI } from "@openauthjs/openauth/ui/password";
 import { createSubjects } from "@openauthjs/openauth/subject";
 import { object, string } from "valibot";
+import { renderDashboard } from "./renderDashboard";
 
 const subjects = createSubjects({
 	user: object({
@@ -98,7 +103,7 @@ export default {
 
 		return issuer({
 			storage: CloudflareStorage({
-				namespace: env.AUTH_KV,
+				namespace: env.AUTH_KV as CloudflareStorageOptions["namespace"],
 			}),
 			subjects,
 			providers: {
@@ -151,28 +156,4 @@ async function getOrCreateUser(env: Env, email: string): Promise<string> {
 	}
 	console.log(`Found or created user ${result.id} with email ${email}`);
 	return result.id;
-}
-
-function renderDashboard(email: string, userId: string) {
-	return `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Dashboard</title>
-        <link rel="stylesheet" type="text/css" href="https://static.integrations.cloudflare.com/styles.css">
-      </head>
-      <body>
-        <header>
-          <h1>Welcome, ${email}!</h1>
-        </header>
-        <main>
-          <p><strong>User ID:</strong> ${userId}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <form action="/" method="POST">
-            <button type="submit">Logout</button>
-          </form>
-        </main>
-      </body>
-    </html>
-  `;
 }
