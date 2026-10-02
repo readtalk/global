@@ -3,6 +3,7 @@
 // Runtime types generated with workerd@1.20260921.1 2025-10-08 global_fetch_strictly_public,nodejs_compat
 interface __BaseEnv_CloudflareEnv {
 	ASSETS: Fetcher;
+	UPDATE_LIST: KVNamespace;
 }
 declare namespace Cloudflare {
 	interface Env extends __BaseEnv_CloudflareEnv {}
