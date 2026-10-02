@@ -1,8 +1,8 @@
 {
-	"name": "society",
+	"name": "global",
 	"description": "Build a full-stack web application with Next.js.",
 	"cloudflare": {
-		"label": "Next.js Framework Starter",
+		"label": "Next.js Framework",
 		"products": [
 			"Workers"
 		],
