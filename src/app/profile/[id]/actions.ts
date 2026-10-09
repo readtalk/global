@@ -22,11 +22,11 @@ export async function createUpdate(id: string, formData: FormData) {
 export async function toggleUpdate(id: string, updateId: string) {
 	const manager = await getManager(id);
 	await manager.toggle(updateId);
-	revalidatePath(`./././${id}`);
+	revalidatePath(`././././${id}`);
 }
 
 export async function deleteUpdate(id: string, updateId: string) {
 	const manager = await getManager(id);
 	await manager.delete(updateId);
-	revalidatePath(`./././${id}`);
+	revalidatePath(`././././${id}`);
 }
