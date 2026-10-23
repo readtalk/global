@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import PwaPopup from "./pwa-popup";
@@ -16,6 +16,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
 	title: "ReadTalk",
 	description: "ReadTalk Global App",
+	manifest: "/manifest.json",
+	appleWebApp: {
+		capable: true,
+		title: "ReadTalk",
+		statusBarStyle: "default",
+	},
+};
+
+export const viewport: Viewport = {
+	themeColor: "#2563eb",
 };
 
 export default function RootLayout({
@@ -30,6 +40,17 @@ export default function RootLayout({
 			>
 				{children}
 				<PwaPopup />
+				<script
+					dangerouslySetInnerHTML={{
+						__html: `
+							if ("serviceWorker" in navigator) {
+								window.addEventListener("load", function() {
+									navigator.serviceWorker.register("/sw.js");
+								});
+							}
+						`,
+					}}
+				/>
 			</body>
 		</html>
 	);
