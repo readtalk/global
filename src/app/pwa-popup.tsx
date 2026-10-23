@@ -28,21 +28,21 @@ export default function PwaPopup() {
 		return (
 			<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4">
 				<div className="w-full max-w-sm rounded-xl bg-white p-6 text-center shadow-lg dark:bg-zinc-900 dark:text-white">
-					<h2 className="text-xl font-bold">Install Aplikasi</h2>
+					<h2 className="text-xl font-bold">Install App</h2>
 					<p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-						Silakan install aplikasi ini terlebih dahulu untuk melanjutkan.
+						Please install the app first to continue.
 					</p>
 					<div className="mt-4 rounded-lg bg-gray-100 p-3 text-left text-xs dark:bg-zinc-800">
 						<p className="font-semibold mb-1">Android:</p>
-						<p>Menu browser &rarr; &quot;Install app&quot; / &quot;Add to Home screen&quot;</p>
+						<p>Browser menu &rarr; &quot;Install app&quot; / &quot;Add to Home screen&quot;</p>
 						<p className="font-semibold mt-2 mb-1">iOS:</p>
-						<p>Tombol Share &rarr; &quot;Add to Home Screen&quot;</p>
+						<p>Share button &rarr; &quot;Add to Home Screen&quot;</p>
 					</div>
 					<button
 						onClick={() => setIsVisible(false)}
 						className="mt-6 w-full rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white dark:bg-white dark:text-black"
 					>
-						Tutup
+						Close
 					</button>
 				</div>
 			</div>
@@ -52,9 +52,9 @@ export default function PwaPopup() {
 	return (
 		<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4">
 			<div className="w-full max-w-sm rounded-xl bg-white p-6 text-center shadow-lg dark:bg-zinc-900 dark:text-white">
-				<h2 className="text-xl font-bold">Lanjutkan Login</h2>
+				<h2 className="text-xl font-bold">Continue to Login</h2>
 				<p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-					Aplikasi sudah terinstall. Silakan login melalui OpenAuth.
+					App is already installed. Please log in via OpenAuth.
 				</p>
 				<button
 					onClick={() => {
@@ -68,7 +68,7 @@ export default function PwaPopup() {
 					onClick={() => setIsVisible(false)}
 					className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 dark:border-zinc-700 dark:text-gray-300"
 				>
-					Nanti Saja
+					Later
 				</button>
 			</div>
 		</div>
