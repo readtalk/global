@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 			}),
 		});
 
-		const data = await response.json();
+		const data = (await response.json()) as { access_token?: string };
 
 		if (data.access_token) {
 			const res = NextResponse.redirect(new URL("/", request.url));
