@@ -1,4 +1,3 @@
-//
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,6 +6,7 @@ import { usePathname } from "next/navigation";
 export default function PwaPopup() {
 	const pathname = usePathname();
 	const [isStandalone, setIsStandalone] = useState<boolean | null>(null);
+	const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 	const [isVisible, setIsVisible] = useState(false);
 
 	useEffect(() => {
@@ -20,10 +20,22 @@ export default function PwaPopup() {
 			(window.navigator as unknown as { standalone?: boolean }).standalone === true;
 
 		setIsStandalone(checkStandalone);
-		setIsVisible(true);
+
+		fetch("/api/auth/status")
+			.then((res) => res.json())
+			.then((data) => {
+				setIsLoggedIn(data.loggedIn);
+				setIsVisible(true);
+			})
+			.catch(() => {
+				setIsLoggedIn(false);
+				setIsVisible(true);
+			});
 	}, [pathname]);
 
-	if (!isVisible || isStandalone === null) return null;
+	if (!isVisible || isStandalone === null || isLoggedIn === null) return null;
+
+	if (isLoggedIn) return null;
 
 	if (!isStandalone) {
 		return (
@@ -51,12 +63,14 @@ export default function PwaPopup() {
 				<p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
 					App is already installed. Please log in via OpenAuth.
 				</p>
-				<a
-					href="/api/auth/login"
-					className="mt-6 block w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+				<button
+					onClick={() => {
+						window.location.href = "/api/auth/login";
+					}}
+					className="mt-6 w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white"
 				>
 					Login OpenAuth
-				</a>
+				</button>
 			</div>
 		</div>
 	);
