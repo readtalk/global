@@ -1,47 +1,57 @@
-import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+"use client";
 
-export async function GET(request: NextRequest) {
-	const searchParams = request.nextUrl.searchParams;
-	const code = searchParams.get("code");
-	const state = searchParams.get("state");
+import { useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
-	if (!code) {
-		return NextResponse.redirect(new URL("/?error=missing_code", request.url));
-	}
+export default function Callback() {
+	const searchParams = useSearchParams();
+	const router = useRouter();
+	const hasExchanged = useRef(false);
 
-	try {
-		const tokenResponse = await fetch("https://auth.readtalk.workers.dev/token", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/x-www-form-urlencoded",
-			},
-			body: new URLSearchParams({
-				grant_type: "authorization_code",
-				client_id: "your-client-id",
-				code: code,
-				redirect_uri: "https://global.readtalk.workers.dev/callback",
-			}),
-		});
+	useEffect(() => {
+		if (hasExchanged.current) return;
+		hasExchanged.current = true;
 
-		if (!tokenResponse.ok) {
-			throw new Error("Failed to exchange token");
-		}
+		const exchangeCode = async () => {
+			const code = searchParams.get("code");
 
-		const data = await tokenResponse.json();
-		const accessToken = data.access_token;
+			if (!code) {
+				router.push("/");
+				return;
+			}
 
-		const cookieStore = await cookies();
-		cookieStore.set("access_token", accessToken, {
-			httpOnly: true,
-			secure: process.env.NODE_ENV === "production",
-			sameSite: "lax",
-			path: "/",
-			maxAge: 60 * 60 * 24 * 7,
-		});
+			try {
+				const verifier = localStorage.getItem("code_verifier") || "";
+				const response = await fetch("https://auth.readtalk.workers.dev/token", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/x-www-form-urlencoded",
+					},
+					body: new URLSearchParams({
+						grant_type: "authorization_code",
+						code: code,
+						redirect_uri: "https://global.readtalk.workers.dev/callback",
+						client_id: "your-client-id",
+						code_verifier: verifier,
+					}),
+				});
 
-		return NextResponse.redirect(new URL("/", request.url));
-	} catch (error) {
-		return NextResponse.redirect(new URL("/?error=auth_failed", request.url));
-	}
+				const data = await response.json();
+
+				if (data.access_token) {
+					localStorage.setItem("session", data.access_token);
+					localStorage.removeItem("code_verifier");
+					router.push("/");
+				} else {
+					router.push("/");
+				}
+			} catch (error) {
+				router.push("/");
+			}
+		};
+
+		exchangeCode();
+	}, [searchParams, router]);
+
+	return <div className="p-4 text-center">Loading...</div>;
 }
