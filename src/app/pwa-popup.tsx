@@ -7,6 +7,7 @@ export default function PwaPopup() {
 	const pathname = usePathname();
 	const [isStandalone, setIsStandalone] = useState<boolean | null>(null);
 	const [isVisible, setIsVisible] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
 
 	useEffect(() => {
 		if (pathname.startsWith("/@") || pathname.startsWith("/u/")) {
@@ -21,6 +22,29 @@ export default function PwaPopup() {
 		setIsStandalone(checkStandalone);
 		setIsVisible(true);
 	}, [pathname]);
+
+	const handleLogin = async () => {
+		setIsLoading(true);
+		try {
+			const array = new Uint32Array(56);
+			window.crypto.getRandomValues(array);
+			const verifier = Array.from(array, (dec) => ("0" + dec.toString(16)).substr(-2)).join("");
+
+			const hashBuffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+			const hashArray = Array.from(new Uint8Array(hashBuffer));
+			const challenge = btoa(String.fromCharCode.apply(null, hashArray))
+				.replace(/\+/g, "-")
+				.replace(/\//g, "_")
+				.replace(/=+$/, "");
+
+			localStorage.setItem("code_verifier", verifier);
+
+			window.location.href = `https://auth.readtalk.workers.dev/authorize?response_type=code&client_id=your-client-id&redirect_uri=https://global.readtalk.workers.dev/callback&code_challenge=${challenge}&code_challenge_method=S256`;
+		} catch (error) {
+			console.error(error);
+			setIsLoading(false);
+		}
+	};
 
 	if (!isVisible || isStandalone === null) return null;
 
@@ -51,12 +75,11 @@ export default function PwaPopup() {
 					App is already installed. Please log in via OpenAuth.
 				</p>
 				<button
-					onClick={() => {
-						window.location.href = "https://auth.readtalk.workers.dev";
-					}}
-					className="mt-6 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white"
+					onClick={handleLogin}
+					disabled={isLoading}
+					className="mt-6 w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
 				>
-					Login OpenAuth
+					{isLoading ? "Redirecting..." : "Login OpenAuth"}
 				</button>
 			</div>
 		</div>
