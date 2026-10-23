@@ -80,14 +80,14 @@ export default function HomePage() {
 
 							<div className="mt-6">
 								<h3 className="mb-5 text-gray-900 font-medium text-xl">Threads</h3>
-								<div className="text-gray-500 text-sm">Belum ada data thread.</div>
+								<div className="text-gray-500 text-sm">No threads found.</div>
 							</div>
 						</div>
 					</div>
 
 					<div className="py-10 lg:w-1/3 w-full md:pl-6">
 						<h3 className="mb-5 text-gray-900 font-medium text-xl">Recent posts</h3>
-						<div className="text-gray-500 text-sm">Belum ada data post.</div>
+						<div className="text-gray-500 text-sm">No recent posts.</div>
 					</div>
 				</div>
 			</main>
