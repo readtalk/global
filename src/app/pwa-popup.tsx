@@ -38,12 +38,6 @@ export default function PwaPopup() {
 						<p className="font-semibold mt-2 mb-1">iOS:</p>
 						<p>Share button &rarr; &quot;Add to Home Screen&quot;</p>
 					</div>
-					<button
-						onClick={() => setIsVisible(false)}
-						className="mt-6 w-full rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white dark:bg-white dark:text-black"
-					>
-						Close
-					</button>
 				</div>
 			</div>
 		);
@@ -63,12 +57,6 @@ export default function PwaPopup() {
 					className="mt-6 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white"
 				>
 					Login OpenAuth
-				</button>
-				<button
-					onClick={() => setIsVisible(false)}
-					className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 dark:border-zinc-700 dark:text-gray-300"
-				>
-					Later
 				</button>
 			</div>
 		</div>
