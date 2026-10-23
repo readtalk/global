@@ -23,7 +23,7 @@ export default function PwaPopup() {
 
 		fetch("/api/auth/status")
 			.then((res) => res.json())
-			.then((data) => {
+			.then((data: { loggedIn: boolean }) => {
 				setIsLoggedIn(data.loggedIn);
 				setIsVisible(true);
 			})
