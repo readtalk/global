@@ -22,8 +22,8 @@ export default function PwaPopup() {
 		setIsStandalone(checkStandalone);
 
 		fetch("/api/auth/status")
-			.then((res) => res.json())
-			.then((data: { loggedIn: boolean }) => {
+			.then((res) => res.json() as Promise<{ loggedIn: boolean }>)
+			.then((data) => {
 				setIsLoggedIn(data.loggedIn);
 				setIsVisible(true);
 			})
