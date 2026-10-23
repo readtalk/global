@@ -1,7 +1,7 @@
 {
-  "name": "ReadTalk Messenger",
-  "short_name": "ReadTalk",
-  "description": "Global ReadTalk Messenger",
+  "name": "READ-Talk",
+  "short_name": "READ-Talk",
+  "description": "READ-Talk",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
