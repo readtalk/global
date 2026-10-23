@@ -1,10 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
-export default function Sidebar({ data }: { data?: { id?: string } }) {
+export default function Sidebar() {
 	const [isMobileNavHidden, setIsMobileNavHidden] = useState(true);
+	const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+	useEffect(() => {
+		fetch("/api/auth/status")
+			.then((res) => res.json() as Promise<{ loggedIn: boolean }>)
+			.then((data) => setIsLoggedIn(data.loggedIn))
+			.catch(() => setIsLoggedIn(false));
+	}, []);
 
 	const sidebarHandler = () => {
 		setIsMobileNavHidden(!isMobileNavHidden);
@@ -41,7 +49,7 @@ export default function Sidebar({ data }: { data?: { id?: string } }) {
 				<nav aria-label="Main navigation">
 					<ul aria-orientation="vertical" className="rounded py-8">
 						<li className={`text-gray-600 text-sm leading-3 py-1 tracking-normal ${isMobileNavHidden ? 'cursor-pointer hover:text-blue-700 focus-within:text-blue-700' : 'pointer-events-none'}`}>
-							<Link href="/" aria-label="Home" data-tooltip={isMobileNavHidden ? "Home" : undefined} className={`p-2 block hover:bg-gray-200 rounded relative z-30 ${isMobileNavHidden ? 'tooltip focus:outline-none focus:ring-2 focus:ring-blue-500' : 'pointer-events-none'}`}>
+							<Link href="/" aria-label="Home" className={`p-2 block hover:bg-gray-200 rounded relative z-30 ${isMobileNavHidden ? 'focus:outline-none focus:ring-2 focus:ring-blue-500' : 'pointer-events-none'}`}>
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
 									className="icon icon-tabler icon-tabler-grid"
@@ -64,7 +72,7 @@ export default function Sidebar({ data }: { data?: { id?: string } }) {
 							</Link>
 						</li>
 						<li className={`text-gray-600 text-sm leading-3 tracking-normal mt-6 py-1 ${isMobileNavHidden ? 'cursor-pointer hover:text-blue-700 focus-within:text-blue-700' : 'pointer-events-none' } flex items-center`}>
-							<Link href={data?.id ? `/api/auth/logout` : `/api/auth/login`} aria-label={data?.id ? 'Logout' : 'Login or Register'} data-tooltip={isMobileNavHidden ? (data?.id ? 'Logout' : 'Login/Register') : undefined} className={`p-2 block hover:bg-gray-200 rounded relative z-30 ${isMobileNavHidden ? 'tooltip focus:outline-none focus:ring-2 focus:ring-blue-500 ' : 'pointer-events-none'}`}>
+							<Link href={isLoggedIn ? `/api/auth/logout` : `/api/auth/login`} aria-label={isLoggedIn ? 'Logout' : 'Login or Register'} className={`p-2 block hover:bg-gray-200 rounded relative z-30 ${isMobileNavHidden ? 'focus:outline-none focus:ring-2 focus:ring-blue-500 ' : 'pointer-events-none'}`}>
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
 									className="icon icon-tabler icon-tabler-users"
@@ -121,7 +129,7 @@ export default function Sidebar({ data }: { data?: { id?: string } }) {
 						</Link>
 					</li>
 					<li className="cursor-pointer text-gray-600 text-sm leading-3 tracking-normal mt-6 py-2 hover:text-blue-700 focus-within:text-blue-700 flex items-center">
-						{data?.id ? (
+						{isLoggedIn ? (
 							<Link href="/api/auth/logout" className="ml-2 p-2 block rounded focus:outline-none focus:ring-2 focus:ring-blue-500">Logout</Link>
 						) : (
 							<Link href="/api/auth/login" className="ml-2 p-2 block rounded focus:outline-none focus:ring-2 focus:ring-blue-500">Login/Register</Link>
