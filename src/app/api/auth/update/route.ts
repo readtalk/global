@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
 		const textUsers = await resUsers.text();
 
 		let dataUpdates, dataUsers;
-		try { dataUpdates = JSON.parse(textUpdates); } catch { return NextResponse.json({ success: false, error: `Updates JSON Parse Error: ${textUpdates}` }, { status: 500 }); }
-		try { dataUsers = JSON.parse(textUsers); } catch { return NextResponse.json({ success: false, error: `Users JSON Parse Error: ${textUsers}` }, { status: 500 }); }
+		try { dataUpdates = JSON.parse(textUpdates); } catch { return NextResponse.json({ success: false, error: `Updates JSON Parse Error: ${textUpdates.substring(0, 100)}` }, { status: 500 }); }
+		try { dataUsers = JSON.parse(textUsers); } catch { return NextResponse.json({ success: false, error: `Users JSON Parse Error: ${textUsers.substring(0, 100)}` }, { status: 500 }); }
 
 		if (dataUpdates.success && dataUsers.success) {
 			const userMap = new Map(dataUsers.users.map((u: any) => [u.id, u]));
@@ -52,8 +52,13 @@ export async function POST(request: NextRequest) {
 		});
 
 		const text = await res.text();
+		
+		if (!res.ok) {
+			return NextResponse.json({ success: false, error: `Backend Error (${res.status}): ${text.substring(0, 200)}` }, { status: res.status });
+		}
+
 		let data;
-		try { data = JSON.parse(text); } catch { return NextResponse.json({ success: false, error: `Backend Parse Error: ${text}` }, { status: 500 }); }
+		try { data = JSON.parse(text); } catch { return NextResponse.json({ success: false, error: `Parse Error: ${text.substring(0, 200)}` }, { status: 500 }); }
 
 		return NextResponse.json(data, { status: res.status });
 	} catch (error: unknown) {
