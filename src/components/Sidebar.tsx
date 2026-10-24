@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Sidebar() {
+	const router = useRouter();
 	const [isMobileNavHidden, setIsMobileNavHidden] = useState(true);
 	const [user, setUser] = useState<{ username: string; yourname: string } | null>(null);
 
@@ -29,9 +31,19 @@ export default function Sidebar() {
 	}, []);
 
 	const handleLogout = () => {
+		// 1. Optimistic UI: Hapus tampilan user saat itu juga
+		setUser(null);
+		setIsMobileNavHidden(true);
+		
+		// 2. Hapus token dari localStorage
 		localStorage.removeItem("session");
 		localStorage.removeItem("code_verifier");
-		window.location.href = "/api/auth/logout";
+		
+		// 3. Baru tembak API logout di background
+		fetch("/api/auth/logout").finally(() => {
+			router.push("/");
+			router.refresh();
+		});
 	};
 
 	const sidebarHandler = () => {
@@ -65,14 +77,25 @@ export default function Sidebar() {
 							</Link>
 						</li>
 						<li className={`text-gray-600 text-sm leading-3 tracking-normal mt-6 py-1 ${isMobileNavHidden ? 'cursor-pointer hover:text-blue-700' : 'pointer-events-none' } flex items-center`}>
-							<button onClick={user ? handleLogout : undefined} className={`p-2 block hover:bg-gray-200 rounded relative z-30 ${isMobileNavHidden ? '' : 'pointer-events-none'}`}>
-								<svg width={20} height={20} viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
-									<circle cx={9} cy={7} r={4} />
-									<path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-									<path d="M16 3.13a4 4 0 0 1 0 7.75" />
-									<path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
-								</svg>
-							</button>
+							{user ? (
+								<button onClick={handleLogout} className={`p-2 block hover:bg-gray-200 rounded relative z-30 ${isMobileNavHidden ? '' : 'pointer-events-none'}`}>
+									<svg width={20} height={20} viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
+										<circle cx={9} cy={7} r={4} />
+										<path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+										<path d="M16 3.13a4 4 0 0 1 0 7.75" />
+										<path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+									</svg>
+								</button>
+							) : (
+								<Link href="/api/auth/login" className={`p-2 block hover:bg-gray-200 rounded relative z-30 ${isMobileNavHidden ? '' : 'pointer-events-none'}`}>
+									<svg width={20} height={20} viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
+										<circle cx={9} cy={7} r={4} />
+										<path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+										<path d="M16 3.13a4 4 0 0 1 0 7.75" />
+										<path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+									</svg>
+								</Link>
+							)}
 						</li>
 					</ul>
 				</nav>
