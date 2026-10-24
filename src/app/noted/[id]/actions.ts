@@ -6,7 +6,7 @@ import { UpdateManager } from "@/lib/update-manager";
 
 async function getManager(id: string) {
 	const { env } = await getCloudflareContext({ async: true });
-	return new UpdateManager(env.UPDATE_LIST, id);
+	return new UpdateManager(env.DIARY_NOTED, id);
 }
 
 export async function createUpdate(id: string, formData: FormData) {
@@ -15,17 +15,17 @@ export async function createUpdate(id: string, formData: FormData) {
 
 	const manager = await getManager(id);
 	await manager.create(text.trim());
-	revalidatePath(`profile/${id}`);
+	revalidatePath(`noted/${id}`);
 }
 
 export async function toggleUpdate(id: string, updateId: string) {
 	const manager = await getManager(id);
 	await manager.toggle(updateId);
-	revalidatePath(`profile/${id}`);
+	revalidatePath(`noted/${id}`);
 }
 
 export async function deleteUpdate(id: string, updateId: string) {
 	const manager = await getManager(id);
 	await manager.delete(updateId);
-	revalidatePath(`profile/${id}`);
+	revalidatePath(`noted/${id}`);
 }
