@@ -1,4 +1,3 @@
-//
 "use client";
 
 import { useState, useEffect } from "react";
@@ -16,11 +15,11 @@ export default function Sidebar() {
 				const email = payload.properties?.email;
 				if (email) {
 					setUser({ username: email.split("@")[0], yourname: email.split("@")[0] });
-					// Ambil data asli dari backend diam-diam untuk update nama
+					
 					fetch("https://auth.readtalk.workers.dev/settings", {
 						headers: { "Authorization": `Bearer ${session}` }
 					})
-					.then(res => res.json())
+					.then(res => res.json() as Promise<{ success: boolean; user?: { username: string; yourname: string } }>)
 					.then(data => {
 						if (data.success && data.user) setUser(data.user);
 					}).catch(() => {});
