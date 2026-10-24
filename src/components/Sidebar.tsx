@@ -1,4 +1,3 @@
-//
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,7 +8,11 @@ export default function Sidebar() {
 	const [user, setUser] = useState<{ username: string; yourname: string } | null>(null);
 
 	useEffect(() => {
-		fetch("/api/auth/me")
+		const session = localStorage.getItem("session");
+		if (session) {
+			fetch("https://auth.readtalk.workers.dev/settings", {
+				headers: { "Authorization": `Bearer ${session}` }
+			})
 			.then((res) => res.json() as Promise<{ success: boolean; user?: { username: string; yourname: string } }>)
 			.then((data) => {
 				if (data.success && data.user) {
@@ -17,7 +20,14 @@ export default function Sidebar() {
 				}
 			})
 			.catch(() => setUser(null));
+		}
 	}, []);
+
+	const handleLogout = () => {
+		localStorage.removeItem("session");
+		localStorage.removeItem("code_verifier");
+		window.location.href = "/api/auth/logout";
+	};
 
 	const sidebarHandler = () => {
 		setIsMobileNavHidden(!isMobileNavHidden);
@@ -50,14 +60,14 @@ export default function Sidebar() {
 							</Link>
 						</li>
 						<li className={`text-gray-600 text-sm leading-3 tracking-normal mt-6 py-1 ${isMobileNavHidden ? 'cursor-pointer hover:text-blue-700' : 'pointer-events-none' } flex items-center`}>
-							<Link href={user ? `/api/auth/logout` : `/api/auth/login`} className={`p-2 block hover:bg-gray-200 rounded relative z-30 ${isMobileNavHidden ? '' : 'pointer-events-none'}`}>
+							<button onClick={user ? handleLogout : undefined} className={`p-2 block hover:bg-gray-200 rounded relative z-30 ${isMobileNavHidden ? '' : 'pointer-events-none'}`}>
 								<svg width={20} height={20} viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
 									<circle cx={9} cy={7} r={4} />
 									<path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
 									<path d="M16 3.13a4 4 0 0 1 0 7.75" />
 									<path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
 								</svg>
-							</Link>
+							</button>
 						</li>
 					</ul>
 				</nav>
@@ -74,7 +84,7 @@ export default function Sidebar() {
 					</li>
 					<li className="cursor-pointer text-gray-600 text-sm tracking-normal mt-6 py-2 hover:text-blue-700 flex items-center">
 						{user ? (
-							<Link href="/api/auth/logout" className="ml-2 p-2 block rounded">Logout</Link>
+							<button onClick={handleLogout} className="ml-2 p-2 block rounded">Logout</button>
 						) : (
 							<Link href="/api/auth/login" className="ml-2 p-2 block rounded">Login/Register</Link>
 						)}
