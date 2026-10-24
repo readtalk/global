@@ -28,7 +28,7 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 		
 		setLoading(id);
 		try {
-			await fetch(`https://auth.readtalk.workers.dev/updates/${id}/like`, {
+			await fetch(`/api/updates/${id}/like`, {
 				method: "POST",
 				headers: { 
 					"Content-Type": "application/json",
