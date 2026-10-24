@@ -17,13 +17,13 @@ type User = {
 
 async function getUserByUsername(username: string): Promise<User | null> {
 	try {
-		const res = await fetch("https://auth.readtalk.workers.dev/users", {
+		const res = await fetch(`https://auth.readtalk.workers.dev/users/${username}`, {
 			cache: "no-store",
 		});
-		const data = (await res.json()) as { success: boolean; users: User[] };
+		const data = (await res.json()) as { success: boolean; user: User };
 		
-		if (data.success && data.users) {
-			return data.users.find((u) => u.username === username) || null;
+		if (data.success && data.user) {
+			return data.user;
 		}
 		return null;
 	} catch (error) {
@@ -51,18 +51,24 @@ export default async function PublicProfile({
 		);
 	}
 
+	// Perbaikan parsing JSON
 	let socials: Record<string, string> = {};
-	if (user.socials) {
+	if (user.socials && typeof user.socials === 'string') {
 		try {
-			socials = JSON.parse(user.socials);
-		} catch {}
+			const parsed = JSON.parse(user.socials);
+			if (typeof parsed === 'object' && parsed !== null) {
+				socials = parsed;
+			}
+		} catch {
+			socials = {};
+		}
 	}
 
 	return (
 		<div className="min-h-screen bg-gray-100 flex items-start justify-center">
 			<div className="max-w-2xl w-full bg-white shadow-md rounded-b-xl overflow-hidden">
 				{/* Header / Banner */}
-				<div className="h-40 w-full bg-blue-500">
+				<div className="h-40 w-full bg-gray-300 relative">
 					{user.header && (
 						<img src={user.header} alt="Header" className="w-full h-full object-cover" />
 					)}
@@ -79,8 +85,8 @@ export default async function PublicProfile({
 						)}
 					</div>
 
-					{/* Nama & Username */}
-					<div className="mt-14">
+					{/* Nama & Username (Dikasih padding top biar gak nabrak avatar) */}
+					<div className="pt-14 pb-2">
 						<h1 className="text-2xl font-bold text-gray-900">{user.yourname || user.username}</h1>
 						<p className="text-gray-500 text-sm">@{user.username}</p>
 					</div>
@@ -110,8 +116,9 @@ export default async function PublicProfile({
 					{/* Social Links */}
 					{Object.keys(socials).length > 0 && (
 						<div className="mt-4 flex flex-wrap gap-3">
-							{Object.entries(socials).map(([key, url]) => (
-								url && (
+							{Object.entries(socials).map(([key, url]) => {
+								if (!url || typeof url !== 'string') return null;
+								return (
 									<a
 										key={key}
 										href={url}
@@ -121,8 +128,8 @@ export default async function PublicProfile({
 									>
 										{key}
 									</a>
-								)
-							))}
+								);
+							})}
 						</div>
 					)}
 				</div>
