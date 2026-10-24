@@ -1,6 +1,6 @@
 {
 	"name": "global",
-	"description": "Build a full-stack web application with Next.js.",
+	"description": "Build a full-stack web application",
 	"cloudflare": {
 		"label": "Next.js Framework",
 		"products": [
