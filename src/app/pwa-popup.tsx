@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 export default function PwaPopup() {
 	const pathname = usePathname();
 	const [isStandalone, setIsStandalone] = useState<boolean | null>(null);
-	const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+	const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true); // Default true biar gak nge-flash
 	const [isVisible, setIsVisible] = useState(false);
 
 	useEffect(() => {
@@ -21,12 +21,13 @@ export default function PwaPopup() {
 
 		setIsStandalone(checkStandalone);
 		
+		// Cek langsung ke localStorage (instan)
 		const session = localStorage.getItem("session");
 		setIsLoggedIn(!!session);
 		setIsVisible(true);
 	}, [pathname]);
 
-	if (!isVisible || isStandalone === null || isLoggedIn === null) return null;
+	if (!isVisible || isStandalone === null) return null;
 
 	if (isLoggedIn) return null;
 
