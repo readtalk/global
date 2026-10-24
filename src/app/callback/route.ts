@@ -29,16 +29,10 @@ export async function GET(request: NextRequest) {
 		const data = (await response.json()) as { access_token?: string };
 
 		if (data.access_token) {
-			const res = NextResponse.redirect(new URL("/", request.url));
-			res.cookies.set("session", data.access_token, {
-				httpOnly: true,
-				secure: process.env.NODE_ENV === "production",
-				sameSite: "lax",
-				path: "/",
-				maxAge: 60 * 60 * 24 * 7,
-			});
-			res.cookies.delete("code_verifier");
-			return res;
+			// Lempar token ke URL sementara, biar Client Component yang simpen ke localStorage
+			const url = new URL("/", request.url);
+			url.searchParams.set("token", data.access_token);
+			return NextResponse.redirect(url);
 		}
 	} catch (error) {
 		console.error(error);
