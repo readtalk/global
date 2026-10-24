@@ -1,9 +1,8 @@
-//
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
 	try {
-		const body = await request.json();
+		const body = (await request.json()) as { content: string };
 		const authHeader = request.headers.get("Authorization");
 
 		if (!authHeader) {
