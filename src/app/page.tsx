@@ -46,7 +46,7 @@ function ForumContent() {
 		fetchData();
 	}, [fetchData]);
 
-	const handlePost = async () => {
+		const handlePost = async () => {
 		if (!content.trim()) return;
 		const token = localStorage.getItem("session");
 		if (!token) {
@@ -70,11 +70,11 @@ function ForumContent() {
 				setContent("");
 				fetchData();
 			} else {
-				alert(data.error || "Failed to post update.");
+				alert(`Gagal: ${data.error}`);
 			}
-		} catch (error) {
+		} catch (error: unknown) {
 			console.error("Failed to post", error);
-			alert("An error occurred while posting.");
+			alert(`Error Catch: ${error instanceof Error ? error.message : "Unknown"}`);
 		} finally {
 			setIsPosting(false);
 		}
