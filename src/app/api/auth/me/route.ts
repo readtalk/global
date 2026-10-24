@@ -1,4 +1,3 @@
-//
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
@@ -11,7 +10,6 @@ export async function GET() {
 			return NextResponse.json({ success: false, error: "Not logged in" }, { status: 401 });
 		}
 
-		
 		const payloadBase64 = session.split(".")[1];
 		const payload = JSON.parse(atob(payloadBase64));
 		const userId = payload.properties?.id || payload.sub;
@@ -20,13 +18,13 @@ export async function GET() {
 			return NextResponse.json({ success: false, error: "Invalid token" }, { status: 401 });
 		}
 
-		
 		const res = await fetch(`https://auth.readtalk.workers.dev/settings`, {
 			headers: { "Authorization": `Bearer ${session}` },
 		});
-		const data = await res.json();
+		
+		const data = (await res.json()) as { success: boolean; user?: { username: string; yourname: string }; error?: string };
 
-		if (data.success) {
+		if (data.success && data.user) {
 			return NextResponse.json({ success: true, user: data.user });
 		}
 
