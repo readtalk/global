@@ -12,7 +12,7 @@ export default async function UpdatePage({
 }) {
 	const { id } = await params;
 	const { env } = await getCloudflareContext({ async: true });
-	const manager = new UpdateManager(env.DIARY_NOTED, id);
+	const manager = new UpdateManager(env.UPDATE_LIST, id);
 	const updates = await manager.list();
 
 	return (
