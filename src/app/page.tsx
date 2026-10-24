@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import Search from "@/components/Search";
 import Updatelist, { UpdatelistItem } from "@/components/Updatelist";
 
-export default function ForumPage() {
+function ForumContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const [content, setContent] = useState("");
@@ -141,5 +141,13 @@ export default function ForumPage() {
 				</div>
 			</div>
 		</>
+	);
+}
+
+export default function ForumPage() {
+	return (
+		<Suspense fallback={<div className="p-4 text-center">Loading...</div>}>
+			<ForumContent />
+		</Suspense>
 	);
 }
