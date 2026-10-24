@@ -52,9 +52,9 @@ export default async function PublicProfile({
 
 	if (!user) {
 		return (
-			<div className="min-h-screen bg-black flex items-center justify-center p-4">
+			<div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
 				<div className="text-center">
-					<h1 className="text-2xl font-bold text-white">User Not Found</h1>
+					<h1 className="text-2xl font-bold text-gray-900">User Not Found</h1>
 					<p className="text-gray-500 text-sm mt-2">@{username} does not exist.</p>
 				</div>
 			</div>
@@ -79,31 +79,31 @@ export default async function PublicProfile({
 	const socialList = Object.entries(socials).filter(([_, url]) => url && typeof url === "string");
 
 	return (
-		<div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
+		<div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col items-center justify-center p-6">
 			<div className="w-full max-w-md flex flex-col items-center text-center">
 				
-				<div className="w-28 h-28 rounded-full overflow-hidden border-2 border-zinc-800 shadow-2xl mb-4">
+				<div className="w-28 h-28 rounded-full overflow-hidden border-2 border-white shadow-xl mb-4 bg-white">
 					{user.avatar ? (
 						<img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
 					) : (
-						<div className="w-full h-full bg-zinc-800 flex items-center justify-center text-3xl font-bold text-zinc-400">
+						<div className="w-full h-full bg-gray-200 flex items-center justify-center text-3xl font-bold text-gray-400">
 							{user.username?.[0]?.toUpperCase() ?? "?"}
 						</div>
 					)}
 				</div>
 
-				<h1 className="text-2xl font-bold tracking-tight">{user.yourname || user.username}</h1>
-				<p className="text-zinc-500 text-sm mt-1">@{user.username}</p>
+				<h1 className="text-2xl font-bold tracking-tight text-gray-900">{user.yourname || user.username}</h1>
+				<p className="text-gray-500 text-sm mt-1">@{user.username}</p>
 
 				{user.headline && (
-					<p className="mt-4 text-zinc-300 text-sm font-medium px-4">{user.headline}</p>
+					<p className="mt-4 text-gray-800 text-sm font-medium px-4">{user.headline}</p>
 				)}
 				{user.about && (
-					<p className="mt-2 text-zinc-400 text-xs px-6 whitespace-pre-wrap">{user.about}</p>
+					<p className="mt-2 text-gray-600 text-xs px-6 whitespace-pre-wrap">{user.about}</p>
 				)}
 
 				{user.location && (
-					<div className="mt-4 flex items-center gap-1 text-zinc-500 text-xs">
+					<div className="mt-4 flex items-center gap-1 text-gray-500 text-xs">
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
 						<span>{user.location}</span>
 					</div>
@@ -113,16 +113,16 @@ export default async function PublicProfile({
 					{socialList.map(([key, url]) => {
 						let Icon = Globe;
 						let label = key.charAt(0).toUpperCase() + key.slice(1);
-						let bgClass = "bg-zinc-900 hover:bg-zinc-800 border-zinc-800";
+						let bgClass = "bg-white hover:bg-gray-100 border-gray-200 text-gray-900 shadow-sm";
 						
 						switch (key.toLowerCase()) {
-							case "facebook": Icon = FacebookLogo; bgClass = "bg-[#1877F2] hover:bg-[#166fe5] border-[#1877F2]"; break;
-							case "instagram": Icon = InstagramLogo; bgClass = "bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] hover:opacity-90 border-transparent"; break;
-							case "x": Icon = XLogo; bgClass = "bg-black hover:bg-zinc-900 border-zinc-700"; break;
-							case "tiktok": Icon = TiktokLogo; bgClass = "bg-black hover:bg-zinc-900 border-zinc-700"; break;
-							case "youtube": Icon = YoutubeLogo; bgClass = "bg-[#FF0000] hover:bg-[#cc0000] border-[#FF0000]"; break;
-							case "linkedin": Icon = LinkedinLogo; bgClass = "bg-[#0A66C2] hover:bg-[#0958a8] border-[#0A66C2]"; break;
-							case "website": label = "Website"; bgClass = "bg-zinc-900 hover:bg-zinc-800 border-zinc-800"; break;
+							case "facebook": Icon = FacebookLogo; bgClass = "bg-[#1877F2] hover:bg-[#166fe5] border-[#1877F2] text-white shadow-md"; break;
+							case "instagram": Icon = InstagramLogo; bgClass = "bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] hover:opacity-90 border-transparent text-white shadow-md"; break;
+							case "x": Icon = XLogo; bgClass = "bg-black hover:bg-zinc-800 border-black text-white shadow-md"; break;
+							case "tiktok": Icon = TiktokLogo; bgClass = "bg-black hover:bg-zinc-800 border-black text-white shadow-md"; break;
+							case "youtube": Icon = YoutubeLogo; bgClass = "bg-[#FF0000] hover:bg-[#cc0000] border-[#FF0000] text-white shadow-md"; break;
+							case "linkedin": Icon = LinkedinLogo; bgClass = "bg-[#0A66C2] hover:bg-[#0958a8] border-[#0A66C2] text-white shadow-md"; break;
+							case "website": label = "Website"; bgClass = "bg-white hover:bg-gray-100 border-gray-200 text-gray-900 shadow-sm"; break;
 						}
 
 						return (
@@ -140,7 +140,7 @@ export default async function PublicProfile({
 					})}
 				</div>
 
-				<div className="mt-10 mb-4 text-zinc-600 text-[10px] uppercase tracking-widest">
+				<div className="mt-10 mb-4 text-gray-400 text-[10px] uppercase tracking-widest font-semibold">
 					Powered by READTalk
 				</div>
 
