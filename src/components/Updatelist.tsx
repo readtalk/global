@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
 export type UpdatelistItem = {
 	id: string;
@@ -13,59 +14,61 @@ export type UpdatelistItem = {
 	repost_count: number;
 	is_liked: boolean;
 	is_reposted: boolean;
+	user?: { username: string; yourname: string };
 };
 
-export default function Updatelist({ data, limit = Infinity }: { data: UpdatelistItem[]; limit?: number }) {
+export default function Updatelist({ data, limit = Infinity, onUpdate }: { data: UpdatelistItem[]; limit?: number; onUpdate: () => void }) {
+	const [loading, setLoading] = useState<string | null>(null);
+
+	const handleLike = async (id: string) => {
+		setLoading(id);
+		try {
+			await fetch(`https://auth.readtalk.workers.dev/updates/${id}/like`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+			});
+			onUpdate();
+		} catch (error) {
+			console.error(error);
+		} finally {
+			setLoading(null);
+		}
+	};
+
 	return (
 		<>
 			{data?.slice(0, limit)?.map((update) => (
-				<article key={update.id}>
-					<Link href={`/update/${update.id}`} className="block p-5 transition duration-150 ease-in-out hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-gray-50 rounded-lg">
-						<div className="md:flex items-center">
-							<div className="w-full">
-								<div className="md:flex items-center justify-between mt-4 md:mt-0 w-full">
-									<h2 className="text-gray-800 text-base font-semibold truncate">{update.content}</h2>
-								</div>
-								<div className="md:mt-1 mt-3 flex items-center text-gray-600">
-									<p className="text-gray-600 text-xs">
-										by <span className="text-blue-500">{update.user_id.substring(0, 8)}...</span>
-									</p>
-									<div className="w-1 h-1 bg-gray-500 rounded-full mx-2" aria-hidden="true" />
-									<time className="text-gray-600 text-xs">
-										{new Date(update.created_at * 1000).toLocaleDateString()}
-									</time>
-								</div>
-							</div>
+				<article key={update.id} className="p-5 border-b border-gray-200 hover:bg-gray-50 transition">
+					<div className="flex items-center gap-3">
+						<div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+							{update.user?.username?.[0]?.toUpperCase() || "?"}
 						</div>
-						
-						<p className="mt-3 text-gray-600 text-sm">
-							{update.content.length > 100 ? update.content.substring(0, 100) + "..." : update.content}
-						</p>
-						
-						<div className="mt-3 md:flex items-center text-gray-600">
-							<div className="flex items-center md:my-0 my-2">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									className="icon icon-tabler icon-tabler-message"
-									width={24}
-									height={24}
-									viewBox="0 0 24 24"
-									strokeWidth="1.5"
-									stroke="currentColor"
-									fill="none"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									aria-hidden="true"
-								>
-									<path stroke="none" d="M0 0h24v24H0z" />
-									<path d="M4 21v-13a3 3 0 0 1 3 -3h10a3 3 0 0 1 3 3v6a3 3 0 0 1 -3 3h-9l-4 4" />
-									<line x1={8} y1={9} x2={16} y2={9} />
-									<line x1={8} y1={13} x2={14} y2={13} />
-								</svg>
-								<p className="ml-2 text-gray-600 text-xs">{update.comment_count || 0} comments</p>
-							</div>
+						<div>
+							<p className="text-gray-900 font-semibold">{update.user?.yourname || "Unknown"}</p>
+							<p className="text-gray-500 text-xs">@{update.user?.username || update.user_id.substring(0, 8)}</p>
 						</div>
-					</Link>
+					</div>
+					
+					<p className="mt-3 text-gray-800 whitespace-pre-wrap">{update.content}</p>
+					
+					<div className="mt-4 flex items-center gap-6 text-gray-500 text-sm">
+						<button className="flex items-center gap-1 hover:text-blue-500 transition">
+							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+							{update.comment_count || 0}
+						</button>
+						<button className="flex items-center gap-1 hover:text-green-500 transition">
+							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+							{update.repost_count || 0}
+						</button>
+						<button 
+							onClick={() => handleLike(update.id)}
+							disabled={loading === update.id}
+							className={`flex items-center gap-1 hover:text-red-500 transition ${update.is_liked ? 'text-red-500' : ''}`}
+						>
+							<svg width="18" height="18" viewBox="0 0 24 24" fill={update.is_liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+							{update.like_count || 0}
+						</button>
+					</div>
 				</article>
 			))}
 		</>
