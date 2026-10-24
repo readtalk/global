@@ -1,39 +1,77 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import Search from "@/components/Search";
 import Updatelist, { UpdatelistItem } from "@/components/Updatelist";
-import UpdatelistComments, { CommentItem } from "@/components/UpdatelistComments";
 
 export default function ForumPage() {
 	const [content, setContent] = useState("");
 	const [updates, setUpdates] = useState<UpdatelistItem[]>([]);
-	const [comments, setComments] = useState<CommentItem[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
+	const [token, setToken] = useState<string | null>(null);
 
 	useEffect(() => {
-		async function fetchData() {
-			try {
-				const resUpdates = await fetch("https://auth.readtalk.workers.dev/updates");
-				const dataUpdates = (await resUpdates.json()) as { success: boolean; updates: UpdatelistItem[] };
-				if (dataUpdates.success) {
-					setUpdates(dataUpdates.updates);
-				}
-			} catch (error) {
-				console.error("Failed to fetch updates", error);
-			} finally {
-				setIsLoading(false);
-			}
-		}
-		fetchData();
+		const session = localStorage.getItem("session");
+		setToken(session);
 	}, []);
 
+	const fetchData = useCallback(async () => {
+		setIsLoading(true);
+		try {
+			const resUpdates = await fetch("https://auth.readtalk.workers.dev/updates", {
+				headers: token ? { "Authorization": `Bearer ${token}` } : {}
+			});
+			const dataUpdates = (await resUpdates.json()) as { success: boolean; updates: UpdatelistItem[] };
+			
+			const resUsers = await fetch("https://auth.readtalk.workers.dev/users");
+			const dataUsers = (await resUsers.json()) as { success: boolean; users: { id: string, username: string, yourname: string }[] };
+
+			if (dataUpdates.success && dataUsers.success) {
+				const userMap = new Map(dataUsers.users.map(u => [u.id, u]));
+				const mergedUpdates = dataUpdates.updates.map(post => ({
+					...post,
+					user: userMap.get(post.user_id) || null
+				}));
+				setUpdates(mergedUpdates);
+			}
+		} catch (error) {
+			console.error("Failed to fetch data", error);
+		} finally {
+			setIsLoading(false);
+		}
+	}, [token]);
+
+	useEffect(() => {
+		fetchData();
+	}, [fetchData]);
+
 	const handlePost = async () => {
-		if (!content.trim()) return;
-		console.log("Post submitted:", content);
-		setContent("");
+		if (!content.trim() || !token) {
+			alert("You must be logged in to post.");
+			return;
+		}
+		
+		try {
+			const res = await fetch("https://auth.readtalk.workers.dev/updates", {
+				method: "POST",
+				headers: { 
+					"Content-Type": "application/json",
+					"Authorization": `Bearer ${token}`
+				},
+				body: JSON.stringify({ content }),
+			});
+			
+			if (res.ok) {
+				setContent("");
+				fetchData();
+			} else {
+				alert("Failed to post update.");
+			}
+		} catch (error) {
+			console.error("Failed to post", error);
+		}
 	};
 
 	return (
@@ -46,6 +84,7 @@ export default function ForumPage() {
 							<div className="py-10 lg:w-2/3 w-full md:pr-6 md:border-r border-gray-300">
 								<div>
 									<Link href="/"><h1 className="text-3xl text-gray-900 font-bold mb-3">Forum</h1></Link>
+									
 									<div className="flex flex-col mt-10 md:flex-row md:items-center">
 										<Search />
 										<div className="w-full md:w-1/2 pt-3 md:pt-0 md:pl-3">
@@ -77,24 +116,21 @@ export default function ForumPage() {
 											</div>
 										</div>
 									</div>
+									
 									<div className="mt-6">
 										{isLoading ? (
 											<p className="text-gray-500 text-sm">Loading updates...</p>
 										) : updates.length > 0 ? (
-											<Updatelist data={updates} />
+											<Updatelist data={updates} onUpdate={fetchData} token={token} />
 										) : (
-											<p className="text-gray-500 text-sm">No updates yet.</p>
+											<p className="text-gray-500 text-sm">No updates yet. Be the first to post!</p>
 										)}
 									</div>
 								</div>
 							</div>
 							<div className="py-10 lg:w-1/3 w-full md:pl-6">
 								<h3 className="mb-5 text-gray-900 font-medium text-xl">Recent comments</h3>
-								{comments.length > 0 ? (
-									<UpdatelistComments data={comments} limit={7} />
-								) : (
-									<p className="text-gray-500 text-sm">No recent comments.</p>
-								)}
+								<p className="text-gray-500 text-sm">Coming soon.</p>
 							</div>
 						</div>
 					</div>
