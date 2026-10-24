@@ -14,16 +14,14 @@ export default function ForumPage() {
 	const [updates, setUpdates] = useState<UpdatelistItem[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 
-	// 1. Tangkap token dari URL (abis balik dari callback) dan simpen ke localStorage
 	useEffect(() => {
 		const token = searchParams.get("token");
 		if (token) {
 			localStorage.setItem("session", token);
-			router.replace("/"); // Bersihin URL dari ?token=...
+			router.replace("/");
 		}
 	}, [searchParams, router]);
 
-	// 2. Fetch data dari API lokal Next.js
 	const fetchData = useCallback(async () => {
 		setIsLoading(true);
 		try {
@@ -67,7 +65,7 @@ export default function ForumPage() {
 				body: JSON.stringify({ content }),
 			});
 			
-			const data = await res.json();
+			const data = (await res.json()) as { error?: string };
 			if (res.ok) {
 				setContent("");
 				fetchData();
