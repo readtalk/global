@@ -1,3 +1,4 @@
+//
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { UpdateManager } from "@/lib/update-manager";
 import { createUpdate, toggleUpdate, deleteUpdate } from "./actions";
