@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 export default function PwaPopup() {
 	const pathname = usePathname();
 	const [isStandalone, setIsStandalone] = useState<boolean | null>(null);
-	const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true); // Default true biar gak nge-flash
+	const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
 	const [isVisible, setIsVisible] = useState(false);
 
 	useEffect(() => {
@@ -21,14 +21,12 @@ export default function PwaPopup() {
 
 		setIsStandalone(checkStandalone);
 		
-		// Cek langsung ke localStorage (instan)
 		const session = localStorage.getItem("session");
 		setIsLoggedIn(!!session);
 		setIsVisible(true);
 	}, [pathname]);
 
 	if (!isVisible || isStandalone === null) return null;
-
 	if (isLoggedIn) return null;
 
 	if (!isStandalone) {
@@ -59,6 +57,8 @@ export default function PwaPopup() {
 				</p>
 				<button
 					onClick={() => {
+						// Optimistic: langsung sembunyiin popup pas diklik, baru pindah halaman
+						setIsLoggedIn(true);
 						window.location.href = "/api/auth/login";
 					}}
 					className="mt-6 w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white"
