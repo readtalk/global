@@ -13,6 +13,7 @@ function ForumContent() {
 	const [content, setContent] = useState("");
 	const [updates, setUpdates] = useState<UpdatelistItem[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
+	const [isPosting, setIsPosting] = useState(false);
 
 	useEffect(() => {
 		const token = searchParams.get("token");
@@ -25,16 +26,14 @@ function ForumContent() {
 	const fetchData = useCallback(async () => {
 		setIsLoading(true);
 		try {
-			const res = await fetch("/api/updates");
-			const data = (await res.json()) as { success: boolean; updates: UpdatelistItem[]; users: { id: string, username: string, yourname: string }[] };
+			const token = localStorage.getItem("session");
+			const res = await fetch("/api/updates", {
+				headers: token ? { "Authorization": `Bearer ${token}` } : {},
+			});
+			const data = (await res.json()) as { success: boolean; updates: UpdatelistItem[] };
 
 			if (data.success) {
-				const userMap = new Map(data.users.map(u => [u.id, u]));
-				const mergedUpdates = data.updates.map(post => ({
-					...post,
-					user: userMap.get(post.user_id) || null
-				}));
-				setUpdates(mergedUpdates);
+				setUpdates(data.updates);
 			}
 		} catch (error) {
 			console.error("Failed to fetch data", error);
@@ -55,11 +54,11 @@ function ForumContent() {
 			return;
 		}
 
+		setIsPosting(true);
 		try {
-			// Nembak ke API Route Next.js (bukan langsung ke backend)
 			const res = await fetch("/api/updates", {
 				method: "POST",
-				headers: { 
+				headers: {
 					"Content-Type": "application/json",
 					"Authorization": `Bearer ${token}`
 				},
@@ -76,6 +75,8 @@ function ForumContent() {
 		} catch (error) {
 			console.error("Failed to post", error);
 			alert("An error occurred while posting.");
+		} finally {
+			setIsPosting(false);
 		}
 	};
 
@@ -105,6 +106,7 @@ function ForumContent() {
 														placeholder="Type something..."
 														value={content}
 														onChange={(e) => setContent(e.target.value)}
+														disabled={isPosting}
 													/>
 												</div>
 											</div>
@@ -113,9 +115,10 @@ function ForumContent() {
 												<div className="w-full md:w-1/2 md:flex md:mb-0 mb-4 justify-end">
 													<button
 														onClick={handlePost}
-														className="bg-blue-700 text-sm text-white rounded hover:bg-blue-600 transition duration-150 ease-in-out py-2 px-6 text-center w-full md:w-auto"
+														disabled={isPosting || !content.trim()}
+														className="bg-blue-700 text-sm text-white rounded hover:bg-blue-600 transition duration-150 ease-in-out py-2 px-6 text-center w-full md:w-auto disabled:opacity-50"
 													>
-														Post
+														{isPosting ? "Posting..." : "Post"}
 													</button>
 												</div>
 											</div>
