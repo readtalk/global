@@ -1,4 +1,3 @@
-//
 "use client";
 
 import { useState } from "react";
@@ -14,7 +13,7 @@ export type UpdatelistItem = {
 	repost_count: number;
 	is_liked: boolean;
 	is_reposted: boolean;
-	user?: { username: string; yourname: string };
+	user?: { username: string; yourname: string } | null;
 };
 
 export default function Updatelist({ data, limit = Infinity, onUpdate, token }: { data: UpdatelistItem[]; limit?: number; onUpdate: () => void; token: string | null }) {
