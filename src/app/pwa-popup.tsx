@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 export default function PwaPopup() {
 	const pathname = usePathname();
+	const searchParams = useSearchParams();
 	const [isStandalone, setIsStandalone] = useState<boolean | null>(null);
 	const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 	const [isVisible, setIsVisible] = useState(false);
@@ -24,16 +25,17 @@ export default function PwaPopup() {
 
 		setIsStandalone(checkStandalone);
 		
+		const hasTokenInUrl = searchParams.get("token");
 		const session = localStorage.getItem("session");
-		const loggedIn = !!session;
-		setIsLoggedIn(loggedIn);
-		setIsVisible(true);
-
-		if (loggedIn) {
-			setIsLoading(true);
-			const timer = setTimeout(() => setIsLoading(false), 1000);
-			return () => clearTimeout(timer);
+		
+		if (hasTokenInUrl || session) {
+			setIsLoggedIn(true);
+			setIsVisible(true);
+			return; 
 		}
+
+		setIsLoggedIn(false);
+		setIsVisible(true);
 
 		const handleBeforeInstallPrompt = (e: Event) => {
 			e.preventDefault();
@@ -42,7 +44,7 @@ export default function PwaPopup() {
 
 		window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 		return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-	}, [pathname]);
+	}, [pathname, searchParams]);
 
 	const handleInstallClick = async () => {
 		if (!deferredPrompt) return;
@@ -57,15 +59,6 @@ export default function PwaPopup() {
 		setIsLoading(true);
 		setTimeout(() => {
 			window.location.href = "/api/auth/login";
-		}, 800);
-	};
-
-	const handleLogoutClick = () => {
-		setIsLoading(true);
-		localStorage.removeItem("session");
-		localStorage.removeItem("code_verifier");
-		setTimeout(() => {
-			window.location.href = "/api/auth/logout";
 		}, 800);
 	};
 
