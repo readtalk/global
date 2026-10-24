@@ -14,12 +14,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	title: "ReadTalk",
-	description: "ReadTalk Global App",
+	title: "READTalk",
+	description: "READTalk Messenger",
 	manifest: "/manifest.json",
 	appleWebApp: {
 		capable: true,
-		title: "ReadTalk",
+		title: "READTalk",
 		statusBarStyle: "default",
 	},
 };
