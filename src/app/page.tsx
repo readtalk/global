@@ -46,7 +46,7 @@ function ForumContent() {
 		fetchData();
 	}, [fetchData]);
 
-		const handlePost = async () => {
+	const handlePost = async () => {
 		if (!content.trim()) return;
 		const token = localStorage.getItem("session");
 		if (!token) {
