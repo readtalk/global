@@ -1,3 +1,13 @@
+import { 
+	FacebookLogo, 
+	InstagramLogo, 
+	XLogo, 
+	TiktokLogo, 
+	YoutubeLogo, 
+	LinkedinLogo, 
+	Globe 
+} from "@phosphor-icons/react/dist/ssr";
+
 export const dynamic = "force-dynamic";
 
 type User = {
@@ -51,12 +61,14 @@ export default async function PublicProfile({
 		);
 	}
 
-	// Perbaikan parsing JSON
 	let socials: Record<string, string> = {};
-	if (user.socials && typeof user.socials === 'string') {
+	if (user.socials && typeof user.socials === "string") {
 		try {
-			const parsed = JSON.parse(user.socials);
-			if (typeof parsed === 'object' && parsed !== null) {
+			let parsed = JSON.parse(user.socials);
+			if (typeof parsed === "string") {
+				parsed = JSON.parse(parsed);
+			}
+			if (typeof parsed === "object" && parsed !== null) {
 				socials = parsed;
 			}
 		} catch {
@@ -67,6 +79,7 @@ export default async function PublicProfile({
 	return (
 		<div className="min-h-screen bg-gray-100 flex items-start justify-center">
 			<div className="max-w-2xl w-full bg-white shadow-md rounded-b-xl overflow-hidden">
+				
 				{/* Header / Banner */}
 				<div className="h-40 w-full bg-gray-300 relative">
 					{user.header && (
@@ -76,8 +89,9 @@ export default async function PublicProfile({
 
 				{/* Profile Info */}
 				<div className="px-6 relative pb-6">
+					
 					{/* Avatar */}
-					<div className="absolute -top-12 left-6 w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-4xl font-bold border-4 border-white overflow-hidden shadow-sm">
+					<div className="absolute -top-12 left-6 z-10 w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-4xl font-bold border-4 border-white overflow-hidden shadow-sm">
 						{user.avatar ? (
 							<img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
 						) : (
@@ -85,8 +99,8 @@ export default async function PublicProfile({
 						)}
 					</div>
 
-					{/* Nama & Username (Dikasih padding top biar gak nabrak avatar) */}
-					<div className="pt-14 pb-2">
+					{/* Nama & Username */}
+					<div className="pt-14">
 						<h1 className="text-2xl font-bold text-gray-900">{user.yourname || user.username}</h1>
 						<p className="text-gray-500 text-sm">@{user.username}</p>
 					</div>
@@ -115,18 +129,50 @@ export default async function PublicProfile({
 
 					{/* Social Links */}
 					{Object.keys(socials).length > 0 && (
-						<div className="mt-4 flex flex-wrap gap-3">
+						<div className="mt-5 flex flex-wrap gap-4">
 							{Object.entries(socials).map(([key, url]) => {
-								if (!url || typeof url !== 'string') return null;
+								if (!url || typeof url !== "string") return null;
+								
+								let Icon = Globe;
+								let colorClass = "text-gray-600";
+								
+								switch (key.toLowerCase()) {
+									case "facebook":
+										Icon = FacebookLogo;
+										colorClass = "text-blue-600";
+										break;
+									case "instagram":
+										Icon = InstagramLogo;
+										colorClass = "text-pink-600";
+										break;
+									case "x":
+										Icon = XLogo;
+										colorClass = "text-black";
+										break;
+									case "tiktok":
+										Icon = TiktokLogo;
+										colorClass = "text-black";
+										break;
+									case "youtube":
+										Icon = YoutubeLogo;
+										colorClass = "text-red-600";
+										break;
+									case "linkedin":
+										Icon = LinkedinLogo;
+										colorClass = "text-blue-700";
+										break;
+								}
+
 								return (
 									<a
 										key={key}
 										href={url}
 										target="_blank"
 										rel="noopener noreferrer"
-										className="text-xs font-semibold text-blue-600 hover:underline capitalize"
+										className={`${colorClass} hover:opacity-80 transition-opacity`}
+										title={key}
 									>
-										{key}
+										<Icon size={24} weight="fill" />
 									</a>
 								);
 							})}
