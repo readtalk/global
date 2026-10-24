@@ -1,4 +1,3 @@
-//
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { UpdateManager } from "@/lib/update-manager";
 import { createUpdate, toggleUpdate, deleteUpdate } from "./actions";
@@ -19,7 +18,7 @@ export default async function UpdatePage({
 		<div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-8 px-4">
 			<div className="max-w-md mx-auto">
 				<h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">
-					Diary Noted
+					DIARY Noted
 				</h1>
 
 				<form
