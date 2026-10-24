@@ -1,42 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import Search from "@/components/Search";
-import Updatelist from "@/components/Updatelist";
-import UpdatelistComments from "@/components/UpdatelistComments";
+import Updatelist, { UpdatelistItem } from "@/components/Updatelist";
+import UpdatelistComments, { CommentItem } from "@/components/UpdatelistComments";
 
 export default function ForumPage() {
 	const [content, setContent] = useState("");
+	const [updates, setUpdates] = useState<UpdatelistItem[]>([]);
+	const [comments, setComments] = useState<CommentItem[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
 
-	// Data dummy (nanti diganti dengan fetch ke /updates)
-	const dummyUpdates = [
-		{
-			id: "1",
-			user_id: "c56be407b81c32a105fd8f24b35c0645",
-			content: "Ini adalah update pertama di sistem baru. UI-nya pakai kerangka Forum!",
-			image_url: null,
-			created_at: Math.floor(Date.now() / 1000),
-			like_count: 5,
-			comment_count: 2,
-			repost_count: 1,
-			is_liked: false,
-			is_reposted: false,
-			user: { username: "fadilgibson", yourname: "Fadil Gibson", avatar: null },
-		},
-	];
+	useEffect(() => {
+		async function fetchData() {
+			try {
+				const resUpdates = await fetch("https://auth.readtalk.workers.dev/updates");
+				const dataUpdates = await resUpdates.json();
+				if (dataUpdates.success) {
+					setUpdates(dataUpdates.updates);
+				}
+			} catch (error) {
+				console.error("Failed to fetch updates", error);
+			} finally {
+				setIsLoading(false);
+			}
+		}
+		fetchData();
+	}, []);
 
-	const dummyComments = [
-		{
-			id: "1",
-			updatelist_id: "1",
-			user_id: "2",
-			content: "Setuju, kerangka Forum-nya tetap keren.",
-			created_at: Math.floor(Date.now() / 1000),
-			user: { username: "admin", yourname: "Admin" },
-		},
-	];
+	const handlePost = async () => {
+		if (!content.trim()) return;
+		// Note: POST request requires X-User-Id header which will be added when auth integration is complete
+		console.log("Post submitted:", content);
+		setContent("");
+	};
 
 	return (
 		<>
@@ -70,6 +69,7 @@ export default function ForumPage() {
 												<div className="w-full md:w-1/2" />
 												<div className="w-full md:w-1/2 md:flex md:mb-0 mb-4 justify-end">
 													<button
+														onClick={handlePost}
 														className="bg-blue-700 text-sm text-white rounded hover:bg-blue-600 transition duration-150 ease-in-out py-2 px-6 text-center w-full md:w-auto"
 													>
 														Post
@@ -79,13 +79,23 @@ export default function ForumPage() {
 										</div>
 									</div>
 									<div className="mt-6">
-										<Updatelist data={dummyUpdates} />
+										{isLoading ? (
+											<p className="text-gray-500 text-sm">Loading updates...</p>
+										) : updates.length > 0 ? (
+											<Updatelist data={updates} />
+										) : (
+											<p className="text-gray-500 text-sm">No updates yet.</p>
+										)}
 									</div>
 								</div>
 							</div>
 							<div className="py-10 lg:w-1/3 w-full md:pl-6">
 								<h3 className="mb-5 text-gray-900 font-medium text-xl">Recent comments</h3>
-								<UpdatelistComments data={dummyComments} limit={7} />
+								{comments.length > 0 ? (
+									<UpdatelistComments data={comments} limit={7} />
+								) : (
+									<p className="text-gray-500 text-sm">No recent comments.</p>
+								)}
 							</div>
 						</div>
 					</div>
