@@ -1,36 +1,38 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import Search from "@/components/Search";
 import Updatelist, { UpdatelistItem } from "@/components/Updatelist";
 
 export default function ForumPage() {
+	const router = useRouter();
+	const searchParams = useSearchParams();
 	const [content, setContent] = useState("");
 	const [updates, setUpdates] = useState<UpdatelistItem[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
-	const [token, setToken] = useState<string | null>(null);
 
+	// 1. Tangkap token dari URL (abis balik dari callback) dan simpen ke localStorage
 	useEffect(() => {
-		const session = localStorage.getItem("session");
-		setToken(session);
-	}, []);
+		const token = searchParams.get("token");
+		if (token) {
+			localStorage.setItem("session", token);
+			router.replace("/"); // Bersihin URL dari ?token=...
+		}
+	}, [searchParams, router]);
 
+	// 2. Fetch data dari API lokal Next.js
 	const fetchData = useCallback(async () => {
 		setIsLoading(true);
 		try {
-			const resUpdates = await fetch("https://auth.readtalk.workers.dev/updates", {
-				headers: token ? { "Authorization": `Bearer ${token}` } : {}
-			});
-			const dataUpdates = (await resUpdates.json()) as { success: boolean; updates: UpdatelistItem[] };
-			
-			const resUsers = await fetch("https://auth.readtalk.workers.dev/users");
-			const dataUsers = (await resUsers.json()) as { success: boolean; users: { id: string, username: string, yourname: string }[] };
+			const res = await fetch("/api/updates");
+			const data = (await res.json()) as { success: boolean; updates: UpdatelistItem[]; users: { id: string, username: string, yourname: string }[] };
 
-			if (dataUpdates.success && dataUsers.success) {
-				const userMap = new Map(dataUsers.users.map(u => [u.id, u]));
-				const mergedUpdates = dataUpdates.updates.map(post => ({
+			if (data.success) {
+				const userMap = new Map(data.users.map(u => [u.id, u]));
+				const mergedUpdates = data.updates.map(post => ({
 					...post,
 					user: userMap.get(post.user_id) || null
 				}));
@@ -41,18 +43,20 @@ export default function ForumPage() {
 		} finally {
 			setIsLoading(false);
 		}
-	}, [token]);
+	}, []);
 
 	useEffect(() => {
 		fetchData();
 	}, [fetchData]);
 
 	const handlePost = async () => {
-		if (!content.trim() || !token) {
+		if (!content.trim()) return;
+		const token = localStorage.getItem("session");
+		if (!token) {
 			alert("You must be logged in to post.");
 			return;
 		}
-		
+
 		try {
 			const res = await fetch("https://auth.readtalk.workers.dev/updates", {
 				method: "POST",
@@ -63,14 +67,16 @@ export default function ForumPage() {
 				body: JSON.stringify({ content }),
 			});
 			
+			const data = await res.json();
 			if (res.ok) {
 				setContent("");
 				fetchData();
 			} else {
-				alert("Failed to post update.");
+				alert(data.error || "Failed to post update.");
 			}
 		} catch (error) {
 			console.error("Failed to post", error);
+			alert("An error occurred while posting.");
 		}
 	};
 
@@ -121,7 +127,7 @@ export default function ForumPage() {
 										{isLoading ? (
 											<p className="text-gray-500 text-sm">Loading updates...</p>
 										) : updates.length > 0 ? (
-											<Updatelist data={updates} onUpdate={fetchData} token={token} />
+											<Updatelist data={updates} onUpdate={fetchData} />
 										) : (
 											<p className="text-gray-500 text-sm">No updates yet. Be the first to post!</p>
 										)}
