@@ -31,19 +31,9 @@ export default function Sidebar() {
 	}, []);
 
 	const handleLogout = () => {
-		// 1. Optimistic UI: Hapus tampilan user saat itu juga
-		setUser(null);
-		setIsMobileNavHidden(true);
-		
-		// 2. Hapus token dari localStorage
 		localStorage.removeItem("session");
 		localStorage.removeItem("code_verifier");
-		
-		// 3. Baru tembak API logout di background
-		fetch("/api/auth/logout").finally(() => {
-			router.push("/");
-			router.refresh();
-		});
+		window.location.href = "/api/auth/logout";
 	};
 
 	const sidebarHandler = () => {
