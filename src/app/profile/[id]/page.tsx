@@ -11,14 +11,14 @@ export default async function UpdatePage({
 }) {
 	const { id } = await params;
 	const { env } = await getCloudflareContext({ async: true });
-	const manager = new UpdateManager(env.UPDATE_LIST, id);
+	const manager = new UpdateManager(env.DIARY_NOTED, id);
 	const updates = await manager.list();
 
 	return (
 		<div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-8 px-4">
 			<div className="max-w-md mx-auto">
 				<h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">
-					READTalk
+					Diary Noted
 				</h1>
 
 				<form
@@ -28,7 +28,7 @@ export default async function UpdatePage({
 					<input
 						type="text"
 						name="text"
-						placeholder="Update-List"
+						placeholder="Noted"
 						className="flex-1 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm px-4 py-2"
 					/>
 					<button
