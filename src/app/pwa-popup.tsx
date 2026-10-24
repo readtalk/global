@@ -20,18 +20,10 @@ export default function PwaPopup() {
 			(window.navigator as unknown as { standalone?: boolean }).standalone === true;
 
 		setIsStandalone(checkStandalone);
-
-		// Ganti fetch ke /api/auth/me biar baca Cookie
-		fetch("/api/auth/me")
-			.then((res) => res.json() as Promise<{ success: boolean }>)
-			.then((data) => {
-				setIsLoggedIn(data.success);
-				setIsVisible(true);
-			})
-			.catch(() => {
-				setIsLoggedIn(false);
-				setIsVisible(true);
-			});
+		
+		const session = localStorage.getItem("session");
+		setIsLoggedIn(!!session);
+		setIsVisible(true);
 	}, [pathname]);
 
 	if (!isVisible || isStandalone === null || isLoggedIn === null) return null;
