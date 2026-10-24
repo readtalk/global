@@ -56,7 +56,8 @@ function ForumContent() {
 		}
 
 		try {
-			const res = await fetch("https://auth.readtalk.workers.dev/updates", {
+			// Nembak ke API Route Next.js (bukan langsung ke backend)
+			const res = await fetch("/api/updates", {
 				method: "POST",
 				headers: { 
 					"Content-Type": "application/json",
