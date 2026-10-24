@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-type Updatelist = {
+export type UpdatelistItem = {
 	id: string;
 	user_id: string;
 	content: string;
@@ -13,10 +13,9 @@ type Updatelist = {
 	repost_count: number;
 	is_liked: boolean;
 	is_reposted: boolean;
-	user?: { username: string; yourname: string; avatar: string | null };
 };
 
-export default function Updatelist({ data, limit = Infinity }: { data: Updatelist[]; limit?: number }) {
+export default function Updatelist({ data, limit = Infinity }: { data: UpdatelistItem[]; limit?: number }) {
 	return (
 		<>
 			{data?.slice(0, limit)?.map((update) => (
@@ -29,7 +28,7 @@ export default function Updatelist({ data, limit = Infinity }: { data: Updatelis
 								</div>
 								<div className="md:mt-1 mt-3 flex items-center text-gray-600">
 									<p className="text-gray-600 text-xs">
-										by <span className="text-blue-500">{update.user?.username || "unknown"}</span>
+										by <span className="text-blue-500">{update.user_id.substring(0, 8)}...</span>
 									</p>
 									<div className="w-1 h-1 bg-gray-500 rounded-full mx-2" aria-hidden="true" />
 									<time className="text-gray-600 text-xs">
@@ -39,7 +38,6 @@ export default function Updatelist({ data, limit = Infinity }: { data: Updatelis
 							</div>
 						</div>
 						
-						{/* Tampilkan potongan konten jika lebih dari 100 karakter */}
 						<p className="mt-3 text-gray-600 text-sm">
 							{update.content.length > 100 ? update.content.substring(0, 100) + "..." : update.content}
 						</p>
