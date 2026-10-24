@@ -6,7 +6,7 @@ import { UpdateManager } from "@/lib/update-manager";
 
 async function getManager(id: string) {
 	const { env } = await getCloudflareContext({ async: true });
-	return new UpdateManager(env.DIARY_NOTED, id);
+	return new UpdateManager(env.UPDATE_LIST, id);
 }
 
 export async function createUpdate(id: string, formData: FormData) {
