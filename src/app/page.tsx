@@ -17,7 +17,7 @@ export default function ForumPage() {
 		async function fetchData() {
 			try {
 				const resUpdates = await fetch("https://auth.readtalk.workers.dev/updates");
-				const dataUpdates = await resUpdates.json();
+				const dataUpdates = (await resUpdates.json()) as { success: boolean; updates: UpdatelistItem[] };
 				if (dataUpdates.success) {
 					setUpdates(dataUpdates.updates);
 				}
@@ -32,7 +32,6 @@ export default function ForumPage() {
 
 	const handlePost = async () => {
 		if (!content.trim()) return;
-		// Note: POST request requires X-User-Id header which will be added when auth integration is complete
 		console.log("Post submitted:", content);
 		setContent("");
 	};
