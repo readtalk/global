@@ -8,10 +8,6 @@ export default function PwaPopup() {
 	const [isStandalone, setIsStandalone] = useState<boolean | null>(null);
 	const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 	const [isVisible, setIsVisible] = useState(false);
-	
-	// State untuk nangkep event install
-	const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-	const [isInstallable, setIsInstallable] = useState(false);
 
 	useEffect(() => {
 		if (pathname.startsWith("/@") || pathname.startsWith("/u/") || pathname === "/callback") {
@@ -25,41 +21,18 @@ export default function PwaPopup() {
 
 		setIsStandalone(checkStandalone);
 
-		fetch("/api/auth/status")
-			.then((res) => res.json() as Promise<{ loggedIn: boolean }>)
+		// Ganti fetch ke /api/auth/me biar baca Cookie
+		fetch("/api/auth/me")
+			.then((res) => res.json() as Promise<{ success: boolean }>)
 			.then((data) => {
-				setIsLoggedIn(data.loggedIn);
+				setIsLoggedIn(data.success);
 				setIsVisible(true);
 			})
 			.catch(() => {
 				setIsLoggedIn(false);
 				setIsVisible(true);
 			});
-
-		// Nangkep event beforeinstallprompt
-		const handleBeforeInstallPrompt = (e: Event) => {
-			e.preventDefault();
-			setDeferredPrompt(e);
-			setIsInstallable(true);
-		};
-
-		window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-
-		return () => {
-			window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-		};
 	}, [pathname]);
-
-	const handleInstallClick = async () => {
-		if (!deferredPrompt) return;
-		deferredPrompt.prompt();
-		
-		const { outcome } = await deferredPrompt.userChoice;
-		if (outcome === "accepted") {
-			setDeferredPrompt(null);
-			setIsInstallable(false);
-		}
-	};
 
 	if (!isVisible || isStandalone === null || isLoggedIn === null) return null;
 
@@ -73,22 +46,12 @@ export default function PwaPopup() {
 					<p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
 						Please install the app first to continue.
 					</p>
-					
-					{isInstallable ? (
-						<button
-							onClick={handleInstallClick}
-							className="mt-6 w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white"
-						>
-							Install Now
-						</button>
-					) : (
-						<div className="mt-4 rounded-lg bg-gray-100 p-3 text-left text-xs dark:bg-zinc-800">
-							<p className="font-semibold mb-1">Android:</p>
-							<p>Browser menu &rarr; &quot;Install app&quot; / &quot;Add to Home screen&quot;</p>
-							<p className="font-semibold mt-2 mb-1">iOS:</p>
-							<p>Share button &rarr; &quot;Add to Home Screen&quot;</p>
-						</div>
-					)}
+					<div className="mt-4 rounded-lg bg-gray-100 p-3 text-left text-xs dark:bg-zinc-800">
+						<p className="font-semibold mb-1">Android:</p>
+						<p>Browser menu &rarr; &quot;Install app&quot; / &quot;Add to Home screen&quot;</p>
+						<p className="font-semibold mt-2 mb-1">iOS:</p>
+						<p>Share button &rarr; &quot;Add to Home Screen&quot;</p>
+					</div>
 				</div>
 			</div>
 		);
