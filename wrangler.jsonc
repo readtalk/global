@@ -14,7 +14,7 @@
 	},
 	"kv_namespaces": [
 		{
-			"binding": "UPDATE_LIST",
+			"binding": "DIARY_NOTED",
 			"id": "8759500f762541669746ef6bc59e64ec"
 		}
 	],
