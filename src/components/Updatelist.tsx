@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 
 export type UpdatelistItem = {
@@ -17,15 +16,19 @@ export type UpdatelistItem = {
 	user?: { username: string; yourname: string };
 };
 
-export default function Updatelist({ data, limit = Infinity, onUpdate }: { data: UpdatelistItem[]; limit?: number; onUpdate: () => void }) {
+export default function Updatelist({ data, limit = Infinity, onUpdate, token }: { data: UpdatelistItem[]; limit?: number; onUpdate: () => void; token: string | null }) {
 	const [loading, setLoading] = useState<string | null>(null);
 
 	const handleLike = async (id: string) => {
+		if (!token) return;
 		setLoading(id);
 		try {
 			await fetch(`https://auth.readtalk.workers.dev/updates/${id}/like`, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers: { 
+					"Content-Type": "application/json",
+					"Authorization": `Bearer ${token}`
+				},
 			});
 			onUpdate();
 		} catch (error) {
@@ -62,7 +65,7 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 						</button>
 						<button 
 							onClick={() => handleLike(update.id)}
-							disabled={loading === update.id}
+							disabled={loading === update.id || !token}
 							className={`flex items-center gap-1 hover:text-red-500 transition ${update.is_liked ? 'text-red-500' : ''}`}
 						>
 							<svg width="18" height="18" viewBox="0 0 24 24" fill={update.is_liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
