@@ -1,4 +1,3 @@
-//
 "use client";
 
 import { useState, useEffect, useCallback, Suspense } from "react";
@@ -89,12 +88,12 @@ function ForumContent() {
 						<div className="lg:flex flex-wrap">
 							<div className="py-10 lg:w-2/3 w-full md:pr-6 md:border-r border-gray-300">
 								<div>
-									<Link href="/"><h1 className="text-3xl text-gray-900 font-bold mb-3">Forum</h1></Link>
+									<Link href="/"><h1 className="text-3xl text-gray-900 font-bold mb-3">Update</h1></Link>
 									
 									<div className="flex flex-col mt-10 md:flex-row md:items-center">
 										<Search />
 										<div className="w-full md:w-1/2 pt-3 md:pt-0 md:pl-3">
-											<h3 className="text-xl text-gray-900 mb-2">Post an update</h3>
+											<h3 className="text-xl text-gray-900 mb-2">Post</h3>
 											<div className="flex flex-col">
 												<label htmlFor="post_update" className="text-gray-800 text-sm font-bold leading-tight tracking-normal mb-2">
 													Content
