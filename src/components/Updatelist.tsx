@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 export type UpdatelistItem = {
@@ -21,9 +21,18 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 	const [loading, setLoading] = useState<string | null>(null);
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [editContent, setEditContent] = useState("");
+	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-	const currentUser = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("session") ? atob(localStorage.getItem("session")!.split(".")[1]) : "{}") : {};
-	const currentUserId = currentUser?.properties?.id;
+	useEffect(() => {
+		fetch("/api/auth/me")
+			.then(res => res.json())
+			.then((data: { success: boolean; user?: { id: string } }) => {
+				if (data.success && data.user) {
+					setCurrentUserId(data.user.id);
+				}
+			})
+			.catch(() => {});
+	}, []);
 
 	const handleAction = async (id: string, action: "like" | "repost") => {
 		const token = localStorage.getItem("session");
