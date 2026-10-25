@@ -21,6 +21,11 @@ function UpdateDetailContent() {
 	const [content, setContent] = useState("");
 	const [isLoading, setIsLoading] = useState(true);
 	const [isPosting, setIsPosting] = useState(false);
+	const [editingId, setEditingId] = useState<string | null>(null);
+	const [editContent, setEditContent] = useState("");
+
+	const currentUser = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("session") ? atob(localStorage.getItem("session")!.split(".")[1]) : "{}") : {};
+	const currentUserId = currentUser?.properties?.id;
 
 	const fetchComments = async () => {
 		try {
@@ -46,22 +51,15 @@ function UpdateDetailContent() {
 	const handlePost = async () => {
 		if (!content.trim()) return;
 		const token = localStorage.getItem("session");
-		if (!token) {
-			alert("You must be logged in to comment.");
-			return;
-		}
+		if (!token) return alert("You must be logged in to comment.");
 
 		setIsPosting(true);
 		try {
 			const res = await fetch(`/api/updates/${id}/comments`, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					"Authorization": `Bearer ${token}`
-				},
+				headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
 				body: JSON.stringify({ content }),
 			});
-			
 			if (res.ok) {
 				setContent("");
 				fetchComments();
@@ -70,6 +68,39 @@ function UpdateDetailContent() {
 			console.error(error);
 		} finally {
 			setIsPosting(false);
+		}
+	};
+
+	const handleDeleteComment = async (commentId: string) => {
+		if (!confirm("Delete this comment?")) return;
+		const token = localStorage.getItem("session");
+		if (!token) return;
+
+		try {
+			await fetch(`/api/updates/${id}/comments/${commentId}`, {
+				method: "DELETE",
+				headers: { "Authorization": `Bearer ${token}` },
+			});
+			fetchComments();
+		} catch (error) {
+			console.error(error);
+		}
+	};
+
+	const handleEditSave = async (commentId: string) => {
+		const token = localStorage.getItem("session");
+		if (!token) return;
+
+		try {
+			await fetch(`/api/updates/${id}/comments/${commentId}`, {
+				method: "PUT",
+				headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+				body: JSON.stringify({ content: editContent }),
+			});
+			setEditingId(null);
+			fetchComments();
+		} catch (error) {
+			console.error(error);
 		}
 	};
 
@@ -102,13 +133,37 @@ function UpdateDetailContent() {
 				<div className="space-y-4">
 					{comments.map((comment) => (
 						<div key={comment.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-							<Link 
-								href={`/profile/@${comment.user?.username || comment.user_id}`} 
-								className="text-sm text-gray-600 mb-1 font-semibold hover:underline block"
-							>
-								{comment.user?.yourname || comment.user?.username || `User ${comment.user_id.substring(0, 8)}`}
-							</Link>
-							<p className="text-gray-800">{comment.content}</p>
+							<div className="flex justify-between items-start">
+								<Link 
+									href={`/profile/@${comment.user?.username || comment.user_id}`} 
+									className="text-sm text-gray-600 mb-1 font-semibold hover:underline block"
+								>
+									{comment.user?.yourname || comment.user?.username || `User ${comment.user_id.substring(0, 8)}`}
+								</Link>
+								{currentUserId === comment.user_id && (
+									<div className="flex gap-2 text-xs text-gray-500">
+										<button onClick={() => { setEditingId(comment.id); setEditContent(comment.content); }} className="hover:text-blue-500">Edit</button>
+										<button onClick={() => handleDeleteComment(comment.id)} className="hover:text-red-500">Delete</button>
+									</div>
+								)}
+							</div>
+							
+							{editingId === comment.id ? (
+								<div className="mt-2">
+									<textarea
+										value={editContent}
+										onChange={(e) => setEditContent(e.target.value)}
+										className="w-full bg-white p-2 rounded border border-gray-300 focus:outline-none focus:border-blue-500"
+										rows={2}
+									/>
+									<div className="mt-2 flex gap-2">
+										<button onClick={() => handleEditSave(comment.id)} className="bg-blue-600 text-white px-3 py-1 rounded text-xs">Save</button>
+										<button onClick={() => setEditingId(null)} className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-xs">Cancel</button>
+									</div>
+								</div>
+							) : (
+								<p className="text-gray-800">{comment.content}</p>
+							)}
 						</div>
 					))}
 				</div>
