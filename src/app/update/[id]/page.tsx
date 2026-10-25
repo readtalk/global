@@ -9,6 +9,7 @@ type Comment = {
 	user_id: string;
 	content: string;
 	created_at: number;
+	user?: { username: string; yourname: string } | null;
 };
 
 function UpdateDetailContent() {
@@ -100,7 +101,9 @@ function UpdateDetailContent() {
 				<div className="space-y-4">
 					{comments.map((comment) => (
 						<div key={comment.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-							<p className="text-sm text-gray-600 mb-1">User {comment.user_id.substring(0, 8)}</p>
+							<p className="text-sm text-gray-600 mb-1">
+								{comment.user?.yourname || comment.user?.username || `User ${comment.user_id.substring(0, 8)}`}
+							</p>
 							<p className="text-gray-800">{comment.content}</p>
 						</div>
 					))}
