@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
 export type UpdatelistItem = {
@@ -19,20 +19,6 @@ export type UpdatelistItem = {
 
 export default function Updatelist({ data, limit = Infinity, onUpdate }: { data: UpdatelistItem[]; limit?: number; onUpdate: () => void }) {
 	const [loading, setLoading] = useState<string | null>(null);
-	const [editingId, setEditingId] = useState<string | null>(null);
-	const [editContent, setEditContent] = useState("");
-	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-
-	useEffect(() => {
-		const session = localStorage.getItem("session");
-		if (session) {
-			try {
-				const payload = JSON.parse(atob(session.split(".")[1]));
-				const userId = payload.properties?.id || payload.sub;
-				if (userId) setCurrentUserId(userId);
-			} catch {}
-		}
-	}, []);
 
 	const handleAction = async (id: string, action: "like" | "repost") => {
 		const token = localStorage.getItem("session");
@@ -49,39 +35,6 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 			console.error(error);
 		} finally {
 			setLoading(null);
-		}
-	};
-
-	const handleDelete = async (id: string) => {
-		if (!confirm("Are you sure you want to delete this post?")) return;
-		const token = localStorage.getItem("session");
-		if (!token) return;
-
-		try {
-			await fetch(`/api/updates/${id}`, {
-				method: "DELETE",
-				headers: { "Authorization": `Bearer ${token}` },
-			});
-			onUpdate();
-		} catch (error) {
-			console.error(error);
-		}
-	};
-
-	const handleEditSave = async (id: string) => {
-		const token = localStorage.getItem("session");
-		if (!token) return;
-
-		try {
-			await fetch(`/api/updates/${id}`, {
-				method: "PUT",
-				headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-				body: JSON.stringify({ content: editContent }),
-			});
-			setEditingId(null);
-			onUpdate();
-		} catch (error) {
-			console.error(error);
 		}
 	};
 
@@ -103,30 +56,9 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 								<p className="text-gray-500 text-xs">@{update.user?.username || update.user_id.substring(0, 8)}</p>
 							</Link>
 						</div>
-						{currentUserId === update.user_id && (
-							<div className="flex gap-2 text-sm text-gray-500">
-								<button onClick={() => { setEditingId(update.id); setEditContent(update.content); }} className="hover:text-blue-500">Edit</button>
-								<button onClick={() => handleDelete(update.id)} className="hover:text-red-500">Delete</button>
-							</div>
-						)}
 					</div>
 
-					{editingId === update.id ? (
-						<div className="mt-3">
-							<textarea
-								value={editContent}
-								onChange={(e) => setEditContent(e.target.value)}
-								className="w-full bg-gray-100 p-2 rounded border border-gray-300 focus:outline-none focus:border-blue-500"
-								rows={3}
-							/>
-							<div className="mt-2 flex gap-2">
-								<button onClick={() => handleEditSave(update.id)} className="bg-blue-600 text-white px-3 py-1 rounded text-sm">Save</button>
-								<button onClick={() => setEditingId(null)} className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm">Cancel</button>
-							</div>
-						</div>
-					) : (
-						<p className="mt-3 text-gray-800 whitespace-pre-wrap">{update.content}</p>
-					)}
+					<p className="mt-3 text-gray-800 whitespace-pre-wrap">{update.content}</p>
 
 					<div className="mt-4 flex items-center gap-6 text-gray-500 text-sm">
 						<Link href={`/update/${update.id}`} className="flex items-center gap-1 hover:text-blue-500 transition">
