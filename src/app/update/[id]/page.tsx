@@ -23,7 +23,7 @@ function UpdateDetailContent() {
 	const fetchComments = async () => {
 		try {
 			const res = await fetch(`/api/updates/${id}/comments`);
-			const data = await res.json();
+			const data = (await res.json()) as { success: boolean; comments: Comment[] };
 			if (data.success) {
 				setComments(data.comments);
 			}
