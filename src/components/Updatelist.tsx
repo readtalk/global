@@ -1,4 +1,3 @@
-//
 "use client";
 
 import { useState, useEffect } from "react";
@@ -26,8 +25,8 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 
 	useEffect(() => {
 		fetch("/api/auth/me")
-			.then(res => res.json())
-			.then((data: { success: boolean; user?: { id: string } }) => {
+			.then(res => res.json() as Promise<{ success: boolean; user?: { id: string } }>)
+			.then((data) => {
 				if (data.success && data.user) {
 					setCurrentUserId(data.user.id);
 				}
