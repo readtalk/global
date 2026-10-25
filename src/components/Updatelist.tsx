@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export type UpdatelistItem = {
 	id: string;
@@ -19,16 +20,16 @@ export type UpdatelistItem = {
 export default function Updatelist({ data, limit = Infinity, onUpdate }: { data: UpdatelistItem[]; limit?: number; onUpdate: () => void }) {
 	const [loading, setLoading] = useState<string | null>(null);
 
-	const handleLike = async (id: string) => {
+	const handleAction = async (id: string, action: "like" | "repost") => {
 		const token = localStorage.getItem("session");
 		if (!token) {
-			alert("You must be logged in to like.");
+			alert(`You must be logged in to ${action}.`);
 			return;
 		}
 		
-		setLoading(id);
+		setLoading(`${action}-${id}`);
 		try {
-			await fetch(`/api/updates/${id}/like`, {
+			await fetch(`/api/updates/${id}/${action}`, {
 				method: "POST",
 				headers: { 
 					"Content-Type": "application/json",
@@ -60,17 +61,21 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 					<p className="mt-3 text-gray-800 whitespace-pre-wrap">{update.content}</p>
 					
 					<div className="mt-4 flex items-center gap-6 text-gray-500 text-sm">
-						<button className="flex items-center gap-1 hover:text-blue-500 transition">
+						<Link href={`/update/${update.id}`} className="flex items-center gap-1 hover:text-blue-500 transition">
 							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
 							{update.comment_count || 0}
-						</button>
-						<button className="flex items-center gap-1 hover:text-green-500 transition">
+						</Link>
+						<button 
+							onClick={() => handleAction(update.id, "repost")}
+							disabled={loading === `repost-${update.id}`}
+							className={`flex items-center gap-1 hover:text-green-500 transition ${update.is_reposted ? 'text-green-500' : ''}`}
+						>
 							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
 							{update.repost_count || 0}
 						</button>
 						<button 
-							onClick={() => handleLike(update.id)}
-							disabled={loading === update.id}
+							onClick={() => handleAction(update.id, "like")}
+							disabled={loading === `like-${update.id}`}
 							className={`flex items-center gap-1 hover:text-red-500 transition ${update.is_liked ? 'text-red-500' : ''}`}
 						>
 							<svg width="18" height="18" viewBox="0 0 24 24" fill={update.is_liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
