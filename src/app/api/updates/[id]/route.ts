@@ -1,4 +1,3 @@
-//
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -17,7 +16,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 			headers: { 
 				"Content-Type": "application/json", 
 				"Authorization": authHeader,
-				"X-User-Id": userId 
+				"X-User-Id": userId
 			},
 			body: JSON.stringify(body),
 		});
