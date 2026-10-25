@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function Sidebar() {
-	const router = useRouter();
 	const [isMobileNavHidden, setIsMobileNavHidden] = useState(true);
 	const [user, setUser] = useState<{ username: string; yourname: string } | null>(null);
 
@@ -68,14 +66,14 @@ export default function Sidebar() {
 						</li>
 						<li className={`text-gray-600 text-sm leading-3 tracking-normal mt-6 py-1 ${isMobileNavHidden ? 'cursor-pointer hover:text-blue-700' : 'pointer-events-none' } flex items-center`}>
 							{user ? (
-								<button onClick={handleLogout} className={`p-2 block hover:bg-gray-200 rounded relative z-30 ${isMobileNavHidden ? '' : 'pointer-events-none'}`}>
+								<Link href={`/profile/@${user.username}`} className={`p-2 block hover:bg-gray-200 rounded relative z-30 ${isMobileNavHidden ? '' : 'pointer-events-none'}`}>
 									<svg width={20} height={20} viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
 										<circle cx={9} cy={7} r={4} />
 										<path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
 										<path d="M16 3.13a4 4 0 0 1 0 7.75" />
 										<path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
 									</svg>
-								</button>
+								</Link>
 							) : (
 								<Link href="/api/auth/login" className={`p-2 block hover:bg-gray-200 rounded relative z-30 ${isMobileNavHidden ? '' : 'pointer-events-none'}`}>
 									<svg width={20} height={20} viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -94,7 +92,9 @@ export default function Sidebar() {
 				<ul className="rounded py-8 pl-2 pr-32 whitespace-no-wrap">
 					{user && (
 						<li className="text-gray-600 text-sm tracking-normal py-2">
-							<span className="ml-2 font-semibold block">{user.yourname || user.username}</span>
+							<Link href={`/profile/@${user.username}`} className="ml-2 font-semibold block hover:underline">
+								{user.yourname || user.username}
+							</Link>
 						</li>
 					)}
 					<li className="cursor-pointer text-gray-600 text-sm tracking-normal py-2 hover:text-blue-700">
