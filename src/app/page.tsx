@@ -57,6 +57,16 @@ function ForumContent() {
 		const postContent = content;
 		const tempId = crypto.randomUUID();
 		
+		let currentUser = { username: "You", yourname: "You" };
+		try {
+			const payload = JSON.parse(atob(token.split(".")[1]));
+			const email = payload.properties?.email;
+			if (email) {
+				const name = email.split("@")[0];
+				currentUser = { username: name, yourname: name };
+			}
+		} catch {}
+
 		const newPost: UpdatelistItem = {
 			id: tempId,
 			user_id: "temp",
@@ -68,7 +78,7 @@ function ForumContent() {
 			repost_count: 0,
 			is_liked: false,
 			is_reposted: false,
-			user: { username: "You", yourname: "You" },
+			user: currentUser,
 		};
 
 		setUpdates((prev) => [newPost, ...prev]);
