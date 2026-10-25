@@ -11,12 +11,8 @@ export async function GET(request: NextRequest) {
 			fetch("https://auth.readtalk.workers.dev/users", { cache: "no-store" }),
 		]);
 
-		const textUpdates = await resUpdates.text();
-		const textUsers = await resUsers.text();
-
-		let dataUpdates, dataUsers;
-		try { dataUpdates = JSON.parse(textUpdates); } catch { return NextResponse.json({ success: false, error: `Updates JSON Parse Error: ${textUpdates}` }, { status: 500 }); }
-		try { dataUsers = JSON.parse(textUsers); } catch { return NextResponse.json({ success: false, error: `Users JSON Parse Error: ${textUsers}` }, { status: 500 }); }
+		const dataUpdates = (await resUpdates.json()) as { success: boolean; updates: any[] };
+		const dataUsers = (await resUsers.json()) as { success: boolean; users: any[] };
 
 		if (dataUpdates.success && dataUsers.success) {
 			const userMap = new Map(dataUsers.users.map((u: any) => [u.id, u]));
@@ -27,9 +23,9 @@ export async function GET(request: NextRequest) {
 			return NextResponse.json({ success: true, updates: mergedUpdates });
 		}
 
-		return NextResponse.json({ success: false, error: "Failed to fetch data from backend" }, { status: 500 });
-	} catch (error: unknown) {
-		return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Internal server error" }, { status: 500 });
+		return NextResponse.json({ success: false, error: "Failed to fetch data" }, { status: 500 });
+	} catch (error) {
+		return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
 	}
 }
 
@@ -51,12 +47,9 @@ export async function POST(request: NextRequest) {
 			body: JSON.stringify({ content: body.content }),
 		});
 
-		const text = await res.text();
-		let data;
-		try { data = JSON.parse(text); } catch { return NextResponse.json({ success: false, error: `Backend Parse Error: ${text}` }, { status: 500 }); }
-
+		const data = await res.json();
 		return NextResponse.json(data, { status: res.status });
-	} catch (error: unknown) {
-		return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Internal server error" }, { status: 500 });
+	} catch (error) {
+		return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
 	}
 }
