@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 const nextConfig: NextConfig = {
 	async rewrites() {
@@ -7,12 +8,14 @@ const nextConfig: NextConfig = {
 				source: "/@:username",
 				destination: "/u/:username",
 			},
+			{
+				source: "/profile/@:username",
+				destination: "/profile/u/:username",
+			},
 		];
 	},
 };
 
 export default nextConfig;
 
-// added by create cloudflare to enable calling `getCloudflareContext()` in `next dev`
-import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 initOpenNextCloudflareForDev();
