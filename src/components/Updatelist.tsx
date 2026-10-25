@@ -53,9 +53,18 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 							</div>
 						</Link>
 						<div className="flex-1">
-							<Link href={`/profile/@${update.user?.username || update.user_id}`} className="hover:underline">
-								<p className="text-gray-900 font-semibold">{update.user?.yourname || "Unknown"}</p>
-							</Link>
+							<div className="flex items-center gap-2">
+								<Link href={`/profile/@${update.user?.username || update.user_id}`} className="hover:underline">
+									<p className="text-gray-900 font-semibold">{update.user?.yourname || "Unknown"}</p>
+								</Link>
+								<span className="text-gray-400 text-xs">·</span>
+								<span className="text-gray-500 text-xs">
+									{new Date(update.created_at * 1000).toLocaleDateString(undefined, { 
+										day: 'numeric', 
+										month: 'short' 
+									})}
+								</span>
+							</div>
 							<Link href={`/profile/@${update.user?.username || update.user_id}`} className="hover:underline">
 								<p className="text-gray-500 text-xs">@{update.user?.username || update.user_id.substring(0, 8)}</p>
 							</Link>
