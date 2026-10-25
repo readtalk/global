@@ -107,10 +107,10 @@ function ForumContent() {
 
 	return (
 		<>
-			<div className="flex flex-no-wrap">
+			<div className="flex min-h-screen bg-gray-50">
 				<Sidebar />
-				<div className="w-full" id="main-content" role="main">
-					<div className="w-full px-6">
+				<div className="flex-1 w-full pb-20 md:pb-0" id="main-content" role="main">
+					<div className="w-full px-4 md:px-6">
 						<div className="lg:flex flex-wrap">
 							<div className="py-10 lg:w-2/3 w-full md:pr-6 md:border-r border-gray-300">
 								<div>
