@@ -3,10 +3,18 @@
 import { useState } from "react";
 import Link from "next/link";
 
+type SearchResult = {
+	id?: string;
+	content?: string;
+	username?: string;
+	yourname?: string;
+	user?: { username: string; yourname: string };
+};
+
 export default function Search() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [searchType, setSearchType] = useState("threads");
-	const [results, setResults] = useState<any[]>([]);
+	const [results, setResults] = useState<SearchResult[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 
 	const handleSearch = async () => {
@@ -17,7 +25,7 @@ export default function Search() {
 			const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&type=${searchType}`, {
 				headers: token ? { "Authorization": `Bearer ${token}` } : {},
 			});
-			const data = await res.json();
+			const data = (await res.json()) as { success: boolean; results: SearchResult[] };
 			if (data.success) {
 				setResults(data.results);
 			}
