@@ -1,4 +1,3 @@
-//
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -12,8 +11,12 @@ export async function GET(request: NextRequest) {
 			fetch("https://auth.readtalk.workers.dev/users", { cache: "no-store" }),
 		]);
 
-		const dataUpdates = (await resUpdates.json()) as { success: boolean; updates: any[] };
-		const dataUsers = (await resUsers.json()) as { success: boolean; users: any[] };
+		const textUpdates = await resUpdates.text();
+		const textUsers = await resUsers.text();
+
+		let dataUpdates, dataUsers;
+		try { dataUpdates = JSON.parse(textUpdates); } catch { return NextResponse.json({ success: false, error: `Updates JSON Error: ${textUpdates.substring(0, 100)}` }, { status: 500 }); }
+		try { dataUsers = JSON.parse(textUsers); } catch { return NextResponse.json({ success: false, error: `Users JSON Error: ${textUsers.substring(0, 100)}` }, { status: 500 }); }
 
 		if (dataUpdates.success && dataUsers.success) {
 			const userMap = new Map(dataUsers.users.map((u: any) => [u.id, u]));
@@ -26,7 +29,7 @@ export async function GET(request: NextRequest) {
 
 		return NextResponse.json({ success: false, error: "Failed to fetch data" }, { status: 500 });
 	} catch (error) {
-		return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
+		return NextResponse.json({ success: false, error: `Catch Error: ${error instanceof Error ? error.message : "Unknown"}` }, { status: 500 });
 	}
 }
 
@@ -48,9 +51,12 @@ export async function POST(request: NextRequest) {
 			body: JSON.stringify({ content: body.content }),
 		});
 
-		const data = await res.json();
+		const text = await res.text();
+		let data;
+		try { data = JSON.parse(text); } catch { return NextResponse.json({ success: false, error: `Backend Error (${res.status}): ${text.substring(0, 100)}` }, { status: res.status }); }
+
 		return NextResponse.json(data, { status: res.status });
 	} catch (error) {
-		return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
+		return NextResponse.json({ success: false, error: `Catch Error: ${error instanceof Error ? error.message : "Unknown"}` }, { status: 500 });
 	}
 }
