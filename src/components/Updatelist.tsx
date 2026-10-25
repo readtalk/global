@@ -24,14 +24,14 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
 	useEffect(() => {
-		fetch("/api/auth/me")
-			.then(res => res.json() as Promise<{ success: boolean; user?: { id: string } }>)
-			.then((data) => {
-				if (data.success && data.user) {
-					setCurrentUserId(data.user.id);
-				}
-			})
-			.catch(() => {});
+		const session = localStorage.getItem("session");
+		if (session) {
+			try {
+				const payload = JSON.parse(atob(session.split(".")[1]));
+				const userId = payload.properties?.id || payload.sub;
+				if (userId) setCurrentUserId(userId);
+			} catch {}
+		}
 	}, []);
 
 	const handleAction = async (id: string, action: "like" | "repost") => {
