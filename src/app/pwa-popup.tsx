@@ -1,8 +1,19 @@
-//
 "use client";
 
 import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+
+type UserProfile = {
+	username: string | null;
+	yourname: string | null;
+	date_of_birth: string | null;
+	avatar: string | null;
+	header: string | null;
+	headline: string | null;
+	about: string | null;
+	socials: string | null;
+	location: string | null;
+};
 
 export default function PwaPopup() {
 	const pathname = usePathname();
@@ -13,6 +24,14 @@ export default function PwaPopup() {
 	
 	const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 	const [isLoading, setIsLoading] = useState(false);
+	
+	const [profile, setProfile] = useState<UserProfile | null>(null);
+	const [isProfileLoading, setIsProfileLoading] = useState(false);
+	
+	const [formUsername, setFormUsername] = useState("");
+	const [formYourname, setFormYourname] = useState("");
+	const [formDob, setFormDob] = useState("");
+	const [isSaving, setIsSaving] = useState(false);
 
 	useEffect(() => {
 		if (pathname.startsWith("/@") || pathname.startsWith("/u/") || pathname === "/callback") {
@@ -47,6 +66,29 @@ export default function PwaPopup() {
 		return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 	}, [pathname, searchParams]);
 
+	useEffect(() => {
+		if (isLoggedIn) {
+			const session = localStorage.getItem("session");
+			if (session) {
+				setIsProfileLoading(true);
+				fetch("https://auth.readtalk.workers.dev/settings", {
+					headers: { "Authorization": `Bearer ${session}` }
+				})
+				.then(res => res.json() as Promise<{ success: boolean; user?: UserProfile }>)
+				.then(data => {
+					if (data.success && data.user) {
+						setProfile(data.user);
+						setFormUsername(data.user.username || "");
+						setFormYourname(data.user.yourname || "");
+						setFormDob(data.user.date_of_birth || "");
+					}
+				})
+				.catch(() => {})
+				.finally(() => setIsProfileLoading(false));
+			}
+		}
+	}, [isLoggedIn]);
+
 	const handleInstallClick = async () => {
 		if (!deferredPrompt) return;
 		deferredPrompt.prompt();
@@ -63,6 +105,45 @@ export default function PwaPopup() {
 		}, 800);
 	};
 
+	const handleSaveProfile = async () => {
+		if (!formUsername.trim() || !formYourname.trim() || !formDob) return;
+		const session = localStorage.getItem("session");
+		if (!session) return;
+
+		setIsSaving(true);
+		try {
+			const res = await fetch("https://auth.readtalk.workers.dev/settings", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"Authorization": `Bearer ${session}`
+				},
+				body: JSON.stringify({
+					username: formUsername,
+					yourname: formYourname,
+					date_of_birth: formDob,
+					avatar: profile?.avatar || null,
+					header: profile?.header || null,
+					headline: profile?.headline || null,
+					about: profile?.about || null,
+					socials: profile?.socials || null,
+					location: profile?.location || null,
+				}),
+			});
+			
+			if (res.ok) {
+				window.location.reload();
+			} else {
+				alert("Failed to save profile.");
+			}
+		} catch (error) {
+			console.error(error);
+			alert("Error saving profile.");
+		} finally {
+			setIsSaving(false);
+		}
+	};
+
 	if (!isVisible || isStandalone === null || isLoggedIn === null) return null;
 
 	if (isLoading) {
@@ -76,13 +157,80 @@ export default function PwaPopup() {
 		);
 	}
 
-	if (isLoggedIn) return null;
+	if (isLoggedIn) {
+		if (isProfileLoading) {
+			return (
+				<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white">
+					<svg className="animate-spin h-10 w-10 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+						<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+						<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+					</svg>
+				</div>
+			);
+		}
+
+		if (profile && (!profile.username || !profile.yourname || !profile.date_of_birth)) {
+			return (
+				<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+					<div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl dark:bg-zinc-900">
+						<h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+							Complete Your Profile
+						</h2>
+						<p className="text-xs text-gray-500 mb-6">
+							Please fill in your details to continue.
+						</p>
+
+						<div className="flex flex-col gap-4 text-left">
+							<div>
+								<label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Username</label>
+								<input
+									type="text"
+									value={formUsername}
+									onChange={(e) => setFormUsername(e.target.value)}
+									placeholder="e.g. johndoe"
+									className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-gray-900"
+								/>
+							</div>
+							<div>
+								<label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Your Name</label>
+								<input
+									type="text"
+									value={formYourname}
+									onChange={(e) => setFormYourname(e.target.value)}
+									placeholder="e.g. John Doe"
+									className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-gray-900"
+								/>
+							</div>
+							<div>
+								<label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Date of Birth</label>
+								<input
+									type="date"
+									value={formDob}
+									onChange={(e) => setFormDob(e.target.value)}
+									className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-gray-900"
+								/>
+							</div>
+						</div>
+
+						<button
+							onClick={handleSaveProfile}
+							disabled={isSaving || !formUsername.trim() || !formYourname.trim() || !formDob}
+							className="mt-6 w-full rounded-xl bg-black px-4 py-3 text-lg font-bold text-white transition hover:bg-gray-800 disabled:opacity-50"
+						>
+							{isSaving ? "Saving..." : "Continue"}
+						</button>
+					</div>
+				</div>
+			);
+		}
+
+		return null;
+	}
 
 	if (!isStandalone) {
 		return (
 			<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
 				<div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl dark:bg-zinc-900">
-					
 					<button
 						onClick={handleInstallClick}
 						disabled={!deferredPrompt}
@@ -112,7 +260,6 @@ export default function PwaPopup() {
 	return (
 		<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
 			<div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl dark:bg-zinc-900">
-				
 				<h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
 					Welcome to ReadTalk
 				</h2>
