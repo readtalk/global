@@ -1,4 +1,3 @@
-//
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
@@ -23,7 +22,10 @@ function UpdateDetailContent() {
 
 	const fetchComments = async () => {
 		try {
-			const res = await fetch(`/api/updates/${id}/comments`);
+			const token = localStorage.getItem("session");
+			const res = await fetch(`/api/updates/${id}/comments`, {
+				headers: token ? { "Authorization": `Bearer ${token}` } : {},
+			});
 			const data = (await res.json()) as { success: boolean; comments: Comment[] };
 			if (data.success) {
 				setComments(data.comments);
