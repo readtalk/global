@@ -14,7 +14,7 @@ export type UpdatelistItem = {
 	repost_count: number;
 	is_liked: boolean;
 	is_reposted: boolean;
-	user?: { username: string; yourname: string } | null;
+	user?: { username: string; yourname: string; avatar?: string | null } | null;
 };
 
 export default function Updatelist({ data, limit = Infinity, onUpdate }: { data: UpdatelistItem[]; limit?: number; onUpdate: () => void }) {
@@ -44,8 +44,12 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 				<article key={update.id} className="p-5 border-b border-gray-200 hover:bg-gray-50 transition">
 					<div className="flex items-center gap-3">
 						<Link href={`/profile/@${update.user?.username || update.user_id}`} className="shrink-0">
-							<div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
-								{update.user?.username?.[0]?.toUpperCase() || "?"}
+							<div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden">
+								{update.user?.avatar ? (
+									<img src={update.user.avatar} alt={update.user.username} className="w-full h-full object-cover" />
+								) : (
+									update.user?.username?.[0]?.toUpperCase() || "?"
+								)}
 							</div>
 						</Link>
 						<div className="flex-1">
