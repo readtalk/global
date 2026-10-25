@@ -54,7 +54,27 @@ function ForumContent() {
 			return;
 		}
 
+		const postContent = content;
+		const tempId = crypto.randomUUID();
+		
+		const newPost: UpdatelistItem = {
+			id: tempId,
+			user_id: "temp",
+			content: postContent,
+			image_url: null,
+			created_at: Math.floor(Date.now() / 1000),
+			like_count: 0,
+			comment_count: 0,
+			repost_count: 0,
+			is_liked: false,
+			is_reposted: false,
+			user: { username: "You", yourname: "You" },
+		};
+
+		setUpdates((prev) => [newPost, ...prev]);
+		setContent("");
 		setIsPosting(true);
+
 		try {
 			const res = await fetch("/api/updates", {
 				method: "POST",
@@ -62,19 +82,14 @@ function ForumContent() {
 					"Content-Type": "application/json",
 					"Authorization": `Bearer ${token}`
 				},
-				body: JSON.stringify({ content }),
+				body: JSON.stringify({ content: postContent }),
 			});
 			
-			const data = (await res.json()) as { error?: string };
 			if (res.ok) {
-				setContent("");
-				fetchData();
-			} else {
-				alert(`Gagal: ${data.error}`);
+				await fetchData();
 			}
-		} catch (error: unknown) {
+		} catch (error) {
 			console.error("Failed to post", error);
-			alert(`Error Catch: ${error instanceof Error ? error.message : "Unknown"}`);
 		} finally {
 			setIsPosting(false);
 		}
