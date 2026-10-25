@@ -7,6 +7,12 @@ import Sidebar from "@/components/Sidebar";
 import Search from "@/components/Search";
 import Updatelist, { UpdatelistItem } from "@/components/Updatelist";
 
+type CurrentUser = {
+	username: string;
+	yourname: string;
+	avatar: string | null;
+};
+
 function ForumContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
@@ -14,6 +20,7 @@ function ForumContent() {
 	const [updates, setUpdates] = useState<UpdatelistItem[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isPosting, setIsPosting] = useState(false);
+	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
 	useEffect(() => {
 		const token = searchParams.get("token");
@@ -44,6 +51,21 @@ function ForumContent() {
 
 	useEffect(() => {
 		fetchData();
+		
+		// Ambil data profil untuk avatar di kotak post
+		const session = localStorage.getItem("session");
+		if (session) {
+			fetch("https://auth.readtalk.workers.dev/settings", {
+				headers: { "Authorization": `Bearer ${session}` }
+			})
+			.then(res => res.json() as Promise<{ success: boolean; user?: CurrentUser }>)
+			.then(data => {
+				if (data.success && data.user) {
+					setCurrentUser(data.user);
+				}
+			})
+			.catch(() => {});
+		}
 	}, [fetchData]);
 
 	const handlePost = async () => {
@@ -57,15 +79,10 @@ function ForumContent() {
 		const postContent = content;
 		const tempId = crypto.randomUUID();
 		
-		let currentUser = { username: "You", yourname: "You" };
-		try {
-			const payload = JSON.parse(atob(token.split(".")[1]));
-			const email = payload.properties?.email;
-			if (email) {
-				const name = email.split("@")[0];
-				currentUser = { username: name, yourname: name };
-			}
-		} catch {}
+		let tempUser = { username: "You", yourname: "You" };
+		if (currentUser) {
+			tempUser = { username: currentUser.username, yourname: currentUser.yourname };
+		}
 
 		const newPost: UpdatelistItem = {
 			id: tempId,
@@ -78,7 +95,7 @@ function ForumContent() {
 			repost_count: 0,
 			is_liked: false,
 			is_reposted: false,
-			user: currentUser,
+			user: tempUser,
 		};
 
 		setUpdates((prev) => [newPost, ...prev]);
@@ -120,8 +137,12 @@ function ForumContent() {
 
 					<div className="p-4 border-b border-gray-200 bg-white">
 						<div className="flex gap-3">
-							<div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold shrink-0">
-								U
+							<div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold shrink-0 overflow-hidden">
+								{currentUser?.avatar ? (
+									<img src={currentUser.avatar} alt="Avatar" className="w-full h-full object-cover" />
+								) : (
+									currentUser?.username?.[0]?.toUpperCase() || "U"
+								)}
 							</div>
 							<div className="flex-1">
 								<textarea
