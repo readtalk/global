@@ -6,7 +6,13 @@ export async function GET(
 ) {
 	try {
 		const { id } = await params;
+		const authHeader = request.headers.get("Authorization");
+		
+		const headers: Record<string, string> = {};
+		if (authHeader) headers["Authorization"] = authHeader;
+
 		const res = await fetch(`https://auth.readtalk.workers.dev/updates/${id}/comments`, {
+			headers,
 			cache: "no-store",
 		});
 		const data = await res.json();
