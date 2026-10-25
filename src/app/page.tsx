@@ -106,70 +106,60 @@ function ForumContent() {
 	};
 
 	return (
-		<>
-			<div className="flex min-h-screen bg-gray-50">
-				<Sidebar />
-				<div className="flex-1 w-full pb-20 md:pb-0" id="main-content" role="main">
-					<div className="w-full px-4 md:px-6">
-						<div className="lg:flex flex-wrap">
-							<div className="py-10 lg:w-2/3 w-full md:pr-6 md:border-r border-gray-300">
-								<div>
-									<Link href="/"><h1 className="text-3xl text-gray-900 font-bold mb-3">Update</h1></Link>
-									
-									<div className="flex flex-col mt-10 md:flex-row md:items-center">
-										<Search />
-										<div className="w-full md:w-1/2 pt-3 md:pt-0 md:pl-3">
-											<h3 className="text-xl text-gray-900 mb-2">Post</h3>
-											<div className="flex flex-col">
-												<label htmlFor="post_update" className="text-gray-800 text-sm font-bold leading-tight tracking-normal mb-2">
-													Content
-												</label>
-												<div className="relative w-full mb-2">
-													<textarea
-														id="post_update"
-														className="text-gray-600 focus:outline-none focus:border focus:border-blue-700 bg-gray-100 font-normal w-full h-24 p-4 text-sm border-gray-300 rounded border resize-none"
-														placeholder="Type something..."
-														value={content}
-														onChange={(e) => setContent(e.target.value)}
-														disabled={isPosting}
-													/>
-												</div>
-											</div>
-											<div className="flex flex-col md:flex-row md:items-center">
-												<div className="w-full md:w-1/2" />
-												<div className="w-full md:w-1/2 md:flex md:mb-0 mb-4 justify-end">
-													<button
-														onClick={handlePost}
-														disabled={isPosting || !content.trim()}
-														className="bg-blue-700 text-sm text-white rounded hover:bg-blue-600 transition duration-150 ease-in-out py-2 px-6 text-center w-full md:w-auto disabled:opacity-50"
-													>
-														{isPosting ? "Posting..." : "Post"}
-													</button>
-												</div>
-											</div>
-										</div>
-									</div>
-									
-									<div className="mt-6">
-										{isLoading ? (
-											<p className="text-gray-500 text-sm">Loading updates...</p>
-										) : updates.length > 0 ? (
-											<Updatelist data={updates} onUpdate={fetchData} />
-										) : (
-											<p className="text-gray-500 text-sm">No updates yet. Be the first to post!</p>
-										)}
-									</div>
-								</div>
+		<div className="flex min-h-screen bg-gray-50">
+			<Sidebar />
+			<div className="flex-1 w-full pb-20 md:pb-0" id="main-content" role="main">
+				<div className="max-w-2xl mx-auto bg-white min-h-screen shadow-sm">
+					<div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+						<h1 className="text-xl font-bold text-gray-900">Update</h1>
+					</div>
+
+					<div className="p-4 border-b border-gray-200">
+						<Search />
+					</div>
+
+					<div className="p-4 border-b border-gray-200 bg-white">
+						<div className="flex gap-3">
+							<div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold shrink-0">
+								U
 							</div>
-							<div className="py-10 lg:w-1/3 w-full md:pl-6">
-								<h3 className="mb-5 text-gray-900 font-medium text-xl">Recent comments</h3>
-								<p className="text-gray-500 text-sm">Coming soon.</p>
+							<div className="flex-1">
+								<textarea
+									className="w-full bg-transparent text-gray-800 placeholder-gray-400 focus:outline-none resize-none text-lg"
+									placeholder="What's happening?"
+									rows={3}
+									value={content}
+									onChange={(e) => setContent(e.target.value)}
+									disabled={isPosting}
+								/>
+								<div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100">
+									<div className="text-blue-500">
+										<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+									</div>
+									<button
+										onClick={handlePost}
+										disabled={isPosting || !content.trim()}
+										className="bg-blue-600 text-white px-5 py-1.5 rounded-full font-bold text-sm hover:bg-blue-700 transition disabled:opacity-50"
+									>
+										{isPosting ? "Posting..." : "Post"}
+									</button>
+								</div>
 							</div>
 						</div>
 					</div>
+
+					<div className="bg-white">
+						{isLoading ? (
+							<div className="p-8 text-center text-gray-500">Loading updates...</div>
+						) : updates.length > 0 ? (
+							<Updatelist data={updates} onUpdate={fetchData} />
+						) : (
+							<div className="p-8 text-center text-gray-500">No updates yet. Be the first to post!</div>
+						)}
+					</div>
 				</div>
 			</div>
-		</>
+		</div>
 	);
 }
 
