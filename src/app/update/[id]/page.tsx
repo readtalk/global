@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 
 type Comment = {
 	id: string;
@@ -75,7 +74,7 @@ function UpdateDetailContent() {
 
 	return (
 		<div className="max-w-2xl mx-auto p-6">
-			<Link href="/" className="text-blue-600 hover:underline mb-4 inline-block">&larr; Back to Forum</Link>
+			<a href="/" className="text-blue-600 hover:underline mb-4 inline-block">&larr; Back to Forum</a>
 			
 			<h1 className="text-2xl font-bold mb-6">Comments</h1>
 
@@ -102,12 +101,9 @@ function UpdateDetailContent() {
 				<div className="space-y-4">
 					{comments.map((comment) => (
 						<div key={comment.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-							<Link 
-								href={`/profile/@${comment.user?.username || comment.user_id}`} 
-								className="text-sm text-gray-600 mb-1 font-semibold hover:underline block"
-							>
+							<p className="text-sm text-gray-600 mb-1">
 								{comment.user?.yourname || comment.user?.username || `User ${comment.user_id.substring(0, 8)}`}
-							</Link>
+							</p>
 							<p className="text-gray-800">{comment.content}</p>
 						</div>
 					))}
