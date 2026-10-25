@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Sidebar() {
-	const [isMobileNavHidden, setIsMobileNavHidden] = useState(true);
+	const pathname = usePathname();
 	const [user, setUser] = useState<{ username: string; yourname: string } | null>(null);
 
 	useEffect(() => {
@@ -15,7 +16,6 @@ export default function Sidebar() {
 				const email = payload.properties?.email;
 				if (email) {
 					setUser({ username: email.split("@")[0], yourname: email.split("@")[0] });
-					
 					fetch("https://auth.readtalk.workers.dev/settings", {
 						headers: { "Authorization": `Bearer ${session}` }
 					})
@@ -34,81 +34,54 @@ export default function Sidebar() {
 		window.location.href = "/api/auth/logout";
 	};
 
-	const sidebarHandler = () => {
-		setIsMobileNavHidden(!isMobileNavHidden);
-	};
-
 	return (
-		<div className="min-h-screen border-r border-gray-100 sticky top-0 h-full bg-gray-100 z-20">
-			<div className="relative top-0 min-h-screen bottom-0 flex items-center flex-col p-4">
-				<button
-					onClick={sidebarHandler}
-					aria-label="Toggle navigation menu"
-					className="p-2 hover:bg-gray-200 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 relative z-30"
-				>
-					<svg width={20} height={20} viewBox="0 0 24 24" strokeWidth="1.5" stroke="#718096" fill="none" strokeLinecap="round" strokeLinejoin="round">
-						<line x1={4} y1={6} x2={20} y2={6} />
-						<line x1={4} y1={12} x2={20} y2={12} />
-						<line x1={4} y1={18} x2={20} y2={18} />
-					</svg>
-				</button>
-				<nav aria-label="Main navigation">
-					<ul aria-orientation="vertical" className="rounded py-8">
-						<li className={`text-gray-600 text-sm leading-3 py-1 tracking-normal ${isMobileNavHidden ? 'cursor-pointer hover:text-blue-700' : 'pointer-events-none'}`}>
-							<Link href="/" className={`p-2 block hover:bg-gray-200 rounded relative z-30 ${isMobileNavHidden ? '' : 'pointer-events-none'}`}>
-								<svg width={20} height={20} viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
-									<rect x={4} y={4} width={6} height={6} rx={1} />
-									<rect x={14} y={4} width={6} height={6} rx={1} />
-									<rect x={4} y={14} width={6} height={6} rx={1} />
-									<rect x={14} y={14} width={6} height={6} rx={1} />
-								</svg>
-							</Link>
-						</li>
-						<li className={`text-gray-600 text-sm leading-3 tracking-normal mt-6 py-1 ${isMobileNavHidden ? 'cursor-pointer hover:text-blue-700' : 'pointer-events-none' } flex items-center`}>
-							{user ? (
-								<Link href={`/profile/@${user.username}`} className={`p-2 block hover:bg-gray-200 rounded relative z-30 ${isMobileNavHidden ? '' : 'pointer-events-none'}`}>
-									<svg width={20} height={20} viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
-										<circle cx={9} cy={7} r={4} />
-										<path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-										<path d="M16 3.13a4 4 0 0 1 0 7.75" />
-										<path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
-									</svg>
-								</Link>
-							) : (
-								<Link href="/api/auth/login" className={`p-2 block hover:bg-gray-200 rounded relative z-30 ${isMobileNavHidden ? '' : 'pointer-events-none'}`}>
-									<svg width={20} height={20} viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
-										<circle cx={9} cy={7} r={4} />
-										<path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-										<path d="M16 3.13a4 4 0 0 1 0 7.75" />
-										<path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
-									</svg>
-								</Link>
-							)}
-						</li>
-					</ul>
-				</nav>
-			</div>
-			<div className={`absolute top-0 min-h-screen left-0 ml-10 flex items-start flex-col bg-gray-100 transition duration-300 ease-in-out transform ${isMobileNavHidden ? '-left-full opacity-0 pointer-events-none' : 'left-0 opacity-100 pointer-events-auto'}`}>
-				<ul className="rounded py-8 pl-2 pr-32 whitespace-no-wrap">
+		<>
+			{/* Desktop Sidebar */}
+			<aside className="hidden md:flex flex-col w-64 h-screen sticky top-0 border-r border-gray-200 bg-white z-20">
+				<div className="p-4 border-b border-gray-200">
+					<Link href="/" className="text-2xl font-bold text-gray-900">READTalk</Link>
+				</div>
+				<nav className="flex-1 p-4 space-y-2">
+					<Link href="/" className={`block p-3 rounded-lg ${pathname === "/" ? "bg-gray-100 font-semibold" : "hover:bg-gray-50"}`}>Update</Link>
 					{user && (
-						<li className="text-gray-600 text-sm tracking-normal py-2">
-							<Link href={`/profile/@${user.username}`} className="ml-2 font-semibold block hover:underline">
-								{user.yourname || user.username}
-							</Link>
-						</li>
+						<Link href={`/profile/@${user.username}`} className={`block p-3 rounded-lg ${pathname.startsWith("/profile") ? "bg-gray-100 font-semibold" : "hover:bg-gray-50"}`}>
+							Profile
+						</Link>
 					)}
-					<li className="cursor-pointer text-gray-600 text-sm tracking-normal py-2 hover:text-blue-700">
-						<Link href="/" className="ml-2 p-2 block rounded">Home</Link>
-					</li>
-					<li className="cursor-pointer text-gray-600 text-sm tracking-normal mt-6 py-2 hover:text-blue-700 flex items-center">
-						{user ? (
-							<button onClick={handleLogout} className="ml-2 p-2 block rounded">Logout</button>
-						) : (
-							<Link href="/api/auth/login" className="ml-2 p-2 block rounded">Login/Register</Link>
-						)}
-					</li>
-				</ul>
-			</div>
-		</div>
+				</nav>
+				<div className="p-4 border-t border-gray-200">
+					{user ? (
+						<button onClick={handleLogout} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50">Logout</button>
+					) : (
+						<Link href="/api/auth/login" className="block p-3 rounded-lg bg-blue-600 text-white text-center">Login</Link>
+					)}
+				</div>
+			</aside>
+
+			{/* Mobile Bottom Navigation */}
+			<nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around p-2 z-50">
+				<Link href="/" className={`flex flex-col items-center p-2 text-xs ${pathname === "/" ? "text-blue-600" : "text-gray-500"}`}>
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+					<span>Update</span>
+				</Link>
+				{user && (
+					<Link href={`/profile/@${user.username}`} className={`flex flex-col items-center p-2 text-xs ${pathname.startsWith("/profile") ? "text-blue-600" : "text-gray-500"}`}>
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+						<span>Profile</span>
+					</Link>
+				)}
+				{user ? (
+					<button onClick={handleLogout} className="flex flex-col items-center p-2 text-xs text-gray-500">
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+						<span>Logout</span>
+					</button>
+				) : (
+					<Link href="/api/auth/login" className="flex flex-col items-center p-2 text-xs text-gray-500">
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+						<span>Login</span>
+					</Link>
+				)}
+			</nav>
+		</>
 	);
 }
