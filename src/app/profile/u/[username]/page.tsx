@@ -8,6 +8,7 @@ import {
 	Globe 
 } from "@phosphor-icons/react/dist/ssr";
 import Sidebar from "@/components/Sidebar";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -100,9 +101,27 @@ export default async function PublicProfile({
 							)}
 						</div>
 
-						<div className="pt-14">
-							<h1 className="text-2xl font-bold text-gray-900">{user.yourname || user.username}</h1>
-							<p className="text-gray-500 text-sm">@{user.username}</p>
+						<div className="pt-14 flex justify-between items-start">
+							<div>
+								<h1 className="text-2xl font-bold text-gray-900">{user.yourname || user.username}</h1>
+								<p className="text-gray-500 text-sm">@{user.username}</p>
+							</div>
+							
+							<div className="flex gap-2">
+								<Link
+									href="/settings"
+									className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold transition"
+								>
+									Settings
+								</Link>
+								<Link
+									href={`/@${user.username}`}
+									target="_blank"
+									className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold transition"
+								>
+									Share
+								</Link>
+							</div>
 						</div>
 
 						{user.headline && (
