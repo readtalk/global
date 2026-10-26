@@ -1,203 +1,136 @@
-import { 
-	FacebookLogo, 
-	InstagramLogo, 
-	XLogo, 
-	TiktokLogo, 
-	YoutubeLogo, 
-	LinkedinLogo, 
-	Globe 
-} from "@phosphor-icons/react/dist/ssr";
-import Sidebar from "@/components/Sidebar";
+"use client";
+
+import { useState, useEffect, Suspense } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
+import Sidebar from "@/components/Sidebar";
 
-export const dynamic = "force-dynamic";
-
-type User = {
+type Comment = {
 	id: string;
-	email: string;
-	username: string;
-	yourname: string;
-	date_of_birth: string;
-	created_at: string;
-	avatar: string | null;
-	header: string | null;
-	headline: string | null;
-	about: string | null;
-	socials: string | null;
-	location: string | null;
+	updatelist_id: string;
+	user_id: string;
+	content: string;
+	created_at: number;
+	user?: { username: string; yourname: string } | null;
 };
 
-async function getUserByUsername(username: string): Promise<User | null> {
-	try {
-		const res = await fetch(`https://auth.readtalk.workers.dev/users/${username}`, {
-			cache: "no-store",
-		});
-		const data = (await res.json()) as { success: boolean; user: User };
+function UpdateDetailContent() {
+	const params = useParams();
+	const id = params.id as string;
 
-		if (data.success && data.user) {
-			return data.user;
-		}
-		return null;
-	} catch (error) {
-		console.error("Failed to fetch user:", error);
-		return null;
-	}
-}
+	const [comments, setComments] = useState<Comment[]>([]);
+	const [content, setContent] = useState("");
+	const [isLoading, setIsLoading] = useState(true);
+	const [isPosting, setIsPosting] = useState(false);
 
-export default async function PublicProfile({
-	params,
-}: {
-	params: Promise<{ username: string }>;
-}) {
-	const { username } = await params;
-	const user = await getUserByUsername(username);
-
-	if (!user) {
-		return (
-			<div className="flex min-h-screen bg-gray-50">
-				<Sidebar />
-				<div className="flex-1 w-full pb-20 md:pb-0 flex items-center justify-center p-4">
-					<div className="text-center">
-						<h1 className="text-2xl font-bold text-gray-800">User Not Found</h1>
-						<p className="text-gray-500 text-sm mt-2">@{username} does not exist.</p>
-					</div>
-				</div>
-			</div>
-		);
-	}
-
-	let socials: Record<string, string> = {};
-	if (user.socials && typeof user.socials === "string") {
+	const fetchComments = async () => {
 		try {
-			let parsed = JSON.parse(user.socials);
-			if (typeof parsed === "string") {
-				parsed = JSON.parse(parsed);
+			const token = localStorage.getItem("session");
+			const res = await fetch(`/api/updates/${id}/comments`, {
+				headers: token ? { "Authorization": `Bearer ${token}` } : {},
+			});
+			const data = (await res.json()) as { success: boolean; comments: Comment[] };
+			if (data.success) {
+				setComments(data.comments);
 			}
-			if (typeof parsed === "object" && parsed !== null) {
-				socials = parsed;
-			}
-		} catch {
-			socials = {};
+		} catch (error) {
+			console.error(error);
+		} finally {
+			setIsLoading(false);
 		}
-	}
+	};
+
+	useEffect(() => {
+		fetchComments();
+	}, [id]);
+
+	const handlePost = async () => {
+		if (!content.trim()) return;
+		const token = localStorage.getItem("session");
+		if (!token) {
+			alert("You must be logged in to comment.");
+			return;
+		}
+
+		setIsPosting(true);
+		try {
+			const res = await fetch(`/api/updates/${id}/comments`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"Authorization": `Bearer ${token}`
+				},
+				body: JSON.stringify({ content }),
+			});
+
+			if (res.ok) {
+				setContent("");
+				fetchComments();
+			}
+		} catch (error) {
+			console.error(error);
+		} finally {
+			setIsPosting(false);
+		}
+	};
 
 	return (
-		<div className="flex min-h-screen bg-gray-50">
-			<Sidebar />
-			<div className="flex-1 w-full pb-20 md:pb-0" id="main-content" role="main">
-				<div className="max-w-2xl mx-auto bg-white shadow-sm rounded-b-xl overflow-hidden my-4 md:my-8">
-					<div className="h-40 w-full bg-gray-300 relative">
-						{user.header && (
-							<img src={user.header} alt="Header" className="w-full h-full object-cover" />
-						)}
-					</div>
+		<>
+			<div className="flex min-h-screen bg-gray-50">
+				<Sidebar />
+				<div className="flex-1 w-full pb-20 md:pb-0" id="main-content" role="main">
+					<div className="max-w-2xl mx-auto p-4 md:p-6">
+						<Link href="/" className="text-blue-600 hover:underline mb-4 inline-block">← Back to Forum</Link>
 
-					<div className="px-6 relative pb-6">
-						<div className="absolute -top-12 left-6 z-10 w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-4xl font-bold border-4 border-white overflow-hidden shadow-sm">
-							{user.avatar ? (
-								<img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
-							) : (
-								user.username?.[0]?.toUpperCase() ?? "?"
-							)}
+						<h1 className="text-2xl font-bold mb-6 text-gray-900">Comments</h1>
+
+						<div className="mb-8">
+							<textarea
+								value={content}
+								onChange={(e) => setContent(e.target.value)}
+								placeholder="Write a comment..."
+								className="w-full bg-white p-4 rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500 text-gray-900"
+								rows={3}
+							/>
+							<button
+								onClick={handlePost}
+								disabled={isPosting || !content.trim()}
+								className="mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg disabled:opacity-50 font-medium"
+							>
+								{isPosting ? "Posting..." : "Post Comment"}
+							</button>
 						</div>
 
-						<div className="pt-14 flex justify-between items-start">
-							<div>
-								<h1 className="text-2xl font-bold text-gray-900">{user.yourname || user.username}</h1>
-								<p className="text-gray-500 text-sm">@{user.username}</p>
-							</div>
-							
-							{/* Tombol Share & Settings */}
-							<div className="flex gap-2">
-								<Link
-									href={`/@${user.username}`}
-									target="_blank"
-									className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-1.5 rounded-full text-sm font-semibold transition flex items-center gap-1"
-								>
-									Share
-								</Link>
-								<Link
-									href="/settings"
-									className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-1.5 rounded-full text-sm font-semibold transition flex items-center gap-1"
-								>
-									Settings
-								</Link>
-							</div>
-						</div>
-
-						{user.headline && (
-							<p className="mt-4 text-gray-800 font-medium">{user.headline}</p>
-						)}
-						{user.about && (
-							<p className="mt-2 text-gray-600 text-sm whitespace-pre-wrap">{user.about}</p>
-						)}
-
-						<div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-500">
-							{user.location && (
-								<div className="flex items-center gap-1">
-									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-									<span>{user.location}</span>
-								</div>
-							)}
-							<div className="flex items-center gap-1">
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-								<span>Joined {new Date(user.created_at).toLocaleDateString()}</span>
-							</div>
-						</div>
-
-						{Object.keys(socials).length > 0 && (
-							<div className="mt-5 flex flex-wrap gap-4">
-								{Object.entries(socials).map(([key, url]) => {
-									if (!url || typeof url !== "string") return null;
-
-									let Icon = Globe;
-									let colorClass = "text-gray-600";
-
-									switch (key.toLowerCase()) {
-										case "facebook":
-											Icon = FacebookLogo;
-											colorClass = "text-blue-600";
-											break;
-										case "instagram":
-											Icon = InstagramLogo;
-											colorClass = "text-pink-600";
-											break;
-										case "x":
-											Icon = XLogo;
-											colorClass = "text-black";
-											break;
-										case "tiktok":
-											Icon = TiktokLogo;
-											colorClass = "text-black";
-											break;
-										case "youtube":
-											Icon = YoutubeLogo;
-											colorClass = "text-red-600";
-											break;
-										case "linkedin":
-											Icon = LinkedinLogo;
-											colorClass = "text-blue-700";
-											break;
-									}
-
-									return (
-										<a
-											key={key}
-											href={url}
-											target="_blank"
-											rel="noopener noreferrer"
-											className={`${colorClass} hover:opacity-80 transition-opacity`}
-											title={key}
+						{isLoading ? (
+							<p className="text-gray-500">Loading comments...</p>
+						) : comments.length > 0 ? (
+							<div className="space-y-4">
+								{comments.map((comment) => (
+									<div key={comment.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+										<Link 
+											href={`/profile/@${comment.user?.username || comment.user_id}`} 
+											className="text-sm text-gray-600 mb-1 font-semibold hover:underline block"
 										>
-											<Icon size={24} weight="fill" />
-										</a>
-									);
-								})}
+											{comment.user?.yourname || comment.user?.username || `User ${comment.user_id.substring(0, 8)}`}
+										</Link>
+										<p className="text-gray-800">{comment.content}</p>
+									</div>
+								))}
 							</div>
+						) : (
+							<p className="text-gray-500">No comments yet.</p>
 						)}
 					</div>
 				</div>
 			</div>
-		</div>
+		</>
+	);
+}
+
+export default function UpdateDetail() {
+	return (
+		<Suspense fallback={<div className="p-4 text-center">Loading...</div>}>
+			<UpdateDetailContent />
+		</Suspense>
 	);
 }
