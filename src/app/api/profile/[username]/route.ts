@@ -7,6 +7,7 @@ export async function GET(
 	try {
 		const { username } = await params;
 		const authHeader = request.headers.get("Authorization");
+		
 		const headers: Record<string, string> = {};
 		if (authHeader) headers["Authorization"] = authHeader;
 
