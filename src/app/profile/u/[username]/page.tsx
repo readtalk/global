@@ -105,19 +105,7 @@ export default async function PublicProfile({
 						<div className="pt-14 flex justify-between items-start">
 							<div>
 								<h1 className="text-2xl font-bold text-gray-900">{user.yourname || user.username}</h1>
-								<div className="flex items-center gap-2 mt-1">
-									<p className="text-gray-500 text-sm">@{user.username}</p>
-									<button
-										onClick={() => {
-											navigator.clipboard.writeText(`@${user.username}`);
-											alert("Username copied!");
-										}}
-										className="text-gray-400 hover:text-blue-500 transition"
-										title="Copy username"
-									>
-										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-									</button>
-								</div>
+								<p className="text-gray-500 text-sm">@{user.username}</p>
 							</div>
 							
 							<div className="flex gap-2">
