@@ -10,6 +10,7 @@ import {
 import Sidebar from "@/components/Sidebar";
 import Link from "next/link";
 import ShareButton from "@/components/ShareButton";
+import CopyUsername from "@/components/CopyUsername";
 
 export const dynamic = "force-dynamic";
 
@@ -105,7 +106,10 @@ export default async function PublicProfile({
 						<div className="pt-14 flex justify-between items-start">
 							<div>
 								<h1 className="text-2xl font-bold text-gray-900">{user.yourname || user.username}</h1>
-								<p className="text-gray-500 text-sm">@{user.username}</p>
+								<div className="flex items-center gap-1 mt-1">
+									<p className="text-gray-500 text-sm">@{user.username}</p>
+									<CopyUsername username={user.username} />
+								</div>
 							</div>
 							
 							<div className="flex gap-2">
