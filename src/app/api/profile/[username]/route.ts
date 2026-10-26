@@ -1,4 +1,3 @@
-//
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -12,34 +11,39 @@ export async function GET(
 		const headers: Record<string, string> = {};
 		if (authHeader) headers["Authorization"] = authHeader;
 
-		const resUser = await fetch(`https://auth.readtalk.workers.dev/users/${username}`, {
+		const res = await fetch(`https://auth.readtalk.workers.dev/users/${username}`, {
 			headers,
 			cache: "no-store",
 		});
-		const dataUser = (await resUser.json()) as { success: boolean; user?: any };
+		
+		const data = (await res.json()) as { 
+			success: boolean; 
+			user?: any; 
+			updates?: any[]; 
+		};
 
-		if (!dataUser.success || !dataUser.user) {
+		if (!data.success || !data.user) {
 			return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
 		}
 
-		const userId = dataUser.user.id;
+		const allUpdates = data.updates || [];
 
-		const resUpdates = await fetch(`https://auth.readtalk.workers.dev/updates?userId=${userId}`, {
-			headers,
-			cache: "no-store",
-		});
-		const dataUpdates = (await resUpdates.json()) as { success: boolean; updates?: any[] };
+		const posts = allUpdates
+			.filter((u: any) => u.type === "original")
+			.map((post: any) => ({ ...post, user: data.user }));
 
-		const posts = (dataUpdates.updates || []).map((post: any) => ({
-			...post,
-			user: dataUser.user
-		}));
+		const reposts = allUpdates
+			.filter((u: any) => u.type === "repost")
+			.map((post: any) => ({ 
+				...post, 
+				user: data.user 
+			}));
 
 		return NextResponse.json({
 			success: true,
-			user: dataUser.user,
+			user: data.user,
 			posts: posts,
-			reposts: []
+			reposts: reposts
 		});
 	} catch (error) {
 		return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
