@@ -11,30 +11,28 @@ export async function GET(
 		const headers: Record<string, string> = {};
 		if (authHeader) headers["Authorization"] = authHeader;
 
-		const [resUser, resUpdates, resUsers] = await Promise.all([
-			fetch(`https://auth.readtalk.workers.dev/users/${username}`, { cache: "no-store" }),
-			fetch("https://auth.readtalk.workers.dev/updates", { headers, cache: "no-store" }),
-			fetch("https://auth.readtalk.workers.dev/users", { cache: "no-store" }),
-		]);
-
+		const resUser = await fetch(`https://auth.readtalk.workers.dev/users/${username}`, {
+			headers,
+			cache: "no-store",
+		});
 		const dataUser = (await resUser.json()) as { success: boolean; user?: any };
-		const dataUpdates = (await resUpdates.json()) as { success: boolean; updates?: any[] };
-		const dataUsers = (await resUsers.json()) as { success: boolean; users?: any[] };
 
 		if (!dataUser.success || !dataUser.user) {
 			return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
 		}
 
-		const targetUserId = String(dataUser.user.id).trim();
-		const userMap = new Map((dataUsers.users || []).map((u: any) => [String(u.id), u]));
-		const allUpdates = dataUpdates.updates || [];
-		
-		const posts = allUpdates
-			.filter((post: any) => String(post.user_id).trim() === targetUserId)
-			.map((post: any) => ({
-				...post,
-				user: userMap.get(String(post.user_id)) || null
-			}));
+		const userId = dataUser.user.id;
+
+		const resUpdates = await fetch(`https://auth.readtalk.workers.dev/updates?userId=${userId}`, {
+			headers,
+			cache: "no-store",
+		});
+		const dataUpdates = (await resUpdates.json()) as { success: boolean; updates?: any[] };
+
+		const posts = (dataUpdates.updates || []).map((post: any) => ({
+			...post,
+			user: dataUser.user
+		}));
 
 		return NextResponse.json({
 			success: true,
