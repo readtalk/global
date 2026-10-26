@@ -23,7 +23,6 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 	const handleAction = async (id: string, action: "like" | "repost") => {
 		const token = localStorage.getItem("session");
 		if (!token) return alert(`You must be logged in to ${action}.`);
-
 		setLoading(`${action}-${id}`);
 		try {
 			await fetch(`/api/updates/${id}/${action}`, {
@@ -38,41 +37,6 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 		}
 	};
 
-	const renderContent = (text: string) => {
-		const urlRegex = /(https?:\/\/[^\s]+)/g;
-		const parts = text.split(urlRegex);
-
-		return parts.map((part, index) => {
-			if (part.match(urlRegex)) {
-				const isImage = /\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i.test(part);
-				const isVideo = /\.(mp4|webm)(\?.*)?$/i.test(part);
-
-				if (isImage) {
-					return (
-						<div key={index} className="mt-2 rounded-xl overflow-hidden border border-gray-200">
-							<img src={part} alt="Media" className="w-full h-auto object-cover" />
-						</div>
-					);
-				}
-
-				if (isVideo) {
-					return (
-						<div key={index} className="mt-2 rounded-xl overflow-hidden border border-gray-200">
-							<video src={part} controls className="w-full h-auto" />
-						</div>
-					);
-				}
-
-				return (
-					<a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline break-all">
-						{part}
-					</a>
-				);
-			}
-			return <span key={index}>{part}</span>;
-		});
-	};
-
 	return (
 		<>
 			{data?.slice(0, limit)?.map((update) => (
@@ -80,11 +44,7 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 					<div className="flex items-center gap-3">
 						<Link href={`/profile/@${update.user?.username || update.user_id}`} className="shrink-0">
 							<div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden">
-								{update.user?.avatar ? (
-									<img src={update.user.avatar} alt={update.user.username} className="w-full h-full object-cover" />
-								) : (
-									update.user?.username?.[0]?.toUpperCase() || "?"
-								)}
+								{update.user?.avatar ? <img src={update.user.avatar} alt={update.user.username} className="w-full h-full object-cover" /> : (update.user?.username?.[0]?.toUpperCase() || "?")}
 							</div>
 						</Link>
 						<div className="flex-1">
@@ -94,10 +54,7 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 								</Link>
 								<span className="text-gray-400 text-xs">·</span>
 								<span className="text-gray-500 text-xs">
-									{new Date(update.created_at * 1000).toLocaleDateString(undefined, { 
-										day: 'numeric', 
-										month: 'short' 
-									})}
+									{new Date(update.created_at * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
 								</span>
 							</div>
 							<Link href={`/profile/@${update.user?.username || update.user_id}`} className="hover:underline">
@@ -106,28 +63,28 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 						</div>
 					</div>
 
-					<div className="mt-3 text-gray-800 whitespace-pre-wrap">
-						{renderContent(update.content)}
-					</div>
+					{update.content && <p className="mt-3 text-gray-800 whitespace-pre-wrap">{update.content}</p>}
+					
+					{update.image_url && (
+						<div className="mt-3 rounded-xl overflow-hidden border border-gray-200">
+							{update.image_url.match(/\.(mp4|webm)$/i) ? (
+								<video src={update.image_url} controls className="w-full h-auto" />
+							) : (
+								<img src={update.image_url} alt="Post media" className="w-full h-auto object-cover" />
+							)}
+						</div>
+					)}
 
 					<div className="mt-4 flex items-center gap-6 text-gray-500 text-sm">
 						<Link href={`/update/${update.id}`} className="flex items-center gap-1 hover:text-blue-500 transition">
 							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
 							{update.comment_count || 0}
 						</Link>
-						<button 
-							onClick={() => handleAction(update.id, "repost")}
-							disabled={loading === `repost-${update.id}`}
-							className={`flex items-center gap-1 hover:text-green-500 transition ${update.is_reposted ? 'text-green-500' : ''}`}
-						>
+						<button onClick={() => handleAction(update.id, "repost")} disabled={loading === `repost-${update.id}`} className={`flex items-center gap-1 hover:text-green-500 transition ${update.is_reposted ? 'text-green-500' : ''}`}>
 							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
 							{update.repost_count || 0}
 						</button>
-						<button 
-							onClick={() => handleAction(update.id, "like")}
-							disabled={loading === `like-${update.id}`}
-							className={`flex items-center gap-1 hover:text-red-500 transition ${update.is_liked ? 'text-red-500' : ''}`}
-						>
+						<button onClick={() => handleAction(update.id, "like")} disabled={loading === `like-${update.id}`} className={`flex items-center gap-1 hover:text-red-500 transition ${update.is_liked ? 'text-red-500' : ''}`}>
 							<svg width="18" height="18" viewBox="0 0 24 24" fill={update.is_liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
 							{update.like_count || 0}
 						</button>
