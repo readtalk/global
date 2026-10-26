@@ -26,16 +26,24 @@ export async function GET(
 			return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
 		}
 
-		const posts = (data.updates || []).map((post: any) => ({
-			...post,
-			user: data.user
-		}));
+		const allUpdates = data.updates || [];
+
+		const posts = allUpdates
+			.filter((u: any) => u.type === "original")
+			.map((post: any) => ({ ...post, user: data.user }));
+
+		const reposts = allUpdates
+			.filter((u: any) => u.type === "repost")
+			.map((post: any) => ({ 
+				...post, 
+				user: data.user 
+			}));
 
 		return NextResponse.json({
 			success: true,
 			user: data.user,
 			posts: posts,
-			reposts: []
+			reposts: reposts
 		});
 	} catch (error) {
 		return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
