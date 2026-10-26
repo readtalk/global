@@ -4,12 +4,12 @@ import { useState, useEffect, Suspense } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
-import ShareButton from "@/components/ShareButton";
-import CopyUsername from "@/components/CopyUsername";
 import { 
 	FacebookLogo, InstagramLogo, XLogo, TiktokLogo, 
 	YoutubeLogo, LinkedinLogo, Globe 
 } from "@phosphor-icons/react/dist/ssr";
+import ShareButton from "@/components/ShareButton";
+import CopyUsername from "@/components/CopyUsername";
 
 type User = {
 	id: string;
@@ -30,8 +30,6 @@ type Post = {
 	image_url: string | null;
 	created_at: number;
 	user: User;
-	is_repost?: boolean;
-	reposted_by?: string;
 };
 
 function ProfileContent() {
@@ -40,19 +38,20 @@ function ProfileContent() {
 
 	const [user, setUser] = useState<User | null>(null);
 	const [posts, setPosts] = useState<Post[]>([]);
-	const [reposts, setReposts] = useState<Post[]>([]);
 	const [activeTab, setActiveTab] = useState<"all" | "post" | "repost">("all");
 	const [isLoading, setIsLoading] = useState(true);
 
 	useEffect(() => {
 		async function fetchData() {
 			try {
-				const res = await fetch(`/api/profile/${username}`);
-				const data = (await res.json()) as { success: boolean; user: User; posts: Post[]; reposts: Post[] };
+				const token = localStorage.getItem("session");
+				const res = await fetch(`/api/profile/${username}`, {
+					headers: token ? { "Authorization": `Bearer ${token}` } : {},
+				});
+				const data = (await res.json()) as { success: boolean; user: User; posts: Post[] };
 				if (data.success) {
 					setUser(data.user);
 					setPosts(data.posts);
-					setReposts(data.reposts || []);
 				}
 			} catch (error) {
 				console.error(error);
@@ -94,8 +93,7 @@ function ProfileContent() {
 		} catch {}
 	}
 
-	const allPosts = [...posts, ...reposts].sort((a, b) => b.created_at - a.created_at);
-	const displayPosts = activeTab === "all" ? allPosts : activeTab === "post" ? posts : reposts;
+	const displayPosts = activeTab === "post" ? posts : activeTab === "all" ? posts : [];
 
 	return (
 		<div className="flex min-h-screen bg-gray-50">
@@ -170,13 +168,7 @@ function ProfileContent() {
 							<p className="text-center text-gray-500 text-sm py-10">Belum ada konten.</p>
 						) : (
 							displayPosts.map(post => (
-								<div key={`${post.id}-${post.is_repost ? 'repost' : 'post'}`} className="p-4">
-									{post.is_repost && (
-										<div className="flex items-center gap-1 text-gray-500 text-xs mb-2">
-											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
-											<span>Reposted by @{user.username}</span>
-										</div>
-									)}
+								<div key={post.id} className="p-4">
 									<div className="flex items-center gap-3 mb-2">
 										<Link href={`/profile/@${post.user?.username}`} className="shrink-0">
 											<div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs overflow-hidden">
