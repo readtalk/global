@@ -33,7 +33,7 @@ export async function GET(
 				success: true,
 				user: dataUser.user,
 				posts,
-				reposts: [] 
+				reposts: []
 			});
 		}
 
