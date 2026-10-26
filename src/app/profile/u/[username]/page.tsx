@@ -4,6 +4,8 @@ import { useState, useEffect, Suspense } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
+import ShareButton from "@/components/ShareButton";
+import CopyUsername from "@/components/CopyUsername";
 import { 
 	FacebookLogo, InstagramLogo, XLogo, TiktokLogo, 
 	YoutubeLogo, LinkedinLogo, Globe 
@@ -112,10 +114,16 @@ function ProfileContent() {
 						<div className="pt-14 flex justify-between items-start">
 							<div>
 								<h1 className="text-2xl font-bold text-gray-900">{user.yourname || user.username}</h1>
-								<p className="text-gray-500 text-sm">@{user.username}</p>
+								<div className="flex items-center gap-1 mt-1">
+									<p className="text-gray-500 text-sm">@{user.username}</p>
+									<CopyUsername username={user.username} />
+								</div>
 							</div>
 							<div className="flex gap-2">
-								<Link href="/settings" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold transition">Settings</Link>
+								<Link href="/settings" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold transition">
+									Settings
+								</Link>
+								<ShareButton username={user.username} />
 							</div>
 						</div>
 
