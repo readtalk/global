@@ -11,32 +11,29 @@ export async function GET(
 		const headers: Record<string, string> = {};
 		if (authHeader) headers["Authorization"] = authHeader;
 
-		const resUser = await fetch(`https://auth.readtalk.workers.dev/users/${username}`, {
+		const res = await fetch(`https://auth.readtalk.workers.dev/users/${username}`, {
 			headers,
 			cache: "no-store",
 		});
-		const dataUser = (await resUser.json()) as { success: boolean; user?: any };
+		
+		const data = (await res.json()) as { 
+			success: boolean; 
+			user?: any; 
+			updates?: any[]; 
+		};
 
-		if (!dataUser.success || !dataUser.user) {
+		if (!data.success || !data.user) {
 			return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
 		}
 
-		const userId = dataUser.user.id;
-
-		const resUpdates = await fetch(`https://auth.readtalk.workers.dev/updates?userId=${userId}`, {
-			headers,
-			cache: "no-store",
-		});
-		const dataUpdates = (await resUpdates.json()) as { success: boolean; updates?: any[] };
-
-		const posts = (dataUpdates.updates || []).map((post: any) => ({
+		const posts = (data.updates || []).map((post: any) => ({
 			...post,
-			user: dataUser.user
+			user: data.user
 		}));
 
 		return NextResponse.json({
 			success: true,
-			user: dataUser.user,
+			user: data.user,
 			posts: posts,
 			reposts: []
 		});
