@@ -7,6 +7,7 @@ import {
 	LinkedinLogo, 
 	Globe 
 } from "@phosphor-icons/react/dist/ssr";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,7 @@ async function getUserByUsername(username: string): Promise<User | null> {
 			cache: "no-store",
 		});
 		const data = (await res.json()) as { success: boolean; user: User };
-		
+
 		if (data.success && data.user) {
 			return data.user;
 		}
@@ -40,6 +41,41 @@ async function getUserByUsername(username: string): Promise<User | null> {
 		console.error("Failed to fetch user:", error);
 		return null;
 	}
+}
+
+export async function generateMetadata({
+	params,
+}: {
+	params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+	const { username } = await params;
+	const user = await getUserByUsername(username);
+
+	if (!user) {
+		return { title: "User Not Found" };
+	}
+
+	const title = `${user.yourname || user.username} (@${user.username})`;
+	const description = user.headline || user.about || `Profil publik @${user.username} di READTalk`;
+	const imageUrl = user.avatar || "https://raw.githubusercontent.com/readtalk/asean/refs/heads/main/public/brand.png";
+
+	return {
+		title,
+		description,
+		openGraph: {
+			title,
+			description,
+			type: "profile",
+			url: `https://global.readtalk.workers.dev/@${user.username}`,
+			images: [{ url: imageUrl }],
+		},
+		twitter: {
+			card: "summary_large_image",
+			title,
+			description,
+			images: [imageUrl],
+		},
+	};
 }
 
 export default async function PublicProfile({
@@ -54,7 +90,7 @@ export default async function PublicProfile({
 		return (
 			<div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
 				<div className="text-center">
-					<h1 className="text-2xl font-bold text-gray-900">User Not Found</h1>
+					<h1 className="text-2xl font-bold text-gray-800">User Not Found</h1>
 					<p className="text-gray-500 text-sm mt-2">@{username} does not exist.</p>
 				</div>
 			</div>
@@ -81,7 +117,6 @@ export default async function PublicProfile({
 	return (
 		<div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col items-center justify-center p-6">
 			<div className="w-full max-w-md flex flex-col items-center text-center">
-				
 				<div className="w-28 h-28 rounded-full overflow-hidden border-2 border-white shadow-xl mb-4 bg-white">
 					{user.avatar ? (
 						<img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
@@ -143,7 +178,6 @@ export default async function PublicProfile({
 				<div className="mt-10 mb-4 text-gray-400 text-[10px] uppercase tracking-widest font-semibold">
 					Powered by READTalk
 				</div>
-
 			</div>
 		</div>
 	);
