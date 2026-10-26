@@ -24,14 +24,14 @@ type User = {
 	created_at: string;
 };
 
-type Post = {
+type Update = {
 	id: string;
 	user_id: string;
 	content: string;
 	image_url: string | null;
 	created_at: number;
 	reposter_id?: string | null;
-	user?: User;
+	type?: string;
 };
 
 function ProfileContent() {
@@ -39,7 +39,7 @@ function ProfileContent() {
 	const username = params.username as string;
 
 	const [user, setUser] = useState<User | null>(null);
-	const [updates, setUpdates] = useState<Post[]>([]);
+	const [updates, setUpdates] = useState<Update[]>([]);
 	const [activeTab, setActiveTab] = useState<"all" | "post" | "repost">("all");
 	const [isLoading, setIsLoading] = useState(true);
 
@@ -53,7 +53,7 @@ function ProfileContent() {
 				const data = (await res.json()) as { 
 					success: boolean; 
 					user: User; 
-					updates: Post[]; 
+					updates: Update[]; 
 				};
 				if (data.success) {
 					setUser(data.user);
@@ -100,11 +100,11 @@ function ProfileContent() {
 	}
 
 	const targetUserId = String(user.id).trim();
-	
+
 	const posts = updates.filter(u => String(u.user_id).trim() === targetUserId && !u.reposter_id);
 	const reposts = updates.filter(u => String(u.reposter_id).trim() === targetUserId);
 	
-	const displayPosts = activeTab === "post" ? posts : activeTab === "all" ? updates : reposts;
+	const displayUpdates = activeTab === "all" ? updates : activeTab === "post" ? posts : reposts;
 
 	return (
 		<div className="flex min-h-screen bg-gray-50">
@@ -175,31 +175,33 @@ function ProfileContent() {
 					</div>
 
 					<div className="divide-y divide-gray-100">
-						{displayPosts.length === 0 ? (
+						{displayUpdates.length === 0 ? (
 							<p className="text-center text-gray-500 text-sm py-10">Belum ada konten.</p>
 						) : (
-							displayPosts.map(post => (
-								<div key={`${post.id}-${post.reposter_id || 'original'}`} className="p-4">
-									{post.reposter_id && (
+							displayUpdates.map(update => (
+								<div key={`${update.id}-${update.reposter_id || 'original'}`} className="p-4">
+									{update.reposter_id && (
 										<div className="flex items-center gap-1 text-gray-500 text-xs mb-2">
 											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
 											<span>Reposted by @{user.username}</span>
 										</div>
 									)}
 									<div className="flex items-center gap-3 mb-2">
-										<Link href={`/profile/@${post.user_id}`} className="shrink-0">
+										<Link href={`/profile/@${update.user_id}`} className="shrink-0">
 											<div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs overflow-hidden">
-												{post.user?.username?.[0]?.toUpperCase() || "?"}
+												{update.user_id === user.id ? (user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" /> : user.username?.[0]?.toUpperCase()) : "?"}
 											</div>
 										</Link>
 										<div>
-											<Link href={`/profile/@${post.user_id}`} className="text-gray-900 font-semibold text-sm hover:underline">{post.user?.yourname || post.user_id}</Link>
-											<p className="text-gray-500 text-xs">@{post.user?.username || post.user_id.substring(0, 8)}</p>
+											<Link href={`/profile/@${update.user_id}`} className="text-gray-900 font-semibold text-sm hover:underline">
+												{update.user_id === user.id ? (user.yourname || user.username) : "Unknown User"}
+											</Link>
+											<p className="text-gray-500 text-xs">@{update.user_id === user.id ? user.username : update.user_id.substring(0, 8)}</p>
 										</div>
 									</div>
-									<Link href={`/update/${post.id}`} className="block">
-										<p className="text-gray-800 text-sm">{post.content}</p>
-										{post.image_url && <img src={post.image_url} alt="Post" className="mt-2 rounded-lg max-h-60 object-cover" />}
+									<Link href={`/update/${update.id}`} className="block">
+										<p className="text-gray-800 text-sm">{update.content}</p>
+										{update.image_url && <img src={update.image_url} alt="Post" className="mt-2 rounded-lg max-h-60 object-cover" />}
 									</Link>
 								</div>
 							))
