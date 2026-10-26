@@ -27,7 +27,7 @@ export async function GET(
 
 			const posts = (dataUpdates.updates || [])
 				.filter((post) => post.user_id === userId)
-				.map((post) => ({ ...post, user: userMap.get(post.user_id) || null }));
+				.map((post) => ({ ...post, user: userMap.get(post.user_id) || null, is_repost: false }));
 
 			return NextResponse.json({
 				success: true,
