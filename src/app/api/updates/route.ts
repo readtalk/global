@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
 			}));
 			return NextResponse.json({ success: true, updates: mergedUpdates });
 		}
-
 		return NextResponse.json({ success: false, error: "Failed to fetch data" }, { status: 500 });
 	} catch (error) {
 		return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
@@ -31,7 +30,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
 	try {
-		const body = (await request.json()) as { content: string };
+		const body = (await request.json()) as { content: string; image_url: string | null };
 		const authHeader = request.headers.get("Authorization");
 
 		if (!authHeader) {
@@ -44,7 +43,7 @@ export async function POST(request: NextRequest) {
 				"Content-Type": "application/json",
 				"Authorization": authHeader,
 			},
-			body: JSON.stringify({ content: body.content }),
+			body: JSON.stringify({ content: body.content, image_url: body.image_url }),
 		});
 
 		const data = await res.json();
