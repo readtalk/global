@@ -21,16 +21,16 @@ export async function GET(
 			return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
 		}
 
-		const userId = dataUser.user.id;
+		const targetUserId = dataUser.user.id;
 		const userMap = new Map((dataUsers.users || []).map((u: any) => [u.id, u]));
-		const rawUpdates = dataUpdates.updates || [];
-
-		const posts = rawUpdates
-			.filter((post: any) => post.user_id === userId)
-			.map((post: any) => ({
-				...post,
-				user: userMap.get(post.user_id) || null
-			}));
+		
+		const allUpdates = dataUpdates.updates || [];
+		const userPosts = allUpdates.filter((post: any) => post.user_id === targetUserId);
+		
+		const posts = userPosts.map((post: any) => ({
+			...post,
+			user: userMap.get(post.user_id) || null
+		}));
 
 		return NextResponse.json({
 			success: true,
