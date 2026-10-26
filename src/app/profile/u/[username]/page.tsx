@@ -26,11 +26,12 @@ type User = {
 
 type Post = {
 	id: string;
+	user_id: string;
 	content: string;
 	image_url: string | null;
 	created_at: number;
-	user: User;
-	type?: string;
+	reposter_id?: string | null;
+	user?: User;
 };
 
 function ProfileContent() {
@@ -38,8 +39,7 @@ function ProfileContent() {
 	const username = params.username as string;
 
 	const [user, setUser] = useState<User | null>(null);
-	const [posts, setPosts] = useState<Post[]>([]);
-	const [reposts, setReposts] = useState<Post[]>([]);
+	const [updates, setUpdates] = useState<Post[]>([]);
 	const [activeTab, setActiveTab] = useState<"all" | "post" | "repost">("all");
 	const [isLoading, setIsLoading] = useState(true);
 
@@ -53,13 +53,11 @@ function ProfileContent() {
 				const data = (await res.json()) as { 
 					success: boolean; 
 					user: User; 
-					posts: Post[]; 
-					reposts: Post[] 
+					updates: Post[]; 
 				};
 				if (data.success) {
 					setUser(data.user);
-					setPosts(data.posts);
-					setReposts(data.reposts || []);
+					setUpdates(data.updates || []);
 				}
 			} catch (error) {
 				console.error(error);
@@ -101,7 +99,12 @@ function ProfileContent() {
 		} catch {}
 	}
 
-	const displayPosts = activeTab === "post" ? posts : activeTab === "all" ? [...posts, ...reposts] : reposts;
+	const targetUserId = String(user.id).trim();
+	
+	const posts = updates.filter(u => String(u.user_id).trim() === targetUserId && !u.reposter_id);
+	const reposts = updates.filter(u => String(u.reposter_id).trim() === targetUserId);
+	
+	const displayPosts = activeTab === "post" ? posts : activeTab === "all" ? updates : reposts;
 
 	return (
 		<div className="flex min-h-screen bg-gray-50">
@@ -176,22 +179,22 @@ function ProfileContent() {
 							<p className="text-center text-gray-500 text-sm py-10">Belum ada konten.</p>
 						) : (
 							displayPosts.map(post => (
-								<div key={post.id} className="p-4">
-									{post.type === "repost" && (
+								<div key={`${post.id}-${post.reposter_id || 'original'}`} className="p-4">
+									{post.reposter_id && (
 										<div className="flex items-center gap-1 text-gray-500 text-xs mb-2">
 											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
 											<span>Reposted by @{user.username}</span>
 										</div>
 									)}
 									<div className="flex items-center gap-3 mb-2">
-										<Link href={`/profile/@${post.user?.username}`} className="shrink-0">
+										<Link href={`/profile/@${post.user_id}`} className="shrink-0">
 											<div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs overflow-hidden">
-												{post.user?.avatar ? <img src={post.user.avatar} className="w-full h-full object-cover" /> : post.user?.username?.[0]?.toUpperCase()}
+												{post.user?.username?.[0]?.toUpperCase() || "?"}
 											</div>
 										</Link>
 										<div>
-											<Link href={`/profile/@${post.user?.username}`} className="text-gray-900 font-semibold text-sm hover:underline">{post.user?.yourname || post.user?.username}</Link>
-											<p className="text-gray-500 text-xs">@{post.user?.username}</p>
+											<Link href={`/profile/@${post.user_id}`} className="text-gray-900 font-semibold text-sm hover:underline">{post.user?.yourname || post.user_id}</Link>
+											<p className="text-gray-500 text-xs">@{post.user?.username || post.user_id.substring(0, 8)}</p>
 										</div>
 									</div>
 									<Link href={`/update/${post.id}`} className="block">
