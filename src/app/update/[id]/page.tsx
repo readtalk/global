@@ -1,4 +1,3 @@
-//
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
@@ -37,7 +36,8 @@ function UpdateDetailContent() {
 	const fetchData = async () => {
 		try {
 			const token = localStorage.getItem("session");
-			const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+			const headers: Record<string, string> = {};
+			if (token) headers["Authorization"] = `Bearer ${token}`;
 
 			const [resPost, resComments] = await Promise.all([
 				fetch(`/api/updates/${id}`, { headers }),
