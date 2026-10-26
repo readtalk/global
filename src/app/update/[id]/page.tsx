@@ -74,13 +74,29 @@ function UpdateDetailContent() {
 		}
 	};
 
+	const handleShare = () => {
+		const url = `${window.location.origin}/update/${id}`;
+		navigator.clipboard.writeText(url);
+		alert("Link copied to clipboard!");
+	};
+
 	return (
 		<>
 			<div className="flex min-h-screen bg-gray-50">
 				<Sidebar />
 				<div className="flex-1 w-full pb-20 md:pb-0" id="main-content" role="main">
 					<div className="max-w-2xl mx-auto p-4 md:p-6">
-						<Link href="/" className="text-blue-600 hover:underline mb-4 inline-block">&larr; Back to Forum</Link>
+						<div className="flex items-center justify-between mb-4">
+							<Link href="/" className="text-blue-600 hover:underline inline-block">← Back to Forum</Link>
+							<div className="flex gap-3">
+								<button onClick={handleShare} className="text-gray-500 hover:text-blue-600">
+									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+								</button>
+								<Link href="/settings" className="text-gray-500 hover:text-blue-600">
+									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+								</Link>
+							</div>
+						</div>
 
 						<h1 className="text-2xl font-bold mb-6 text-gray-900">Comments</h1>
 
