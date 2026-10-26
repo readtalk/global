@@ -11,25 +11,34 @@ export async function GET(
 		const headers: Record<string, string> = {};
 		if (authHeader) headers["Authorization"] = authHeader;
 
-		const res = await fetch(`https://auth.readtalk.workers.dev/users/${username}`, {
+		const resUser = await fetch(`https://auth.readtalk.workers.dev/users/${username}`, {
 			headers,
 			cache: "no-store",
 		});
-		
-		const data = (await res.json()) as { 
-			success: boolean; 
-			user?: any; 
-			updates?: any[]; 
-		};
+		const dataUser = (await resUser.json()) as { success: boolean; user?: any };
 
-		if (!data.success || !data.user) {
+		if (!dataUser.success || !dataUser.user) {
 			return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
 		}
 
+		const userId = dataUser.user.id;
+
+		const resUpdates = await fetch(`https://auth.readtalk.workers.dev/updates?userId=${userId}`, {
+			headers,
+			cache: "no-store",
+		});
+		const dataUpdates = (await resUpdates.json()) as { success: boolean; updates?: any[] };
+
+		const posts = (dataUpdates.updates || []).map((post: any) => ({
+			...post,
+			user: dataUser.user
+		}));
+
 		return NextResponse.json({
 			success: true,
-			user: data.user,
-			updates: data.updates || []
+			user: dataUser.user,
+			posts: posts,
+			reposts: []
 		});
 	} catch (error) {
 		return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
