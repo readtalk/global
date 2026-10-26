@@ -32,6 +32,9 @@ type Update = {
 	created_at: number;
 	reposter_id?: string | null;
 	type?: string;
+	author_username?: string;
+	author_yourname?: string;
+	author_avatar?: string | null;
 };
 
 function ProfileContent() {
@@ -100,7 +103,6 @@ function ProfileContent() {
 	}
 
 	const targetUserId = String(user.id).trim();
-
 	const posts = updates.filter(u => String(u.user_id).trim() === targetUserId && !u.reposter_id);
 	const reposts = updates.filter(u => String(u.reposter_id).trim() === targetUserId);
 	
@@ -187,16 +189,20 @@ function ProfileContent() {
 										</div>
 									)}
 									<div className="flex items-center gap-3 mb-2">
-										<Link href={`/profile/@${update.user_id}`} className="shrink-0">
+										<Link href={`/profile/@${update.author_username || update.user_id}`} className="shrink-0">
 											<div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs overflow-hidden">
-												{update.user_id === user.id ? (user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" /> : user.username?.[0]?.toUpperCase()) : "?"}
+												{update.author_avatar ? (
+													<img src={update.author_avatar} className="w-full h-full object-cover" />
+												) : (
+													update.author_username?.[0]?.toUpperCase() || "?"
+												)}
 											</div>
 										</Link>
 										<div>
-											<Link href={`/profile/@${update.user_id}`} className="text-gray-900 font-semibold text-sm hover:underline">
-												{update.user_id === user.id ? (user.yourname || user.username) : "Unknown User"}
+											<Link href={`/profile/@${update.author_username || update.user_id}`} className="text-gray-900 font-semibold text-sm hover:underline">
+												{update.author_yourname || update.author_username || "Unknown User"}
 											</Link>
-											<p className="text-gray-500 text-xs">@{update.user_id === user.id ? user.username : update.user_id.substring(0, 8)}</p>
+											<p className="text-gray-500 text-xs">@{update.author_username || update.user_id.substring(0, 8)}</p>
 										</div>
 									</div>
 									<Link href={`/update/${update.id}`} className="block">
