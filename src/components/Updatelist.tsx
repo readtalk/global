@@ -38,6 +38,41 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 		}
 	};
 
+	const renderContent = (text: string) => {
+		const urlRegex = /(https?:\/\/[^\s]+)/g;
+		const parts = text.split(urlRegex);
+
+		return parts.map((part, index) => {
+			if (part.match(urlRegex)) {
+				const isImage = /\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i.test(part);
+				const isVideo = /\.(mp4|webm)(\?.*)?$/i.test(part);
+
+				if (isImage) {
+					return (
+						<div key={index} className="mt-2 rounded-xl overflow-hidden border border-gray-200">
+							<img src={part} alt="Media" className="w-full h-auto object-cover" />
+						</div>
+					);
+				}
+
+				if (isVideo) {
+					return (
+						<div key={index} className="mt-2 rounded-xl overflow-hidden border border-gray-200">
+							<video src={part} controls className="w-full h-auto" />
+						</div>
+					);
+				}
+
+				return (
+					<a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline break-all">
+						{part}
+					</a>
+				);
+			}
+			return <span key={index}>{part}</span>;
+		});
+	};
+
 	return (
 		<>
 			{data?.slice(0, limit)?.map((update) => (
@@ -71,7 +106,9 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 						</div>
 					</div>
 
-					<p className="mt-3 text-gray-800 whitespace-pre-wrap">{update.content}</p>
+					<div className="mt-3 text-gray-800 whitespace-pre-wrap">
+						{renderContent(update.content)}
+					</div>
 
 					<div className="mt-4 flex items-center gap-6 text-gray-500 text-sm">
 						<Link href={`/update/${update.id}`} className="flex items-center gap-1 hover:text-blue-500 transition">
