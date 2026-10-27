@@ -81,7 +81,7 @@ function ProfileContent() {
 		const token = localStorage.getItem("session");
 		if (!token) return alert(`You must be logged in to ${action}.`);
 
-		// 1. Optimistic UI: Ubah state langsung saat diklik
+		// 1. Optimistic UI: Langsung ubah state saat itu juga
 		setUpdates((prev) =>
 			prev.map((u) => {
 				if (u.id === id) {
@@ -104,17 +104,15 @@ function ProfileContent() {
 		);
 
 		try {
-			// 2. Kirim ke backend di background
+			// 2. Kirim request ke backend di belakang layar
 			await fetch(`/api/updates/${id}/${action}`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
 			});
-			// 3. Sync data asli (kalau perlu)
-			// fetchData(); 
 		} catch (error) {
 			console.error(error);
-			// 4. Rollback kalau gagal
-			fetchData(); 
+			// 3. Kalau gagal, balikin ke state asli
+			fetchData();
 		}
 	};
 
