@@ -68,8 +68,8 @@ export default function Search() {
 					onChange={(e) => { setSearchType(e.target.value); setResults([]); setIsOpen(false); }}
 					className="bg-transparent text-gray-600 text-sm focus:outline-none font-medium cursor-pointer border-l border-gray-300 pl-2"
 				>
-					<option value="threads">Threads</option>
-					<option value="posts">Posts</option>
+					<option value="threads">Posts</option>
+					<option value="posts">Usernane</option>
 				</select>
 
 				<button
@@ -85,7 +85,7 @@ export default function Search() {
 					) : (
 						<MagnifyingGlass size={16} weight="bold" />
 					)}
-					<span>Search</span>
+					<span></span>
 				</button>
 			</div>
 			
