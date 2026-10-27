@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
+import Updatelist, { UpdatelistItem } from "@/components/Updatelist";
 import { 
 	FacebookLogo, InstagramLogo, XLogo, TiktokLogo, 
 	YoutubeLogo, LinkedinLogo, Globe 
@@ -24,53 +25,38 @@ type User = {
 	created_at: string;
 };
 
-type Update = {
-	id: string;
-	user_id: string;
-	content: string;
-	image_url: string | null;
-	created_at: number;
-	reposter_id?: string | null;
-	type?: string;
-	author_username?: string;
-	author_yourname?: string;
-	author_avatar?: string | null;
-	like_count?: number;
-	comment_count?: number;
-	repost_count?: number;
-};
-
 function ProfileContent() {
 	const params = useParams();
 	const username = params.username as string;
 
 	const [user, setUser] = useState<User | null>(null);
-	const [updates, setUpdates] = useState<Update[]>([]);
+	const [updates, setUpdates] = useState<UpdatelistItem[]>([]);
 	const [activeTab, setActiveTab] = useState<"all" | "post" | "repost">("all");
 	const [isLoading, setIsLoading] = useState(true);
 
-	useEffect(() => {
-		async function fetchData() {
-			try {
-				const token = localStorage.getItem("session");
-				const res = await fetch(`/api/profile/${username}`, {
-					headers: token ? { "Authorization": `Bearer ${token}` } : {},
-				});
-				const data = (await res.json()) as { 
-					success: boolean; 
-					user: User; 
-					updates: Update[]; 
-				};
-				if (data.success) {
-					setUser(data.user);
-					setUpdates(data.updates || []);
-				}
-			} catch (error) {
-				console.error(error);
-			} finally {
-				setIsLoading(false);
+	const fetchData = async () => {
+		try {
+			const token = localStorage.getItem("session");
+			const res = await fetch(`/api/profile/${username}`, {
+				headers: token ? { "Authorization": `Bearer ${token}` } : {},
+			});
+			const data = (await res.json()) as { 
+				success: boolean; 
+				user: User; 
+				updates: UpdatelistItem[]; 
+			};
+			if (data.success) {
+				setUser(data.user);
+				setUpdates(data.updates || []);
 			}
+		} catch (error) {
+			console.error(error);
+		} finally {
+			setIsLoading(false);
 		}
+	};
+
+	useEffect(() => {
 		fetchData();
 	}, [username]);
 
@@ -183,58 +169,7 @@ function ProfileContent() {
 						{displayUpdates.length === 0 ? (
 							<p className="text-center text-gray-500 text-sm py-10">Belum ada konten.</p>
 						) : (
-							displayUpdates.map(update => (
-								<div key={`${update.id}-${update.reposter_id || 'original'}`} className="p-4">
-									{update.reposter_id && (
-										<div className="flex items-center gap-1 text-gray-500 text-xs mb-2">
-											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
-											<span>Reposted by @{user.username}</span>
-										</div>
-									)}
-									<div className="flex items-center gap-3 mb-2">
-										<Link href={`/profile/@${update.author_username || update.user_id}`} className="shrink-0">
-											<div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs overflow-hidden">
-												{update.author_avatar ? (
-													<img src={update.author_avatar} className="w-full h-full object-cover" />
-												) : (
-													update.author_username?.[0]?.toUpperCase() || "?"
-												)}
-											</div>
-										</Link>
-										<div>
-											<div className="flex items-center gap-2">
-												<Link href={`/profile/@${update.author_username || update.user_id}`} className="text-gray-900 font-semibold text-sm hover:underline">
-													{update.author_yourname || update.author_username || "Unknown User"}
-												</Link>
-												<span className="text-gray-400 text-xs">·</span>
-												<span className="text-gray-500 text-xs">
-													{new Date(update.created_at * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-												</span>
-											</div>
-											<p className="text-gray-500 text-xs">@{update.author_username || update.user_id.substring(0, 8)}</p>
-										</div>
-									</div>
-									<Link href={`/update/${update.id}`} className="block">
-										<p className="text-gray-800 text-sm">{update.content}</p>
-										{update.image_url && <img src={update.image_url} alt="Post" className="mt-2 rounded-lg max-h-60 object-cover" />}
-									</Link>
-									
-									<div className="mt-3 flex items-center gap-6 text-gray-500 text-sm">
-										<Link href={`/update/${update.id}`} className="flex items-center gap-1 hover:text-blue-500 transition">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-											{update.comment_count || 0}
-										</Link>
-										<div className="flex items-center gap-1">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
-											{update.repost_count || 0}
-										</div>
-										<div className="flex items-center gap-1">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-											{update.like_count || 0}
-										</div>
-									</div>
-								</div>
-							))
+							<Updatelist data={displayUpdates} onUpdate={fetchData} />
 						)}
 					</div>
 				</div>
