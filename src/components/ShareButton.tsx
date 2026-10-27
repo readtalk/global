@@ -11,7 +11,7 @@ export default function ShareButton({ username }: { username: string }) {
 			try {
 				await navigator.share({
 					title: `@${username} di READTalk`,
-					text: `Cek profil @${username} di READTalk`,
+					text: `Public Profile by @${username} at READTalk Messenger`,
 					url: url,
 				});
 			} catch (error) {
