@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { timeAgo } from "@/lib/timer";
 
 export type UpdatelistItem = {
 	id: string;
@@ -52,10 +53,14 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 								<Link href={`/profile/@${update.user?.username || update.user_id}`} className="hover:underline">
 									<p className="text-gray-900 font-semibold">{update.user?.yourname || "Unknown"}</p>
 								</Link>
-								<span className="text-gray-400 text-xs">·</span>
-								<span className="text-gray-500 text-xs">
-									{new Date(update.created_at * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-								</span>
+								{update.created_at && (
+									<>
+										<span className="text-gray-400 text-xs">·</span>
+										<span className="text-gray-500 text-xs">
+											{timeAgo(update.created_at)}
+										</span>
+									</>
+								)}
 							</div>
 							<Link href={`/profile/@${update.user?.username || update.user_id}`} className="hover:underline">
 								<p className="text-gray-500 text-xs">@{update.user?.username || update.user_id.substring(0, 8)}</p>
