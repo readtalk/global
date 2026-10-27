@@ -145,7 +145,7 @@ function UpdateDetailContent() {
 				) : (<p className="text-center text-gray-500 text-sm mt-4">No comments yet. Be the first to reply!</p>)}
 			</div>
 
-			<div className="flex-none bg-white border-t border-gray-200 p-3 flex gap-2 pb-safe">
+			<div className="flex-none bg-white border-t border-gray-200 p-3 flex gap-2">
 				<input type="text" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Write a comment..." className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" onKeyDown={(e) => e.key === "Enter" && handlePostComment()} />
 				<button onClick={handlePostComment} disabled={isPosting || !content.trim()} className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold disabled:opacity-50">{isPosting ? "..." : "Reply"}</button>
 			</div>
