@@ -202,9 +202,15 @@ function ProfileContent() {
 											</div>
 										</Link>
 										<div>
-											<Link href={`/profile/@${update.author_username || update.user_id}`} className="text-gray-900 font-semibold text-sm hover:underline">
-												{update.author_yourname || update.author_username || "Unknown User"}
-											</Link>
+											<div className="flex items-center gap-2">
+												<Link href={`/profile/@${update.author_username || update.user_id}`} className="text-gray-900 font-semibold text-sm hover:underline">
+													{update.author_yourname || update.author_username || "Unknown User"}
+												</Link>
+												<span className="text-gray-400 text-xs">·</span>
+												<span className="text-gray-500 text-xs">
+													{new Date(update.created_at * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+												</span>
+											</div>
 											<p className="text-gray-500 text-xs">@{update.author_username || update.user_id.substring(0, 8)}</p>
 										</div>
 									</div>
