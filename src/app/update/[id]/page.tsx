@@ -42,17 +42,14 @@ function UpdateDetailContent() {
 			const headers: Record<string, string> = {};
 			if (token) headers["Authorization"] = `Bearer ${token}`;
 
-			// 1. Tarik semua postingan dari /api/updates
 			const resAll = await fetch(`/api/updates`, { headers });
 			const dataAll = (await resAll.json()) as { success: boolean; updates: UpdatelistItem[] };
 			
-			// 2. Cari postingan yang ID-nya cocok
 			if (dataAll.success && dataAll.updates) {
 				const foundPost = dataAll.updates.find(p => p.id === id);
 				if (foundPost) setPost(foundPost);
 			}
 
-			// 3. Tarik komentar
 			const resComments = await fetch(`/api/updates/${id}/comments`, { headers });
 			const dataComments = (await resComments.json()) as { success: boolean; comments: Comment[] };
 			if (dataComments.success) setComments(dataComments.comments);
@@ -129,7 +126,13 @@ function UpdateDetailContent() {
 									</div>
 								</Link>
 								<div>
-									<Link href={`/profile/@${post.user?.username}`} className="text-gray-900 font-semibold hover:underline">{post.user?.yourname}</Link>
+									<div className="flex items-center gap-2">
+										<Link href={`/profile/@${post.user?.username}`} className="text-gray-900 font-semibold hover:underline">{post.user?.yourname}</Link>
+										<span className="text-gray-400 text-xs">·</span>
+										<span className="text-gray-500 text-xs">
+											{new Date(post.created_at * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+										</span>
+									</div>
 									<p className="text-gray-500 text-xs">@{post.user?.username}</p>
 								</div>
 							</div>
@@ -168,7 +171,13 @@ function UpdateDetailContent() {
 									</div>
 								</Link>
 								<div className="bg-gray-100 rounded-2xl px-4 py-2 max-w-[85%]">
-									<Link href={`/profile/@${comment.user?.username}`} className="text-gray-900 font-semibold text-sm hover:underline">{comment.user?.yourname}</Link>
+									<div className="flex items-center gap-2">
+										<Link href={`/profile/@${comment.user?.username}`} className="text-gray-900 font-semibold text-sm hover:underline">{comment.user?.yourname}</Link>
+										<span className="text-gray-400 text-[10px]">·</span>
+										<span className="text-gray-500 text-[10px]">
+											{new Date(comment.created_at * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+										</span>
+									</div>
 									<p className="text-gray-800 text-[15px]">{comment.content}</p>
 								</div>
 							</div>
