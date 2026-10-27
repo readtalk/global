@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
+import { timeAgo } from "@/lib/timer";
 
 type UpdatelistItem = {
 	id: string;
@@ -148,10 +149,14 @@ function UpdateDetailContent() {
 								<div>
 									<div className="flex items-center gap-2">
 										<Link href={`/profile/@${post.user?.username}`} className="text-gray-900 font-semibold hover:underline">{post.user?.yourname}</Link>
-										<span className="text-gray-400 text-xs">·</span>
-										<span className="text-gray-500 text-xs">
-											{new Date(post.created_at * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-										</span>
+										{post.created_at && (
+											<>
+												<span className="text-gray-400 text-xs">·</span>
+												<span className="text-gray-500 text-xs">
+													{timeAgo(post.created_at)}
+												</span>
+											</>
+										)}
 									</div>
 									<p className="text-gray-500 text-xs">@{post.user?.username}</p>
 								</div>
@@ -201,10 +206,14 @@ function UpdateDetailContent() {
 								<div className="bg-gray-100 rounded-2xl px-4 py-2 max-w-[85%]">
 									<div className="flex items-center gap-2">
 										<Link href={`/profile/@${comment.user?.username}`} className="text-gray-900 font-semibold text-sm hover:underline">{comment.user?.yourname}</Link>
-										<span className="text-gray-400 text-[10px]">·</span>
-										<span className="text-gray-500 text-[10px]">
-											{new Date(comment.created_at * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-										</span>
+										{comment.created_at && (
+											<>
+												<span className="text-gray-400 text-[10px]">·</span>
+												<span className="text-gray-500 text-[10px]">
+													{timeAgo(comment.created_at)}
+												</span>
+											</>
+										)}
 									</div>
 									<p className="text-gray-800 text-[15px]">{comment.content}</p>
 								</div>
