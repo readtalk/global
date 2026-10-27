@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
+import { timeAgo } from "@/lib/timer";
 import { 
 	FacebookLogo, InstagramLogo, XLogo, TiktokLogo, 
 	YoutubeLogo, LinkedinLogo, Globe 
@@ -227,10 +228,14 @@ function ProfileContent() {
 												<Link href={`/profile/@${update.author_username || update.user_id}`} className="text-gray-900 font-semibold text-sm hover:underline">
 													{update.author_yourname || update.author_username || "Unknown User"}
 												</Link>
-												<span className="text-gray-400 text-xs">·</span>
-												<span className="text-gray-500 text-xs">
-													{new Date(update.created_at * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-												</span>
+												{update.created_at && (
+													<>
+														<span className="text-gray-400 text-xs">·</span>
+														<span className="text-gray-500 text-xs">
+															{timeAgo(update.created_at)}
+														</span>
+													</>
+												)}
 											</div>
 											<p className="text-gray-500 text-xs">@{update.author_username || update.user_id.substring(0, 8)}</p>
 										</div>
