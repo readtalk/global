@@ -69,7 +69,7 @@ export default function Search() {
 					className="bg-transparent text-gray-600 text-sm focus:outline-none font-medium cursor-pointer border-l border-gray-300 pl-2"
 				>
 					<option value="threads">Posts</option>
-					<option value="posts">Usernane</option>
+					<option value="posts">Users</option>
 				</select>
 
 				<button
@@ -85,7 +85,7 @@ export default function Search() {
 					) : (
 						<MagnifyingGlass size={16} weight="bold" />
 					)}
-					<span></span>
+					
 				</button>
 			</div>
 			
