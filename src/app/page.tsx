@@ -29,8 +29,8 @@ function ForumContent() {
 		}
 	}, [searchParams, router]);
 
-	const fetchData = useCallback(async () => {
-		setIsLoading(true);
+	const fetchData = useCallback(async (showLoading = true) => {
+		if (showLoading) setIsLoading(true);
 		try {
 			const token = localStorage.getItem("session");
 			const res = await fetch("/api/updates", {
@@ -41,7 +41,7 @@ function ForumContent() {
 		} catch (error) {
 			console.error(error);
 		} finally {
-			setIsLoading(false);
+			if (showLoading) setIsLoading(false);
 		}
 	}, []);
 
@@ -99,7 +99,8 @@ function ForumContent() {
 				headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
 				body: JSON.stringify({ content: content, image_url: imageUrl }),
 			});
-			await fetchData();
+			// Panggil fetchData tanpa nampilin loading
+			await fetchData(false);
 		} catch (error) { console.error(error); } finally { setIsPosting(false); }
 	};
 
@@ -138,7 +139,7 @@ function ForumContent() {
 					</div>
 				</div>
 				<div className="bg-white">
-					{isLoading ? <div className="p-8 text-center text-gray-500">Loading updates...</div> : updates.length > 0 ? <Updatelist data={updates} onUpdate={fetchData} /> : <div className="p-8 text-center text-gray-500">No updates yet. Be the first to post!</div>}
+					{isLoading ? <div className="p-8 text-center text-gray-500">Loading updates...</div> : updates.length > 0 ? <Updatelist data={updates} onUpdate={() => fetchData(false)} /> : <div className="p-8 text-center text-gray-500">No updates yet. Be the first to post!</div>}
 				</div>
 			</div>
 		</div>
