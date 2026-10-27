@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 
 type SearchResult = {
 	id?: string;
@@ -50,36 +51,42 @@ export default function Search() {
 	};
 
 	return (
-		<div className="w-full md:w-1/2 relative" ref={wrapperRef}>
-			<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-2 bg-gray-100 p-1.5 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
-				<div className="relative flex-1">
-					<input
-						className="w-full bg-transparent text-gray-800 placeholder-gray-500 focus:outline-none h-9 pl-3 pr-4 text-sm"
-						placeholder="Search..."
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-						onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-						onFocus={() => { if (results.length > 0) setIsOpen(true); }}
-					/>
-				</div>
+		<div className="w-full relative" ref={wrapperRef}>
+			<div className="flex items-center gap-2 bg-gray-100 p-1.5 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
 				
-				<div className="flex items-center gap-1 border-t sm:border-t-0 sm:border-l border-gray-300 pt-2 sm:pt-0 sm:pl-2">
-					<select
-						value={searchType}
-						onChange={(e) => { setSearchType(e.target.value); setResults([]); setIsOpen(false); }}
-						className="bg-transparent text-gray-600 text-sm focus:outline-none font-medium cursor-pointer"
-					>
-						<option value="threads">Threads</option>
-						<option value="posts">Posts</option>
-					</select>
-					<button
-						onClick={handleSearch}
-						disabled={isLoading}
-						className="bg-gray-800 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-gray-700 transition disabled:opacity-50 font-medium"
-					>
-						{isLoading ? "..." : "Search"}
-					</button>
-				</div>
+				<input
+					className="flex-1 bg-transparent text-gray-800 placeholder-gray-500 focus:outline-none h-9 pl-3 text-sm"
+					placeholder="Search..."
+					value={searchQuery}
+					onChange={(e) => setSearchQuery(e.target.value)}
+					onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+					onFocus={() => { if (results.length > 0) setIsOpen(true); }}
+				/>
+				
+				<select
+					value={searchType}
+					onChange={(e) => { setSearchType(e.target.value); setResults([]); setIsOpen(false); }}
+					className="bg-transparent text-gray-600 text-sm focus:outline-none font-medium cursor-pointer border-l border-gray-300 pl-2"
+				>
+					<option value="threads">Threads</option>
+					<option value="posts">Posts</option>
+				</select>
+
+				<button
+					onClick={handleSearch}
+					disabled={isLoading}
+					className="bg-gray-800 text-white p-2 rounded-lg hover:bg-gray-700 transition disabled:opacity-50 flex items-center justify-center"
+					aria-label="Search"
+				>
+					{isLoading ? (
+						<svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+							<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+							<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+						</svg>
+					) : (
+						<MagnifyingGlass size={20} weight="bold" />
+					)}
+				</button>
 			</div>
 			
 			{/* Dropdown Hasil */}
