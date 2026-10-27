@@ -105,6 +105,7 @@ function UpdateDetailContent() {
 				<Link href="/" className="text-gray-600 hover:text-gray-900"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5"></path><polyline points="12 19 5 12 12 5"></polyline></svg></Link>
 				<h1 className="text-lg font-bold text-gray-900">Post's Activity</h1>
 			</div>
+			
 			<div className="flex-1 overflow-y-auto p-4 space-y-4">
 				{post && (
 					<div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
@@ -143,7 +144,8 @@ function UpdateDetailContent() {
 					))
 				) : (<p className="text-center text-gray-500 text-sm mt-4">No comments yet. Be the first to reply!</p>)}
 			</div>
-			<div className="flex-none bg-white border-t border-gray-200 p-3 flex gap-2">
+
+			<div className="flex-none bg-white border-t border-gray-200 p-3 flex gap-2 pb-safe">
 				<input type="text" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Write a comment..." className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" onKeyDown={(e) => e.key === "Enter" && handlePostComment()} />
 				<button onClick={handlePostComment} disabled={isPosting || !content.trim()} className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold disabled:opacity-50">{isPosting ? "..." : "Reply"}</button>
 			</div>
