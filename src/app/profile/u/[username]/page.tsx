@@ -50,6 +50,7 @@ function ProfileContent() {
 	const [updates, setUpdates] = useState<Update[]>([]);
 	const [activeTab, setActiveTab] = useState<"all" | "post" | "repost">("all");
 	const [isLoading, setIsLoading] = useState(true);
+	const [loading, setLoading] = useState<string | null>(null);
 
 	const fetchData = async () => {
 		try {
@@ -80,39 +81,17 @@ function ProfileContent() {
 	const handleAction = async (id: string, action: "like" | "repost") => {
 		const token = localStorage.getItem("session");
 		if (!token) return alert(`You must be logged in to ${action}.`);
-
-		// 1. Optimistic UI: Langsung ubah state saat itu juga
-		setUpdates((prev) =>
-			prev.map((u) => {
-				if (u.id === id) {
-					if (action === "like") {
-						return { 
-							...u, 
-							is_liked: !u.is_liked, 
-							like_count: (u.like_count || 0) + (u.is_liked ? -1 : 1) 
-						};
-					} else {
-						return { 
-							...u, 
-							is_reposted: !u.is_reposted, 
-							repost_count: (u.repost_count || 0) + (u.is_reposted ? -1 : 1) 
-						};
-					}
-				}
-				return u;
-			})
-		);
-
+		setLoading(`${action}-${id}`);
 		try {
-			// 2. Kirim request ke backend di belakang layar
 			await fetch(`/api/updates/${id}/${action}`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
 			});
+			fetchData();
 		} catch (error) {
 			console.error(error);
-			// 3. Kalau gagal, balikin ke state asli
-			fetchData();
+		} finally {
+			setLoading(null);
 		}
 	};
 
@@ -268,6 +247,7 @@ function ProfileContent() {
 										</Link>
 										<button 
 											onClick={() => handleAction(update.id, "repost")} 
+											disabled={loading === `repost-${update.id}`} 
 											className={`flex items-center gap-1 hover:text-green-500 transition ${update.is_reposted ? 'text-green-500' : ''}`}
 										>
 											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
@@ -275,6 +255,7 @@ function ProfileContent() {
 										</button>
 										<button 
 											onClick={() => handleAction(update.id, "like")} 
+											disabled={loading === `like-${update.id}`} 
 											className={`flex items-center gap-1 hover:text-red-500 transition ${update.is_liked ? 'text-red-500' : ''}`}
 										>
 											<svg width="16" height="16" viewBox="0 0 24 24" fill={update.is_liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
@@ -298,3 +279,4 @@ export default function ProfilePage() {
 		</Suspense>
 	);
 }
+```
