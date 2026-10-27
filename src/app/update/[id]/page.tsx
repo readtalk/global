@@ -42,16 +42,21 @@ function UpdateDetailContent() {
 			const headers: Record<string, string> = {};
 			if (token) headers["Authorization"] = `Bearer ${token}`;
 
-			const [resPost, resComments] = await Promise.all([
-				fetch(`/api/updates/${id}`, { headers }),
-				fetch(`/api/updates/${id}/comments`, { headers }),
-			]);
+			// 1. Tarik semua postingan dari /api/updates
+			const resAll = await fetch(`/api/updates`, { headers });
+			const dataAll = (await resAll.json()) as { success: boolean; updates: UpdatelistItem[] };
+			
+			// 2. Cari postingan yang ID-nya cocok
+			if (dataAll.success && dataAll.updates) {
+				const foundPost = dataAll.updates.find(p => p.id === id);
+				if (foundPost) setPost(foundPost);
+			}
 
-			const dataPost = (await resPost.json()) as { success: boolean; update: UpdatelistItem };
+			// 3. Tarik komentar
+			const resComments = await fetch(`/api/updates/${id}/comments`, { headers });
 			const dataComments = (await resComments.json()) as { success: boolean; comments: Comment[] };
-
-			if (dataPost.success) setPost(dataPost.update);
 			if (dataComments.success) setComments(dataComments.comments);
+
 		} catch (error) {
 			console.error(error);
 		} finally {
@@ -102,10 +107,11 @@ function UpdateDetailContent() {
 	}
 
 	return (
-		<div className="flex min-h-screen bg-white">
+		<div className="flex h-screen bg-white overflow-hidden">
 			<Sidebar />
-			<div className="flex-1 w-full pb-20 md:pb-0 flex flex-col h-screen" id="main-content" role="main">
-				<div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-4">
+			<div className="flex-1 flex flex-col h-full pb-20 md:pb-0" id="main-content" role="main">
+				
+				<div className="flex-none bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-4 z-10">
 					<Link href="/" className="text-gray-600 hover:text-gray-900">
 						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5"></path><polyline points="12 19 5 12 12 5"></polyline></svg>
 					</Link>
@@ -113,6 +119,7 @@ function UpdateDetailContent() {
 				</div>
 
 				<div className="flex-1 overflow-y-auto p-4 space-y-4">
+					
 					{post && (
 						<div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
 							<div className="flex items-center gap-3 mb-2">
@@ -131,8 +138,7 @@ function UpdateDetailContent() {
 								<img src={post.image_url} alt="Post Image" className="mt-3 rounded-lg max-h-80 w-full object-cover" />
 							)}
 
-							{/* Counts */}
-							<div className="mt-4 flex items-center gap-6 text-gray-500 text-sm">
+							<div className="mt-4 flex items-center gap-6 text-gray-500 text-sm border-t border-gray-200 pt-3">
 								<div className="flex items-center gap-1">
 									<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
 									{post.comment_count || 0}
@@ -172,7 +178,7 @@ function UpdateDetailContent() {
 					)}
 				</div>
 
-				<div className="sticky bottom-0 bg-white border-t border-gray-200 p-3 flex gap-2">
+				<div className="flex-none bg-white border-t border-gray-200 p-3 flex gap-2 pb-safe">
 					<input
 						type="text"
 						value={content}
