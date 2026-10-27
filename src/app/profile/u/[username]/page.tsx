@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import Sidebar from "@/components/Sidebar";
 import { timeAgo } from "@/lib/timer";
 import { 
 	FacebookLogo, InstagramLogo, XLogo, TiktokLogo, 
@@ -12,41 +11,12 @@ import {
 import ShareButton from "@/components/ShareButton";
 import CopyUsername from "@/components/CopyUsername";
 
-type User = {
-	id: string;
-	username: string;
-	yourname: string;
-	avatar: string | null;
-	header: string | null;
-	headline: string | null;
-	about: string | null;
-	socials: string | null;
-	location: string | null;
-	created_at: string;
-};
-
-type Update = {
-	id: string;
-	user_id: string;
-	content: string;
-	image_url: string | null;
-	created_at: number;
-	reposter_id?: string | null;
-	type?: string;
-	author_username?: string;
-	author_yourname?: string;
-	author_avatar?: string | null;
-	like_count?: number;
-	comment_count?: number;
-	repost_count?: number;
-	is_liked?: boolean;
-	is_reposted?: boolean;
-};
+type User = { id: string; username: string; yourname: string; avatar: string | null; header: string | null; headline: string | null; about: string | null; socials: string | null; location: string | null; created_at: string; };
+type Update = { id: string; user_id: string; content: string; image_url: string | null; created_at: number; reposter_id?: string | null; type?: string; author_username?: string; author_yourname?: string; author_avatar?: string | null; like_count?: number; comment_count?: number; repost_count?: number; is_liked?: boolean; is_reposted?: boolean; };
 
 function ProfileContent() {
 	const params = useParams();
 	const username = params.username as string;
-
 	const [user, setUser] = useState<User | null>(null);
 	const [updates, setUpdates] = useState<Update[]>([]);
 	const [activeTab, setActiveTab] = useState<"all" | "post" | "repost">("all");
@@ -56,221 +26,106 @@ function ProfileContent() {
 	const fetchData = async () => {
 		try {
 			const token = localStorage.getItem("session");
-			const res = await fetch(`/api/profile/${username}`, {
-				headers: token ? { "Authorization": `Bearer ${token}` } : {},
-			});
-			const data = (await res.json()) as { 
-				success: boolean; 
-				user: User; 
-				updates: Update[]; 
-			};
-			if (data.success) {
-				setUser(data.user);
-				setUpdates(data.updates || []);
-			}
-		} catch (error) {
-			console.error(error);
-		} finally {
-			setIsLoading(false);
-		}
+			const res = await fetch(`/api/profile/${username}`, { headers: token ? { "Authorization": `Bearer ${token}` } : {} });
+			const data = (await res.json()) as { success: boolean; user: User; updates: Update[]; };
+			if (data.success) { setUser(data.user); setUpdates(data.updates || []); }
+		} catch (error) { console.error(error); } finally { setIsLoading(false); }
 	};
 
-	useEffect(() => {
-		fetchData();
-	}, [username]);
+	useEffect(() => { fetchData(); }, [username]);
 
 	const handleAction = async (id: string, action: "like" | "repost") => {
 		const token = localStorage.getItem("session");
 		if (!token) return alert(`You must be logged in to ${action}.`);
 		setLoading(`${action}-${id}`);
 		try {
-			await fetch(`/api/updates/${id}/${action}`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-			});
+			await fetch(`/api/updates/${id}/${action}`, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` } });
 			fetchData();
-		} catch (error) {
-			console.error(error);
-		} finally {
-			setLoading(null);
-		}
+		} catch (error) { console.error(error); } finally { setLoading(null); }
 	};
 
-	if (isLoading) {
-		return (
-			<div className="flex min-h-screen bg-gray-50">
-				<Sidebar />
-				<div className="flex-1 flex justify-center items-center pb-20">
-					<p className="text-gray-500">Loading profile...</p>
-				</div>
-			</div>
-		);
-	}
-
-	if (!user) {
-		return (
-			<div className="flex min-h-screen bg-gray-50">
-				<Sidebar />
-				<div className="flex-1 flex justify-center items-center pb-20">
-					<p className="text-gray-500">User not found.</p>
-				</div>
-			</div>
-		);
-	}
+	if (isLoading) return <div className="w-full h-full flex justify-center items-center"><p className="text-gray-500">Loading profile...</p></div>;
+	if (!user) return <div className="w-full h-full flex justify-center items-center"><p className="text-gray-500">User not found.</p></div>;
 
 	let socials: Record<string, string> = {};
-	if (user.socials) {
-		try {
-			let parsed = JSON.parse(user.socials);
-			if (typeof parsed === "string") parsed = JSON.parse(parsed);
-			if (typeof parsed === "object" && parsed !== null) socials = parsed;
-		} catch {}
-	}
+	if (user.socials) { try { let parsed = JSON.parse(user.socials); if (typeof parsed === "string") parsed = JSON.parse(parsed); if (typeof parsed === "object" && parsed !== null) socials = parsed; } catch {} }
 
 	const targetUserId = String(user.id).trim();
 	const posts = updates.filter(u => String(u.user_id).trim() === targetUserId && !u.reposter_id);
 	const reposts = updates.filter(u => String(u.reposter_id).trim() === targetUserId);
-	
 	const displayUpdates = activeTab === "all" ? updates : activeTab === "post" ? posts : reposts;
 
 	return (
-		<div className="flex min-h-screen bg-gray-50">
-			<Sidebar />
-			<div className="flex-1 w-full pb-20 md:pb-0" id="main-content" role="main">
-				<div className="max-w-2xl mx-auto bg-white shadow-sm rounded-b-xl overflow-hidden my-4 md:my-8">
-					<div className="h-40 w-full bg-gray-300 relative">
-						{user.header && <img src={user.header} alt="Header" className="w-full h-full object-cover" />}
+		<div className="w-full h-full overflow-y-auto">
+			<div className="max-w-2xl mx-auto bg-white shadow-sm rounded-b-xl overflow-hidden my-4 md:my-8">
+				<div className="h-40 w-full bg-gray-300 relative">{user.header && <img src={user.header} alt="Header" className="w-full h-full object-cover" />}</div>
+				<div className="px-6 relative pb-6">
+					<div className="absolute -top-12 left-6 z-10 w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-4xl font-bold border-4 border-white overflow-hidden shadow-sm">
+						{user.avatar ? <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" /> : user.username?.[0]?.toUpperCase()}
 					</div>
-
-					<div className="px-6 relative pb-6">
-						<div className="absolute -top-12 left-6 z-10 w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-4xl font-bold border-4 border-white overflow-hidden shadow-sm">
-							{user.avatar ? <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" /> : user.username?.[0]?.toUpperCase()}
+					<div className="pt-14 flex justify-between items-start">
+						<div>
+							<h1 className="text-2xl font-bold text-gray-900">{user.yourname || user.username}</h1>
+							<div className="flex items-center gap-1 mt-1"><p className="text-gray-500 text-sm">@{user.username}</p><CopyUsername username={user.username} /></div>
 						</div>
-
-						<div className="pt-14 flex justify-between items-start">
-							<div>
-								<h1 className="text-2xl font-bold text-gray-900">{user.yourname || user.username}</h1>
-								<div className="flex items-center gap-1 mt-1">
-									<p className="text-gray-500 text-sm">@{user.username}</p>
-									<CopyUsername username={user.username} />
+						<div className="flex gap-2"><Link href="/settings" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold transition">Settings</Link><ShareButton username={user.username} /></div>
+					</div>
+					{user.headline && <p className="mt-2 text-gray-800 font-medium">{user.headline}</p>}
+					{user.about && <p className="mt-2 text-gray-600 text-sm whitespace-pre-wrap">{user.about}</p>}
+					<div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-500">
+						{user.location && <span className="flex items-center gap-1">📍 {user.location}</span>}
+						<span>Joined {new Date(user.created_at).toLocaleDateString()}</span>
+					</div>
+					{Object.keys(socials).length > 0 && (
+						<div className="mt-5 flex flex-wrap gap-4">
+							{Object.entries(socials).map(([key, url]) => {
+								if (!url || typeof url !== "string") return null;
+								let Icon = Globe; let colorClass = "text-gray-600";
+								switch (key.toLowerCase()) {
+									case "facebook": Icon = FacebookLogo; colorClass = "text-blue-600"; break;
+									case "instagram": Icon = InstagramLogo; colorClass = "text-pink-600"; break;
+									case "x": Icon = XLogo; colorClass = "text-black"; break;
+									case "tiktok": Icon = TiktokLogo; colorClass = "text-black"; break;
+									case "youtube": Icon = YoutubeLogo; colorClass = "text-red-600"; break;
+									case "linkedin": Icon = LinkedinLogo; colorClass = "text-blue-700"; break;
+								}
+								return <a key={key} href={url} target="_blank" rel="noopener noreferrer" className={`${colorClass} hover:opacity-80 transition-opacity`} title={key}><Icon size={24} weight="fill" /></a>;
+							})}
+						</div>
+					)}
+				</div>
+				<div className="flex border-t border-gray-200">
+					<button onClick={() => setActiveTab("all")} className={`flex-1 py-3 text-sm font-semibold transition ${activeTab === "all" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-50"}`}>All</button>
+					<button onClick={() => setActiveTab("post")} className={`flex-1 py-3 text-sm font-semibold transition ${activeTab === "post" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-50"}`}>Post</button>
+					<button onClick={() => setActiveTab("repost")} className={`flex-1 py-3 text-sm font-semibold transition ${activeTab === "repost" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-50"}`}>Repost</button>
+				</div>
+				<div className="divide-y divide-gray-100">
+					{displayUpdates.length === 0 ? <p className="text-center text-gray-500 text-sm py-10">Belum ada konten.</p> : displayUpdates.map(update => (
+						<div key={`${update.id}-${update.reposter_id || 'original'}`} className="p-4">
+							{update.reposter_id && (
+								<div className="flex items-center gap-1 text-gray-500 text-xs mb-2">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+									<span>Reposted by @{user.username}</span>
+								</div>
+							)}
+							<div className="flex items-center gap-3 mb-2">
+								<Link href={`/profile/@${update.author_username || update.user_id}`} className="shrink-0"><div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs overflow-hidden">{update.author_avatar ? <img src={update.author_avatar} className="w-full h-full object-cover" /> : (update.author_username?.[0]?.toUpperCase() || "?")}</div></Link>
+								<div>
+									<div className="flex items-center gap-2">
+										<Link href={`/profile/@${update.author_username || update.user_id}`} className="text-gray-900 font-semibold text-sm hover:underline">{update.author_yourname || update.author_username || "Unknown User"}</Link>
+										{update.created_at && (<><span className="text-gray-400 text-xs">·</span><span className="text-gray-500 text-xs">{timeAgo(update.created_at)}</span></>)}
+									</div>
+									<p className="text-gray-500 text-xs">@{update.author_username || update.user_id.substring(0, 8)}</p>
 								</div>
 							</div>
-							<div className="flex gap-2">
-								<Link href="/settings" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold transition">
-									Settings
-								</Link>
-								<ShareButton username={user.username} />
+							<Link href={`/update/${update.id}`} className="block"><p className="text-gray-800 text-sm">{update.content}</p>{update.image_url && <img src={update.image_url} alt="Post" className="mt-2 rounded-lg max-h-60 object-cover" />}</Link>
+							<div className="mt-3 flex items-center gap-6 text-gray-500 text-sm">
+								<Link href={`/update/${update.id}`} className="flex items-center gap-1 hover:text-blue-500 transition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>{update.comment_count || 0}</Link>
+								<button onClick={() => handleAction(update.id, "repost")} disabled={loading === `repost-${update.id}`} className={`flex items-center gap-1 hover:text-green-500 transition ${update.is_reposted ? 'text-green-500' : ''}`}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>{update.repost_count || 0}</button>
+								<button onClick={() => handleAction(update.id, "like")} disabled={loading === `like-${update.id}`} className={`flex items-center gap-1 hover:text-red-500 transition ${update.is_liked ? 'text-red-500' : ''}`}><svg width="16" height="16" viewBox="0 0 24 24" fill={update.is_liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>{update.like_count || 0}</button>
 							</div>
 						</div>
-
-						{user.headline && <p className="mt-2 text-gray-800 font-medium">{user.headline}</p>}
-						{user.about && <p className="mt-2 text-gray-600 text-sm whitespace-pre-wrap">{user.about}</p>}
-
-						<div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-500">
-							{user.location && <span className="flex items-center gap-1">📍 {user.location}</span>}
-							<span>Joined {new Date(user.created_at).toLocaleDateString()}</span>
-						</div>
-
-						{Object.keys(socials).length > 0 && (
-							<div className="mt-5 flex flex-wrap gap-4">
-								{Object.entries(socials).map(([key, url]) => {
-									if (!url || typeof url !== "string") return null;
-									let Icon = Globe;
-									let colorClass = "text-gray-600";
-									switch (key.toLowerCase()) {
-										case "facebook": Icon = FacebookLogo; colorClass = "text-blue-600"; break;
-										case "instagram": Icon = InstagramLogo; colorClass = "text-pink-600"; break;
-										case "x": Icon = XLogo; colorClass = "text-black"; break;
-										case "tiktok": Icon = TiktokLogo; colorClass = "text-black"; break;
-										case "youtube": Icon = YoutubeLogo; colorClass = "text-red-600"; break;
-										case "linkedin": Icon = LinkedinLogo; colorClass = "text-blue-700"; break;
-									}
-									return (
-										<a key={key} href={url} target="_blank" rel="noopener noreferrer" className={`${colorClass} hover:opacity-80 transition-opacity`} title={key}>
-											<Icon size={24} weight="fill" />
-										</a>
-									);
-								})}
-							</div>
-						)}
-					</div>
-
-					<div className="flex border-t border-gray-200">
-						<button onClick={() => setActiveTab("all")} className={`flex-1 py-3 text-sm font-semibold transition ${activeTab === "all" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-50"}`}>All</button>
-						<button onClick={() => setActiveTab("post")} className={`flex-1 py-3 text-sm font-semibold transition ${activeTab === "post" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-50"}`}>Post</button>
-						<button onClick={() => setActiveTab("repost")} className={`flex-1 py-3 text-sm font-semibold transition ${activeTab === "repost" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-50"}`}>Repost</button>
-					</div>
-
-					<div className="divide-y divide-gray-100">
-						{displayUpdates.length === 0 ? (
-							<p className="text-center text-gray-500 text-sm py-10">Belum ada konten.</p>
-						) : (
-							displayUpdates.map(update => (
-								<div key={`${update.id}-${update.reposter_id || 'original'}`} className="p-4">
-									{update.reposter_id && (
-										<div className="flex items-center gap-1 text-gray-500 text-xs mb-2">
-											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
-											<span>Reposted by @{user.username}</span>
-										</div>
-									)}
-									<div className="flex items-center gap-3 mb-2">
-										<Link href={`/profile/@${update.author_username || update.user_id}`} className="shrink-0">
-											<div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs overflow-hidden">
-												{update.author_avatar ? (
-													<img src={update.author_avatar} className="w-full h-full object-cover" />
-												) : (
-													update.author_username?.[0]?.toUpperCase() || "?"
-												)}
-											</div>
-										</Link>
-										<div>
-											<div className="flex items-center gap-2">
-												<Link href={`/profile/@${update.author_username || update.user_id}`} className="text-gray-900 font-semibold text-sm hover:underline">
-													{update.author_yourname || update.author_username || "Unknown User"}
-												</Link>
-												{update.created_at && (
-													<>
-														<span className="text-gray-400 text-xs">·</span>
-														<span className="text-gray-500 text-xs">
-															{timeAgo(update.created_at)}
-														</span>
-													</>
-												)}
-											</div>
-											<p className="text-gray-500 text-xs">@{update.author_username || update.user_id.substring(0, 8)}</p>
-										</div>
-									</div>
-									<Link href={`/update/${update.id}`} className="block">
-										<p className="text-gray-800 text-sm">{update.content}</p>
-										{update.image_url && <img src={update.image_url} alt="Post" className="mt-2 rounded-lg max-h-60 object-cover" />}
-									</Link>
-									
-									<div className="mt-3 flex items-center gap-6 text-gray-500 text-sm">
-										<Link href={`/update/${update.id}`} className="flex items-center gap-1 hover:text-blue-500 transition">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-											{update.comment_count || 0}
-										</Link>
-										<button 
-											onClick={() => handleAction(update.id, "repost")} 
-											disabled={loading === `repost-${update.id}`} 
-											className={`flex items-center gap-1 hover:text-green-500 transition ${update.is_reposted ? 'text-green-500' : ''}`}
-										>
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
-											{update.repost_count || 0}
-										</button>
-										<button 
-											onClick={() => handleAction(update.id, "like")} 
-											disabled={loading === `like-${update.id}`} 
-											className={`flex items-center gap-1 hover:text-red-500 transition ${update.is_liked ? 'text-red-500' : ''}`}
-										>
-											<svg width="16" height="16" viewBox="0 0 24 24" fill={update.is_liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-											{update.like_count || 0}
-										</button>
-									</div>
-								</div>
-							))
-						)}
-					</div>
+					))}
 				</div>
 			</div>
 		</div>
@@ -278,9 +133,5 @@ function ProfileContent() {
 }
 
 export default function ProfilePage() {
-	return (
-		<Suspense fallback={<div className="p-4 text-center">Loading...</div>}>
-			<ProfileContent />
-		</Suspense>
-	);
+	return <Suspense fallback={<div className="p-4 text-center">Loading...</div>}><ProfileContent /></Suspense>;
 }
