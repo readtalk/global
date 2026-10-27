@@ -4,6 +4,7 @@ import "./globals.css";
 import PwaPopup from "./pwa-popup";
 import { Suspense } from "react";
 import Script from "next/script";
+import Sidebar from "@/components/Sidebar";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -48,9 +49,7 @@ export default function RootLayout({
 					`}
 				</Script>
 			</head>
-			<body
-				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-			>
+			<body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}>
 				<noscript>
 					<iframe
 						src="https://www.googletagmanager.com/ns.html?id=GTM-NZBG294V"
@@ -59,7 +58,14 @@ export default function RootLayout({
 						style={{ display: "none", visibility: "hidden" }}
 					></iframe>
 				</noscript>
-				{children}
+				
+				<div className="flex h-screen overflow-hidden">
+					<Sidebar />
+					<main className="flex-1 h-full overflow-hidden pb-16 md:pb-0">
+						{children}
+					</main>
+				</div>
+
 				<Suspense fallback={null}>
 					<PwaPopup />
 				</Suspense>
