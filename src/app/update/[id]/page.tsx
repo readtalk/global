@@ -17,8 +17,10 @@ function UpdateDetailContent() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isPosting, setIsPosting] = useState(false);
 	const [loadingAction, setLoadingAction] = useState<string | null>(null);
+	const [currentUser, setCurrentUser] = useState<{ username: string; yourname: string; avatar: string | null } | null>(null);
 
-	const fetchData = async () => {
+	const fetchData = async (showLoading = true) => {
+		if (showLoading) setIsLoading(true);
 		try {
 			const token = localStorage.getItem("session");
 			const headers: Record<string, string> = {};
@@ -32,10 +34,24 @@ function UpdateDetailContent() {
 			const resComments = await fetch(`/api/updates/${id}/comments`, { headers });
 			const dataComments = (await resComments.json()) as { success: boolean; comments: Comment[] };
 			if (dataComments.success) setComments(dataComments.comments);
-		} catch (error) { console.error(error); } finally { setIsLoading(false); }
+		} catch (error) { console.error(error); } finally { if (showLoading) setIsLoading(false); }
 	};
 
-	useEffect(() => { fetchData(); }, [id]);
+	useEffect(() => { 
+		fetchData(); 
+		const session = localStorage.getItem("session");
+		if (session) {
+			try {
+				const payload = JSON.parse(atob(session.split(".")[1]));
+				const email = payload.properties?.email;
+				if (email) setCurrentUser({ username: email.split("@")[0], yourname: email.split("@")[0], avatar: null });
+				fetch("https://auth.readtalk.workers.dev/settings", { headers: { "Authorization": `Bearer ${session}` } })
+				.then(res => res.json() as Promise<{ success: boolean; user?: any }>)
+				.then(data => { if (data.success && data.user) setCurrentUser(data.user); })
+				.catch(() => {});
+			} catch {}
+		}
+	}, [id]);
 
 	const handleAction = async (action: "like" | "repost") => {
 		if (!post) return;
@@ -44,7 +60,7 @@ function UpdateDetailContent() {
 		setLoadingAction(`${action}-${post.id}`);
 		try {
 			await fetch(`/api/updates/${post.id}/${action}`, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` } });
-			fetchData();
+			await fetchData(false);
 		} catch (error) { console.error(error); } finally { setLoadingAction(null); }
 	};
 
@@ -52,11 +68,33 @@ function UpdateDetailContent() {
 		if (!content.trim()) return;
 		const token = localStorage.getItem("session");
 		if (!token) return alert("You must be logged in to comment.");
+		
+		const commentContent = content;
+		
+		const tempComment: Comment = {
+			id: crypto.randomUUID(),
+			updatelist_id: id,
+			user_id: currentUser?.username || "temp",
+			content: commentContent,
+			created_at: Math.floor(Date.now() / 1000),
+			user: currentUser ? { username: currentUser.username, yourname: currentUser.yourname, avatar: currentUser.avatar } : { username: "You", yourname: "You", avatar: null }
+		};
+
+		setComments((prev) => [...prev, tempComment]);
+		setContent("");
 		setIsPosting(true);
+
 		try {
-			const res = await fetch(`/api/updates/${id}/comments`, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ content }) });
-			if (res.ok) { setContent(""); fetchData(); }
-		} catch (error) { console.error(error); } finally { setIsPosting(false); }
+			const res = await fetch(`/api/updates/${id}/comments`, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ content: commentContent }) });
+			if (res.ok) { 
+				await fetchData(false); 
+			}
+		} catch (error) { 
+			console.error(error); 
+			fetchData(false);
+		} finally { 
+			setIsPosting(false); 
+		}
 	};
 
 	if (isLoading) return <div className="w-full h-full flex justify-center items-center"><p className="text-gray-500">Loading...</p></div>;
