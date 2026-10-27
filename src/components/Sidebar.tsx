@@ -34,6 +34,11 @@ export default function Sidebar() {
 		window.location.href = "/api/auth/logout";
 	};
 
+	// JIKA DI HALAMAN PUBLIK, JANGAN TAMPILKAN SIDEBAR / BOTTOM NAV
+	if (pathname.startsWith("/@") || pathname.startsWith("/u/")) {
+		return null;
+	}
+
 	return (
 		<>
 			<aside className="hidden md:flex flex-col w-64 h-full border-r border-gray-200 bg-white z-20 shrink-0">
