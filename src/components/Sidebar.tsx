@@ -35,8 +35,8 @@ export default function Sidebar() {
 	};
 
 	if (pathname.startsWith("/@") || pathname.startsWith("/u/") || pathname.startsWith("/update/")) {
-    return null;
-}
+		return null;
+	}
 
 	return (
 		<>
@@ -47,9 +47,12 @@ export default function Sidebar() {
 				<nav className="flex-1 p-4 space-y-2 overflow-y-auto">
 					<Link href="/" className={`block p-3 rounded-lg ${pathname === "/" ? "bg-gray-100 font-semibold" : "hover:bg-gray-50"}`}>Update</Link>
 					{user && (
-						<Link href={`/profile/@${user.username}`} className={`block p-3 rounded-lg ${pathname.startsWith("/profile") ? "bg-gray-100 font-semibold" : "hover:bg-gray-50"}`}>
-							Profile
-						</Link>
+						<>
+							<Link href="/notifications" className={`block p-3 rounded-lg ${pathname === "/notifications" ? "bg-gray-100 font-semibold" : "hover:bg-gray-50"}`}>Notifications</Link>
+							<Link href={`/profile/@${user.username}`} className={`block p-3 rounded-lg ${pathname.startsWith("/profile") ? "bg-gray-100 font-semibold" : "hover:bg-gray-50"}`}>
+								Profile
+							</Link>
+						</>
 					)}
 				</nav>
 				<div className="p-4 border-t border-gray-200">
@@ -67,10 +70,16 @@ export default function Sidebar() {
 					<span>Update</span>
 				</Link>
 				{user && (
-					<Link href={`/profile/@${user.username}`} className={`flex flex-col items-center p-2 text-xs ${pathname.startsWith("/profile") ? "text-blue-600" : "text-gray-500"}`}>
-						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-						<span>Profile</span>
-					</Link>
+					<>
+						<Link href="/notifications" className={`flex flex-col items-center p-2 text-xs ${pathname === "/notifications" ? "text-blue-600" : "text-gray-500"}`}>
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+							<span>Notif</span>
+						</Link>
+						<Link href={`/profile/@${user.username}`} className={`flex flex-col items-center p-2 text-xs ${pathname.startsWith("/profile") ? "text-blue-600" : "text-gray-500"}`}>
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+							<span>Profile</span>
+						</Link>
+					</>
 				)}
 				{user ? (
 					<button onClick={handleLogout} className="flex flex-col items-center p-2 text-xs text-gray-500">
