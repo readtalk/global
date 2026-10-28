@@ -34,7 +34,6 @@ function ProfileContent() {
 	const [updates, setUpdates] = useState<Update[]>([]);
 	const [activeTab, setActiveTab] = useState<"all" | "post" | "repost">("all");
 	const [isLoading, setIsLoading] = useState(true);
-	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 	const [isFollowing, setIsFollowing] = useState(false);
 
 	const fetchData = async () => {
@@ -52,17 +51,7 @@ function ProfileContent() {
 		} catch (error) { console.error(error); } finally { setIsLoading(false); }
 	};
 
-	useEffect(() => {
-		fetchData();
-		const session = localStorage.getItem("session");
-		if (session) {
-			try {
-				const payload = JSON.parse(atob(session.split(".")[1]));
-				const id = payload.properties?.id || payload.sub;
-				if (id) setCurrentUserId(id);
-			} catch {}
-		}
-	}, [username]);
+	useEffect(() => { fetchData(); }, [username]);
 
 	const handleFollowToggle = async () => {
 		const token = localStorage.getItem("session");
@@ -94,8 +83,6 @@ function ProfileContent() {
 	const reposts = updates.filter(u => String(u.reposter_id).trim() === targetUserId);
 	const displayUpdates = activeTab === "all" ? updates : activeTab === "post" ? posts : reposts;
 
-	const isOwnProfile = currentUserId === user.id;
-
 	return (
 		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0">
 			<div className="max-w-2xl mx-auto bg-white shadow-sm rounded-b-xl overflow-hidden my-4 md:my-8">
@@ -110,16 +97,12 @@ function ProfileContent() {
 							<div className="flex items-center gap-1 mt-1"><p className="text-gray-500 text-sm">@{user.username}</p><CopyUsername username={user.username} /></div>
 						</div>
 						<div className="flex gap-2">
-							{isOwnProfile ? (
-								<Link href="/settings" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold transition">Edit Profile</Link>
-							) : (
-								<button 
-									onClick={handleFollowToggle} 
-									className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${isFollowing ? 'bg-gray-200 text-gray-800' : 'bg-blue-600 text-white'}`}
-								>
-									{isFollowing ? "Following" : "Follow"}
-								</button>
-							)}
+							<button 
+								onClick={handleFollowToggle} 
+								className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${isFollowing ? 'bg-gray-200 text-gray-800' : 'bg-blue-600 text-white'}`}
+							>
+								{isFollowing ? "Following" : "Follow"}
+							</button>
 							<Link href="/settings" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold transition">Settings</Link>
 							<ShareButton username={user.username} />
 						</div>
