@@ -99,13 +99,13 @@ function ForumContent() {
 				headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
 				body: JSON.stringify({ content: content, image_url: imageUrl }),
 			});
-			// Panggil fetchData tanpa nampilin loading
+			
 			await fetchData(false);
 		} catch (error) { console.error(error); } finally { setIsPosting(false); }
 	};
 
 	return (
-		<div className="w-full h-full overflow-y-auto">
+		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0">
 			<div className="max-w-2xl mx-auto bg-white min-h-full shadow-sm">
 				<div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 py-3">
 					<h1 className="text-xl font-bold text-gray-900">Update</h1>
