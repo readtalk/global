@@ -30,7 +30,7 @@ export default function NotificationsPage() {
 			}
 
 			try {
-				const res = await fetch("https://auth.readtalk.workers.dev/notifications", {
+				const res = await fetch("/api/notifications", {
 					headers: { "Authorization": `Bearer ${token}` },
 				});
 				const data = (await res.json()) as { success: boolean; notifications: Notification[] };
