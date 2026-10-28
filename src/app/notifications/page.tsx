@@ -36,6 +36,13 @@ export default function NotificationsPage() {
 				const data = (await res.json()) as { success: boolean; notifications: Notification[] };
 				if (data.success) {
 					setNotifications(data.notifications);
+
+					if (data.notifications.some((n) => !n.is_read)) {
+						await fetch("/api/notifications/read", {
+							method: "PUT",
+							headers: { "Authorization": `Bearer ${token}` },
+						});
+					}
 				}
 			} catch (error) {
 				console.error(error);
