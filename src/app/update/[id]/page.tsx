@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { timeAgo } from "@/lib/timer";
+import LikeRepost from "@/components/LikeRepost";
 
 type UpdatelistItem = {
   id: string;
@@ -39,7 +40,6 @@ function UpdateDetailContent() {
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isPosting, setIsPosting] = useState(false);
-  const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<{ username: string; yourname: string; avatar: string | null } | null>(null);
 
   const fetchData = async (showLoading = true) => {
@@ -85,24 +85,6 @@ function UpdateDetailContent() {
       } catch {}
     }
   }, [id]);
-
-  const handleAction = async (action: "like" | "repost") => {
-    if (!post) return;
-    const token = localStorage.getItem("session");
-    if (!token) return alert(`You must be logged in to ${action}.`);
-    setLoadingAction(`${action}-${post.id}`);
-    try {
-      await fetch(`/api/updates/${post.id}/${action}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      });
-      await fetchData(false);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoadingAction(null);
-    }
-  };
 
   const handlePostComment = async () => {
     if (!content.trim()) return;
@@ -171,8 +153,14 @@ function UpdateDetailContent() {
             {post.image_url && <img src={post.image_url} alt="Post Image" className="mt-3 rounded-lg max-h-80 w-full object-cover" />}
             <div className="mt-4 flex items-center gap-6 text-gray-500 text-sm border-t border-gray-200 pt-3">
               <Link href={`/update/${post.id}`} className="flex items-center gap-1 hover:text-blue-500 transition"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>{post.comment_count || 0}</Link>
-              <button onClick={() => handleAction("repost")} disabled={loadingAction === `repost-${post.id}`} className={`flex items-center gap-1 hover:text-green-500 transition ${post.is_reposted ? 'text-green-500' : ''}`}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>{post.repost_count || 0}</button>
-              <button onClick={() => handleAction("like")} disabled={loadingAction === `like-${post.id}`} className={`flex items-center gap-1 hover:text-red-500 transition ${post.is_liked ? 'text-red-500' : ''}`}><svg width="18" height="18" viewBox="0 0 24 24" fill={post.is_liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>{post.like_count || 0}</button>
+              <LikeRepost
+                id={post.id}
+                like_count={post.like_count}
+                repost_count={post.repost_count}
+                is_liked={post.is_liked}
+                is_reposted={post.is_reposted}
+                onUpdate={() => fetchData(false)}
+              />
             </div>
           </div>
         )}
