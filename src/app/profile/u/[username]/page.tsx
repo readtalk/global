@@ -6,7 +6,8 @@ import Link from "next/link";
 import { timeAgo } from "@/lib/timer";
 import { 
 	FacebookLogo, InstagramLogo, XLogo, TiktokLogo, 
-	YoutubeLogo, LinkedinLogo, Globe 
+	YoutubeLogo, LinkedinLogo, Globe,
+	ChatCircle, Phone
 } from "@phosphor-icons/react/dist/ssr";
 import ShareButton from "@/components/ShareButton";
 import CopyUsername from "@/components/CopyUsername";
@@ -86,6 +87,8 @@ function ProfileContent() {
 	const reposts = updates.filter(u => String(u.reposter_id).trim() === targetUserId);
 	const displayUpdates = activeTab === "all" ? updates : activeTab === "post" ? posts : reposts;
 
+	const isFollowing = user.follow_status === "following" || user.follow_status === "mutual";
+
 	return (
 		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0">
 			<div className="max-w-2xl mx-auto bg-white shadow-sm rounded-b-xl overflow-hidden my-4 md:my-8">
@@ -94,37 +97,45 @@ function ProfileContent() {
 					<div className="absolute -top-12 left-6 z-10 w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-4xl font-bold border-4 border-white overflow-hidden shadow-sm">
 						{user.avatar ? <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" /> : user.username?.[0]?.toUpperCase()}
 					</div>
-					<div className="pt-14 flex justify-between items-start">
-						<div>
-							<h1 className="text-2xl font-bold text-gray-900">{user.yourname || user.username}</h1>
-							<div className="flex items-center gap-1 mt-1"><p className="text-gray-500 text-sm">@{user.username}</p><CopyUsername username={user.username} /></div>
-						</div>
-						<div className="flex gap-2">
-							{user.id !== currentUserId && (
-								<>
-									{user.follow_status === "none" && (
-										<button onClick={handleFollowToggle} className="bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold">Follow</button>
-									)}
-									{user.follow_status === "following" && (
-										<button onClick={handleFollowToggle} className="bg-gray-200 text-gray-800 px-4 py-1.5 rounded-full text-xs font-semibold">Following</button>
-									)}
-									{user.follow_status === "followers" && (
-										<button onClick={handleFollowToggle} className="bg-gray-200 text-gray-800 px-4 py-1.5 rounded-full text-xs font-semibold">Follow Back</button>
-									)}
-									{user.follow_status === "mutual" && (
-										<>
-											<button onClick={handleFollowToggle} className="bg-gray-200 text-gray-800 px-4 py-1.5 rounded-full text-xs font-semibold">Following</button>
-											<button className="bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold">Chat</button>
-											<button className="bg-green-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold">Call</button>
-										</>
-									)}
-								</>
+					
+					<div className="pt-14">
+						<div className="flex justify-between items-start">
+							<div>
+								<h1 className="text-2xl font-bold text-gray-900">{user.yourname || user.username}</h1>
+								<div className="flex items-center gap-1 mt-1"><p className="text-gray-500 text-sm">@{user.username}</p><CopyUsername username={user.username} /></div>
+							</div>
+							
+							{user.id === currentUserId && (
+								<div className="flex gap-2">
+									<Link href="/settings" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold transition">Settings</Link>
+									<ShareButton username={user.username} />
+								</div>
 							)}
-							<Link href="/settings" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold transition">Settings</Link>
-							<ShareButton username={user.username} />
 						</div>
+
+						{user.id !== currentUserId && (
+							<div className="mt-4 flex gap-2">
+								{!isFollowing ? (
+									<button onClick={handleFollowToggle} className="bg-black text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-gray-800 transition">
+										Follow
+									</button>
+								) : (
+									<>
+										<button className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-blue-700 transition flex items-center gap-2">
+											<ChatCircle size={18} weight="bold" />
+											Chat
+										</button>
+										<button className="bg-green-600 text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-green-700 transition flex items-center gap-2">
+											<Phone size={18} weight="bold" />
+											Call
+										</button>
+									</>
+								)}
+							</div>
+						)}
 					</div>
-					{user.headline && <p className="mt-2 text-gray-800 font-medium">{user.headline}</p>}
+
+					{user.headline && <p className="mt-4 text-gray-800 font-medium">{user.headline}</p>}
 					{user.about && <p className="mt-2 text-gray-600 text-sm whitespace-pre-wrap">{user.about}</p>}
 					<div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-500">
 						{user.location && <span className="flex items-center gap-1">📍 {user.location}</span>}
