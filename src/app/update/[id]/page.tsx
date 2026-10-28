@@ -13,7 +13,11 @@ type UpdatelistItem = {
   like_count: number;
   comment_count: number;
   repost_count: number;
-  user?: { username: string; yourname: string; avatar: string | null } | null;
+  is_liked?: boolean;
+  is_reposted?: boolean;
+  author_username?: string;
+  author_yourname?: string;
+  author_avatar?: string | null;
 };
 
 type Comment = {
@@ -22,7 +26,9 @@ type Comment = {
   user_id: string;
   content: string;
   created_at: number;
-  user?: { username: string; yourname: string; avatar: string | null } | null;
+  author_username?: string;
+  author_yourname?: string;
+  author_avatar?: string | null;
 };
 
 function UpdateDetailContent() {
@@ -42,13 +48,15 @@ function UpdateDetailContent() {
       const token = localStorage.getItem("session");
       const headers: Record<string, string> = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
-      const resAll = await fetch(`/api/updates`, { headers });
-      const dataAll = (await resAll.json()) as { success: boolean; updates: UpdatelistItem[] };
-      if (dataAll.success && dataAll.updates) {
-        const foundPost = dataAll.updates.find((p) => p.id === id);
-        if (foundPost) setPost(foundPost);
+      const [resPost, resComments] = await Promise.all([
+        fetch(`/api/updates/${id}`, { headers }),
+        fetch(`/api/updates/${id}/comments`, { headers }),
+      ]);
+      const dataPost = (await resPost.json()) as { success: boolean; update?: UpdatelistItem; updates?: UpdatelistItem[] };
+      if (dataPost.success) {
+        const found = dataPost.update ?? dataPost.updates?.[0] ?? null;
+        if (found) setPost(found);
       }
-      const resComments = await fetch(`/api/updates/${id}/comments`, { headers });
       const dataComments = (await resComments.json()) as { success: boolean; comments: Comment[] };
       if (dataComments.success) setComments(dataComments.comments);
     } catch (error) {
@@ -107,7 +115,9 @@ function UpdateDetailContent() {
       user_id: currentUser?.username || "temp",
       content: commentContent,
       created_at: Math.floor(Date.now() / 1000),
-      user: currentUser ? { username: currentUser.username, yourname: currentUser.yourname, avatar: currentUser.avatar } : { username: "You", yourname: "You", avatar: null },
+      author_username: currentUser?.username,
+      author_yourname: currentUser?.yourname,
+      author_avatar: currentUser?.avatar,
     };
     setComments((prev) => [...prev, tempComment]);
     setContent("");
@@ -144,25 +154,25 @@ function UpdateDetailContent() {
         {post && (
           <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <Link href={`/profile/@${post.user?.username}`} className="shrink-0">
+              <Link href={`/profile/@${post.author_username}`} className="shrink-0">
                 <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden">
-                  {post.user?.avatar ? <img src={post.user.avatar} className="w-full h-full object-cover" /> : post.user?.username?.[0]?.toUpperCase()}
+                  {post.author_avatar ? <img src={post.author_avatar} className="w-full h-full object-cover" /> : post.author_username?.[0]?.toUpperCase()}
                 </div>
               </Link>
               <div>
                 <div className="flex items-center gap-2">
-                  <Link href={`/profile/@${post.user?.username}`} className="text-gray-900 font-semibold hover:underline">{post.user?.yourname}</Link>
+                  <Link href={`/profile/@${post.author_username}`} className="text-gray-900 font-semibold hover:underline">{post.author_yourname}</Link>
                   {post.created_at && (<><span className="text-gray-400 text-xs">·</span><span className="text-gray-500 text-xs">{timeAgo(post.created_at)}</span></>)}
                 </div>
-                <p className="text-gray-500 text-xs">@{post.user?.username}</p>
+                <p className="text-gray-500 text-xs">@{post.author_username}</p>
               </div>
             </div>
             <p className="text-gray-800 whitespace-pre-wrap text-[15px]">{post.content}</p>
             {post.image_url && <img src={post.image_url} alt="Post Image" className="mt-3 rounded-lg max-h-80 w-full object-cover" />}
             <div className="mt-4 flex items-center gap-6 text-gray-500 text-sm border-t border-gray-200 pt-3">
               <Link href={`/update/${post.id}`} className="flex items-center gap-1 hover:text-blue-500 transition"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>{post.comment_count || 0}</Link>
-              <button onClick={() => handleAction("repost")} disabled={loadingAction === `repost-${post.id}`} className="flex items-center gap-1 hover:text-green-500 transition"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>{post.repost_count || 0}</button>
-              <button onClick={() => handleAction("like")} disabled={loadingAction === `like-${post.id}`} className="flex items-center gap-1 hover:text-red-500 transition"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>{post.like_count || 0}</button>
+              <button onClick={() => handleAction("repost")} disabled={loadingAction === `repost-${post.id}`} className={`flex items-center gap-1 hover:text-green-500 transition ${post.is_reposted ? 'text-green-500' : ''}`}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>{post.repost_count || 0}</button>
+              <button onClick={() => handleAction("like")} disabled={loadingAction === `like-${post.id}`} className={`flex items-center gap-1 hover:text-red-500 transition ${post.is_liked ? 'text-red-500' : ''}`}><svg width="18" height="18" viewBox="0 0 24 24" fill={post.is_liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>{post.like_count || 0}</button>
             </div>
           </div>
         )}
@@ -170,14 +180,14 @@ function UpdateDetailContent() {
         {comments.length > 0 ? (
           comments.map((comment) => (
             <div key={comment.id} className="flex gap-3 items-start">
-              <Link href={`/profile/@${comment.user?.username}`} className="shrink-0">
+              <Link href={`/profile/@${comment.author_username}`} className="shrink-0">
                 <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold text-xs overflow-hidden">
-                  {comment.user?.avatar ? <img src={comment.user.avatar} className="w-full h-full object-cover" /> : comment.user?.username?.[0]?.toUpperCase()}
+                  {comment.author_avatar ? <img src={comment.author_avatar} className="w-full h-full object-cover" /> : comment.author_username?.[0]?.toUpperCase()}
                 </div>
               </Link>
               <div className="bg-gray-100 rounded-2xl px-4 py-2 max-w-[85%]">
                 <div className="flex items-center gap-2">
-                  <Link href={`/profile/@${comment.user?.username}`} className="text-gray-900 font-semibold text-sm hover:underline">{comment.user?.yourname}</Link>
+                  <Link href={`/profile/@${comment.author_username}`} className="text-gray-900 font-semibold text-sm hover:underline">{comment.author_yourname}</Link>
                   {comment.created_at && (<><span className="text-gray-400 text-[10px]">·</span><span className="text-gray-500 text-[10px]">{timeAgo(comment.created_at)}</span></>)}
                 </div>
                 <p className="text-gray-800 text-[15px]">{comment.content}</p>
