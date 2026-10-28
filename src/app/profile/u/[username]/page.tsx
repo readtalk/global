@@ -12,7 +12,19 @@ import ShareButton from "@/components/ShareButton";
 import CopyUsername from "@/components/CopyUsername";
 import LikeRepost from "@/components/LikeRepost";
 
-type User = { id: string; username: string; yourname: string; avatar: string | null; header: string | null; headline: string | null; about: string | null; socials: string | null; location: string | null; created_at: string; };
+type User = { 
+	id: string; 
+	username: string; 
+	yourname: string; 
+	avatar: string | null; 
+	header: string | null; 
+	headline: string | null; 
+	about: string | null; 
+	socials: string | null; 
+	location: string | null; 
+	created_at: string; 
+	follow_status?: "none" | "following" | "followers" | "mutual";
+};
 type Update = { id: string; user_id: string; content: string; image_url: string | null; created_at: number; reposter_id?: string | null; type?: string; author_username?: string; author_yourname?: string; author_avatar?: string | null; like_count?: number; comment_count?: number; repost_count?: number; is_liked?: boolean; is_reposted?: boolean; };
 
 function ProfileContent() {
@@ -22,6 +34,7 @@ function ProfileContent() {
 	const [updates, setUpdates] = useState<Update[]>([]);
 	const [activeTab, setActiveTab] = useState<"all" | "post" | "repost">("all");
 	const [isLoading, setIsLoading] = useState(true);
+	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
 	const fetchData = async () => {
 		try {
@@ -32,7 +45,35 @@ function ProfileContent() {
 		} catch (error) { console.error(error); } finally { setIsLoading(false); }
 	};
 
-	useEffect(() => { fetchData(); }, [username]);
+	useEffect(() => {
+		fetchData();
+		const session = localStorage.getItem("session");
+		if (session) {
+			try {
+				const payload = JSON.parse(atob(session.split(".")[1]));
+				const id = payload.properties?.id || payload.sub;
+				if (id) setCurrentUserId(id);
+			} catch {}
+		}
+	}, [username]);
+
+	const handleFollowToggle = async () => {
+		const token = localStorage.getItem("session");
+		if (!token) return alert("You must be logged in.");
+		
+		try {
+			const res = await fetch(`/api/profile/${username}/follow`, {
+				method: "POST",
+				headers: { "Authorization": `Bearer ${token}` }
+			});
+			const data = await res.json();
+			if (data.success) {
+				fetchData();
+			}
+		} catch (error) {
+			console.error(error);
+		}
+	};
 
 	if (isLoading) return <div className="w-full h-full flex justify-center items-center"><p className="text-gray-500">Loading profile...</p></div>;
 	if (!user) return <div className="w-full h-full flex justify-center items-center"><p className="text-gray-500">User not found.</p></div>;
@@ -58,7 +99,30 @@ function ProfileContent() {
 							<h1 className="text-2xl font-bold text-gray-900">{user.yourname || user.username}</h1>
 							<div className="flex items-center gap-1 mt-1"><p className="text-gray-500 text-sm">@{user.username}</p><CopyUsername username={user.username} /></div>
 						</div>
-						<div className="flex gap-2"><Link href="/settings" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold transition">Settings</Link><ShareButton username={user.username} /></div>
+						<div className="flex gap-2">
+							{user.id !== currentUserId && (
+								<>
+									{user.follow_status === "none" && (
+										<button onClick={handleFollowToggle} className="bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold">Follow</button>
+									)}
+									{user.follow_status === "following" && (
+										<button onClick={handleFollowToggle} className="bg-gray-200 text-gray-800 px-4 py-1.5 rounded-full text-xs font-semibold">Following</button>
+									)}
+									{user.follow_status === "followers" && (
+										<button onClick={handleFollowToggle} className="bg-gray-200 text-gray-800 px-4 py-1.5 rounded-full text-xs font-semibold">Follow Back</button>
+									)}
+									{user.follow_status === "mutual" && (
+										<>
+											<button onClick={handleFollowToggle} className="bg-gray-200 text-gray-800 px-4 py-1.5 rounded-full text-xs font-semibold">Following</button>
+											<button className="bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold">Chat</button>
+											<button className="bg-green-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold">Call</button>
+										</>
+									)}
+								</>
+							)}
+							<Link href="/settings" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold transition">Settings</Link>
+							<ShareButton username={user.username} />
+						</div>
 					</div>
 					{user.headline && <p className="mt-2 text-gray-800 font-medium">{user.headline}</p>}
 					{user.about && <p className="mt-2 text-gray-600 text-sm whitespace-pre-wrap">{user.about}</p>}
