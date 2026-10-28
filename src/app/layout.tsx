@@ -59,9 +59,9 @@ export default function RootLayout({
 					></iframe>
 				</noscript>
 				
-				<div className="flex h-[100dvh] overflow-hidden">
+				<div className="flex h-[100dvh] w-full overflow-hidden">
 					<Sidebar />
-					<main className="flex-1 h-full overflow-hidden md:pb-0">
+					<main className="flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col">
 						{children}
 					</main>
 				</div>
