@@ -1,4 +1,3 @@
-//
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
@@ -36,13 +35,20 @@ function ProfileContent() {
 	const [activeTab, setActiveTab] = useState<"all" | "post" | "repost">("all");
 	const [isLoading, setIsLoading] = useState(true);
 	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+	const [isFollowing, setIsFollowing] = useState(false);
 
 	const fetchData = async () => {
 		try {
 			const token = localStorage.getItem("session");
 			const res = await fetch(`/api/profile/${username}`, { headers: token ? { "Authorization": `Bearer ${token}` } : {} });
 			const data = (await res.json()) as { success: boolean; user: User; updates: Update[]; };
-			if (data.success) { setUser(data.user); setUpdates(data.updates || []); }
+			if (data.success) { 
+				setUser(data.user); 
+				setUpdates(data.updates || []); 
+				if (data.user.follow_status === "following" || data.user.follow_status === "mutual") {
+					setIsFollowing(true);
+				}
+			}
 		} catch (error) { console.error(error); } finally { setIsLoading(false); }
 	};
 
@@ -69,6 +75,7 @@ function ProfileContent() {
 			});
 			const data = (await res.json()) as { success: boolean };
 			if (data.success) {
+				setIsFollowing(!isFollowing);
 				fetchData();
 			}
 		} catch (error) {
@@ -87,6 +94,8 @@ function ProfileContent() {
 	const reposts = updates.filter(u => String(u.reposter_id).trim() === targetUserId);
 	const displayUpdates = activeTab === "all" ? updates : activeTab === "post" ? posts : reposts;
 
+	const isOwnProfile = currentUserId === user.id;
+
 	return (
 		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0">
 			<div className="max-w-2xl mx-auto bg-white shadow-sm rounded-b-xl overflow-hidden my-4 md:my-8">
@@ -101,25 +110,15 @@ function ProfileContent() {
 							<div className="flex items-center gap-1 mt-1"><p className="text-gray-500 text-sm">@{user.username}</p><CopyUsername username={user.username} /></div>
 						</div>
 						<div className="flex gap-2">
-							{user.id !== currentUserId && (
-								<>
-									{user.follow_status === "none" && (
-										<button onClick={handleFollowToggle} className="bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold">Follow</button>
-									)}
-									{user.follow_status === "following" && (
-										<button onClick={handleFollowToggle} className="bg-gray-200 text-gray-800 px-4 py-1.5 rounded-full text-xs font-semibold">Following</button>
-									)}
-									{user.follow_status === "followers" && (
-										<button onClick={handleFollowToggle} className="bg-gray-200 text-gray-800 px-4 py-1.5 rounded-full text-xs font-semibold">Follow Back</button>
-									)}
-									{user.follow_status === "mutual" && (
-										<>
-											<button onClick={handleFollowToggle} className="bg-gray-200 text-gray-800 px-4 py-1.5 rounded-full text-xs font-semibold">Following</button>
-											<button className="bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold">Chat</button>
-											<button className="bg-green-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold">Call</button>
-										</>
-									)}
-								</>
+							{isOwnProfile ? (
+								<Link href="/settings" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold transition">Edit Profile</Link>
+							) : (
+								<button 
+									onClick={handleFollowToggle} 
+									className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${isFollowing ? 'bg-gray-200 text-gray-800' : 'bg-blue-600 text-white'}`}
+								>
+									{isFollowing ? "Following" : "Follow"}
+								</button>
 							)}
 							<Link href="/settings" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold transition">Settings</Link>
 							<ShareButton username={user.username} />
