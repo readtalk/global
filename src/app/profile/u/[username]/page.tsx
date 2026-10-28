@@ -66,7 +66,7 @@ function ProfileContent() {
 				method: "POST",
 				headers: { "Authorization": `Bearer ${token}` }
 			});
-			const data = await res.json();
+			const data = (await res.json()) as { success: boolean };
 			if (data.success) {
 				fetchData();
 			}
