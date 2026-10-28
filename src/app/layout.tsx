@@ -1,4 +1,3 @@
-//
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -60,7 +59,7 @@ export default function RootLayout({
 					></iframe>
 				</noscript>
 				
-				<div className="flex h-screen overflow-hidden">
+				<div className="flex h-[100dvh] overflow-hidden">
 					<Sidebar />
 					<main className="flex-1 h-full overflow-hidden md:pb-0">
 						{children}
