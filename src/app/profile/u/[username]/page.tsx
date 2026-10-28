@@ -56,7 +56,7 @@ function ProfileContent() {
 	const displayUpdates = activeTab === "all" ? updates : activeTab === "post" ? posts : reposts;
 
 	return (
-		<div className="w-full h-full overflow-y-auto">
+		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0">
 			<div className="max-w-2xl mx-auto bg-white shadow-sm rounded-b-xl overflow-hidden my-4 md:my-8">
 				<div className="h-40 w-full bg-gray-300 relative">{user.header && <img src={user.header} alt="Header" className="w-full h-full object-cover" />}</div>
 				<div className="px-6 relative pb-6">
