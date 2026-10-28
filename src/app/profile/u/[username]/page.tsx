@@ -34,24 +34,28 @@ function ProfileContent() {
 	const [updates, setUpdates] = useState<Update[]>([]);
 	const [activeTab, setActiveTab] = useState<"all" | "post" | "repost">("all");
 	const [isLoading, setIsLoading] = useState(true);
-	const [isFollowing, setIsFollowing] = useState(false);
+	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
 	const fetchData = async () => {
 		try {
 			const token = localStorage.getItem("session");
 			const res = await fetch(`/api/profile/${username}`, { headers: token ? { "Authorization": `Bearer ${token}` } : {} });
 			const data = (await res.json()) as { success: boolean; user: User; updates: Update[]; };
-			if (data.success) { 
-				setUser(data.user); 
-				setUpdates(data.updates || []); 
-				if (data.user.follow_status === "following" || data.user.follow_status === "mutual") {
-					setIsFollowing(true);
-				}
-			}
+			if (data.success) { setUser(data.user); setUpdates(data.updates || []); }
 		} catch (error) { console.error(error); } finally { setIsLoading(false); }
 	};
 
-	useEffect(() => { fetchData(); }, [username]);
+	useEffect(() => {
+		fetchData();
+		const session = localStorage.getItem("session");
+		if (session) {
+			try {
+				const payload = JSON.parse(atob(session.split(".")[1]));
+				const id = payload.properties?.id || payload.sub;
+				if (id) setCurrentUserId(id);
+			} catch {}
+		}
+	}, [username]);
 
 	const handleFollowToggle = async () => {
 		const token = localStorage.getItem("session");
@@ -64,7 +68,6 @@ function ProfileContent() {
 			});
 			const data = (await res.json()) as { success: boolean };
 			if (data.success) {
-				setIsFollowing(!isFollowing);
 				fetchData();
 			}
 		} catch (error) {
@@ -97,12 +100,26 @@ function ProfileContent() {
 							<div className="flex items-center gap-1 mt-1"><p className="text-gray-500 text-sm">@{user.username}</p><CopyUsername username={user.username} /></div>
 						</div>
 						<div className="flex gap-2">
-							<button 
-								onClick={handleFollowToggle} 
-								className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${isFollowing ? 'bg-gray-200 text-gray-800' : 'bg-blue-600 text-white'}`}
-							>
-								{isFollowing ? "Following" : "Follow"}
-							</button>
+							{user.id !== currentUserId && (
+								<>
+									{user.follow_status === "none" && (
+										<button onClick={handleFollowToggle} className="bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold">Follow</button>
+									)}
+									{user.follow_status === "following" && (
+										<button onClick={handleFollowToggle} className="bg-gray-200 text-gray-800 px-4 py-1.5 rounded-full text-xs font-semibold">Following</button>
+									)}
+									{user.follow_status === "followers" && (
+										<button onClick={handleFollowToggle} className="bg-gray-200 text-gray-800 px-4 py-1.5 rounded-full text-xs font-semibold">Follow Back</button>
+									)}
+									{user.follow_status === "mutual" && (
+										<>
+											<button onClick={handleFollowToggle} className="bg-gray-200 text-gray-800 px-4 py-1.5 rounded-full text-xs font-semibold">Following</button>
+											<button className="bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold">Chat</button>
+											<button className="bg-green-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold">Call</button>
+										</>
+									)}
+								</>
+							)}
 							<Link href="/settings" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold transition">Settings</Link>
 							<ShareButton username={user.username} />
 						</div>
