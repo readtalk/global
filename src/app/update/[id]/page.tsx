@@ -124,7 +124,7 @@ function UpdateDetailContent() {
   if (isLoading) return <div className="w-full flex-1 min-h-0 flex justify-center items-center"><p className="text-gray-500">Loading...</p></div>;
 
   return (
-    <div className="w-full flex-1 min-h-0 flex flex-col bg-white overflow-hidden">
+    <div className="w-full flex-1 min-h-0 flex flex-col overflow-hidden">
       <div className="flex-none bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-4 z-10">
         <Link href="/" className="text-gray-600 hover:text-gray-900">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5"></path><polyline points="12 19 5 12 12 5"></polyline></svg>
