@@ -35,7 +35,10 @@ function UpdateDetailContent() {
 				if (found) setPost(found);
 			}
 			const dataComments = (await resComments.json()) as { success: boolean; comments: Comment[] };
-			if (dataComments.success) setComments(dataComments.comments);
+			if (dataComments.success) {
+				const sorted = [...dataComments.comments].sort((a, b) => b.created_at - a.created_at);
+				setComments(sorted);
+			}
 		} catch (error) { console.error(error); } finally { if (showLoading) setIsLoading(false); }
 	};
 
@@ -73,7 +76,7 @@ function UpdateDetailContent() {
 			author_avatar: currentUser?.avatar
 		};
 
-		setComments((prev) => [...prev, tempComment]);
+		setComments((prev) => [tempComment, ...prev]);
 		setContent("");
 		setIsPosting(true);
 
