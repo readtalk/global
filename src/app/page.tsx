@@ -25,6 +25,7 @@ function ForumContent() {
 		const token = searchParams.get("token");
 		if (token) {
 			localStorage.setItem("session", token);
+			window.dispatchEvent(new Event("session-changed"));
 			router.replace("/");
 		}
 	}, [searchParams, router]);
