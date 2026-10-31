@@ -9,23 +9,32 @@ export default function Sidebar() {
 	const [user, setUser] = useState<{ username: string; yourname: string } | null>(null);
 
 	useEffect(() => {
-		const session = localStorage.getItem("session");
-		if (session) {
-			try {
-				const payload = JSON.parse(atob(session.split(".")[1]));
-				const email = payload.properties?.email;
-				if (email) {
-					setUser({ username: email.split("@")[0], yourname: email.split("@")[0] });
-					fetch("https://auth.readtalk.workers.dev/settings", {
-						headers: { "Authorization": `Bearer ${session}` }
-					})
-					.then(res => res.json() as Promise<{ success: boolean; user?: { username: string; yourname: string } }>)
-					.then(data => {
-						if (data.success && data.user) setUser(data.user);
-					}).catch(() => {});
-				}
-			} catch {}
-		}
+		const checkSession = () => {
+			const session = localStorage.getItem("session");
+			if (session) {
+				try {
+					const payload = JSON.parse(atob(session.split(".")[1]));
+					const email = payload.properties?.email;
+					if (email) {
+						setUser({ username: email.split("@")[0], yourname: email.split("@")[0] });
+						fetch("https://auth.readtalk.workers.dev/settings", {
+							headers: { "Authorization": `Bearer ${session}` }
+						})
+						.then(res => res.json() as Promise<{ success: boolean; user?: { username: string; yourname: string } }>)
+						.then(data => {
+							if (data.success && data.user) setUser(data.user);
+						}).catch(() => {});
+					}
+				} catch {}
+			} else {
+				setUser(null);
+			}
+		};
+
+		checkSession();
+
+		window.addEventListener("session-changed", checkSession);
+		return () => window.removeEventListener("session-changed", checkSession);
 	}, []);
 
 	const handleLogout = () => {
