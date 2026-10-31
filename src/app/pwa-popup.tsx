@@ -236,7 +236,7 @@ export default function PwaPopup() {
 						disabled={!deferredPrompt}
 						className="w-full rounded-xl bg-black px-4 py-3 text-lg font-bold tracking-wider text-white transition hover:bg-gray-800 disabled:opacity-50"
 					>
-						[INSTALL]
+						INSTALL
 					</button>
 
 					<p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -261,7 +261,7 @@ export default function PwaPopup() {
 		<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
 			<div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl dark:bg-zinc-900">
 				<h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-					Welcome to ReadTalk
+					Welcome to READTalk
 				</h2>
 
 				<button
