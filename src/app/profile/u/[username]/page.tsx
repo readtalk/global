@@ -88,6 +88,7 @@ function ProfileContent() {
 	const displayUpdates = activeTab === "all" ? updates : activeTab === "post" ? posts : reposts;
 
 	const isFollowing = user.follow_status === "following" || user.follow_status === "mutual";
+	const isMutual = user.follow_status === "mutual";
 
 	return (
 		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0">
@@ -115,19 +116,19 @@ function ProfileContent() {
 
 						{user.id !== currentUserId && (
 							<div className="mt-4 flex gap-2">
-								{!isFollowing ? (
-									<button onClick={handleFollowToggle} className="bg-black text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-gray-800 transition">
-										Follow
-									</button>
-								) : (
+								<button 
+									onClick={handleFollowToggle} 
+									className={`px-6 py-2 rounded-full text-sm font-bold transition ${isFollowing ? "bg-gray-100 text-gray-800 hover:bg-gray-200" : "bg-black text-white hover:bg-gray-800"}`}
+								>
+									{isFollowing ? "Following" : user.follow_status === "followers" ? "Follow Back" : "Follow"}
+								</button>
+								{isMutual && (
 									<>
-										<button className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-blue-700 transition flex items-center gap-2">
-											<ChatCircle size={18} weight="bold" />
-											Chat
+										<button className="bg-black text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-gray-800 transition flex items-center justify-center">
+											<ChatCircle size={20} weight="bold" />
 										</button>
-										<button className="bg-green-600 text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-green-700 transition flex items-center gap-2">
-											<Phone size={18} weight="bold" />
-											Call
+										<button className="bg-black text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-gray-800 transition flex items-center justify-center">
+											<Phone size={20} weight="bold" />
 										</button>
 									</>
 								)}
