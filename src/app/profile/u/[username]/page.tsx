@@ -25,6 +25,8 @@ type User = {
 	location: string | null; 
 	created_at: string; 
 	follow_status?: "none" | "following" | "followers" | "mutual";
+	follower_count?: number;
+	following_count?: number;
 };
 type Update = { id: string; user_id: string; content: string; image_url: string | null; created_at: number; reposter_id?: string | null; type?: string; author_username?: string; author_yourname?: string; author_avatar?: string | null; like_count?: number; comment_count?: number; repost_count?: number; is_liked?: boolean; is_reposted?: boolean; };
 
@@ -112,6 +114,11 @@ function ProfileContent() {
 									<ShareButton username={user.username} />
 								</div>
 							)}
+						</div>
+
+						<div className="mt-3 flex items-center gap-4 text-sm text-gray-600">
+							<span><strong className="text-gray-900">{user.following_count || 0}</strong> Following</span>
+							<span><strong className="text-gray-900">{user.follower_count || 0}</strong> Followers</span>
 						</div>
 
 						{user.id !== currentUserId && (
