@@ -17,6 +17,17 @@ export default function Review({ url }: { url: string }) {
 
 	useEffect(() => {
 		const fetchPreview = async () => {
+			const cacheKey = `preview_${url}`;
+			const cachedData = localStorage.getItem(cacheKey);
+
+			if (cachedData) {
+				try {
+					setData(JSON.parse(cachedData));
+					setIsLoading(false);
+					return;
+				} catch {}
+			}
+
 			try {
 				const token = localStorage.getItem("session");
 				const res = await fetch(`/api/updates/review?url=${encodeURIComponent(url)}`, {
@@ -25,6 +36,7 @@ export default function Review({ url }: { url: string }) {
 				const result = (await res.json()) as { success: boolean; data?: PreviewData };
 				if (result.success && result.data) {
 					setData(result.data);
+					localStorage.setItem(cacheKey, JSON.stringify(result.data));
 				}
 			} catch (error) {
 				console.error(error);
