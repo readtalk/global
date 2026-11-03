@@ -30,7 +30,7 @@ export default function Review({ url }: { url: string }) {
 
 			try {
 				const token = localStorage.getItem("session");
-				const res = await fetch(`/api/updates/preview?url=${encodeURIComponent(url)}`, {
+				const res = await fetch(`/api/updates/review?url=${encodeURIComponent(url)}`, {
 					headers: token ? { "Authorization": `Bearer ${token}` } : {},
 				});
 				const result = (await res.json()) as { success: boolean; data?: PreviewData };
