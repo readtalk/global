@@ -1,88 +1,99 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { 
+	UserCircle, 
+	LockKey, 
+	Moon, 
+	Translate, 
+	Bell, 
+	SignOut 
+} from "@phosphor-icons/react/dist/ssr";
+
+export default function SettingsPage() {
+	const router = useRouter();
+	const [user, setUser] = useState<{ username: string; yourname: string; avatar: string | null } | null>(null);
+
+	useEffect(() => {
+		const session = localStorage.getItem("session");
+		if (session) {
+			try {
+				const payload = JSON.parse(atob(session.split(".")[1]));
+				const email = payload.properties?.email;
+				if (email) {
+					setUser({ username: email.split("@")[0], yourname: email.split("@")[0], avatar: null });
+					fetch("https://auth.readtalk.workers.dev/settings", {
+						headers: { "Authorization": `Bearer ${session}` }
+					})
+					.then(res => res.json() as Promise<{ success: boolean; user?: { username: string; yourname: string; avatar: string | null } }>)
+					.then(data => {
+						if (data.success && data.user) setUser(data.user);
+					}).catch(() => {});
+				}
+			} catch {}
+		} else {
+			router.replace("/");
+		}
+	}, [router]);
+
+	const handleLogout = () => {
+		localStorage.removeItem("session");
+		localStorage.removeItem("code_verifier");
+		window.location.href = "/api/auth/logout";
+	};
+
+	const menuItems = [
+		{ label: "Account", desc: "Privacy, security, change email", icon: UserCircle, href: "/settings/account" },
+		{ label: "Privacy", desc: "Block contacts, disappearing messages", icon: LockKey, href: "/settings/privacy" },
+		{ label: "Appearance", desc: "Theme, chat wallpaper", icon: Moon, href: "/settings/appearance" },
+		{ label: "Language", desc: "English", icon: Translate, href: "/settings/language" },
+		{ label: "Notifications", desc: "Message, group & call tones", icon: Bell, href: "/settings/notifications" },
+	];
+
 	return (
-		<div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-			<main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-				<Image
-					className="dark:invert"
-					src="/next.svg"
-					alt="Next.js logo"
-					width={180}
-					height={38}
-					priority
-				/>
-				<ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-					<li className="mb-2 tracking-[-.01em]">
-						Get started by editing{" "}
-						<code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-							src/app/page.tsx
-						</code>
-						.
-					</li>
-					<li className="tracking-[-.01em]">
-						Save and see your changes instantly.
-					</li>
-				</ol>
-
-				<div className="flex gap-4 items-center flex-col sm:flex-row">
-					<a
-						className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-						href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						Read our docs
-					</a>
+		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0 bg-gray-50">
+			<div className="max-w-2xl mx-auto bg-white min-h-full shadow-sm">
+				<div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 py-3">
+					<h1 className="text-xl font-bold text-gray-900">Settings</h1>
 				</div>
-			</main>
-			<footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-				<a
-					className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-					href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<Image
-						aria-hidden
-						src="/file.svg"
-						alt="File icon"
-						width={16}
-						height={16}
-					/>
-					Learn
-				</a>
-				<a
-					className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-					href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<Image
-						aria-hidden
-						src="/window.svg"
-						alt="Window icon"
-						width={16}
-						height={16}
-					/>
-					Examples
-				</a>
-				<a
-					className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-					href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<Image
-						aria-hidden
-						src="/globe.svg"
-						alt="Globe icon"
-						width={16}
-						height={16}
-					/>
-					Go to nextjs.org →
-				</a>
-			</footer>
+
+				{user && (
+					<div className="p-4 border-b border-gray-200 flex items-center gap-4">
+						<div className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center text-white text-2xl font-bold overflow-hidden shrink-0">
+							{user.avatar ? <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" /> : user.username?.[0]?.toUpperCase()}
+						</div>
+						<div>
+							<h2 className="text-lg font-bold text-gray-900">{user.yourname}</h2>
+							<p className="text-gray-500 text-sm">@{user.username}</p>
+						</div>
+					</div>
+				)}
+
+				<div className="flex flex-col">
+					{menuItems.map((item) => (
+						<Link key={item.label} href={item.href} className="flex items-center gap-4 p-4 border-b border-gray-100 hover:bg-gray-50 transition">
+							<div className="text-gray-500">
+								<item.icon size={24} />
+							</div>
+							<div className="flex-1">
+								<p className="text-gray-900 font-medium">{item.label}</p>
+								<p className="text-gray-500 text-sm">{item.desc}</p>
+							</div>
+						</Link>
+					))}
+
+					<button onClick={handleLogout} className="flex items-center gap-4 p-4 border-b border-gray-100 hover:bg-red-50 transition text-left w-full">
+						<div className="text-red-500">
+							<SignOut size={24} />
+						</div>
+						<div className="flex-1">
+							<p className="text-red-500 font-medium">Logout</p>
+						</div>
+					</button>
+				</div>
+			</div>
 		</div>
 	);
 }
