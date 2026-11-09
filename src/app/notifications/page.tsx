@@ -32,9 +32,10 @@ export default function NotificationsPage() {
 			try {
 				const res = await fetch("/api/notifications", {
 					headers: { "Authorization": `Bearer ${token}` },
-					cache: "no-store"
+					cache: "no-store",
 				});
 				const data = (await res.json()) as { success: boolean; notifications: Notification[] };
+				
 				if (data.success && data.notifications) {
 					setNotifications(data.notifications);
 
@@ -81,7 +82,7 @@ export default function NotificationsPage() {
 								<div className="flex-1 min-w-0">
 									<div className="flex items-center gap-2">
 										<Link href={`/profile/@${notif.actor_username || notif.actor_id}`} className="text-gray-900 font-semibold text-sm hover:underline">
-											{notif.actor_yourname || notif.actor_username || "Unknown"}
+											{notif.actor_yourname || notif.actor_username || "Unknown User"}
 										</Link>
 										<span className="text-gray-500 text-xs">{timeAgo(notif.created_at)}</span>
 									</div>
@@ -90,6 +91,7 @@ export default function NotificationsPage() {
 										{notif.type === "like" && "liked your post."}
 										{notif.type === "comment" && "commented on your post."}
 										{notif.type === "repost" && "reposted your post."}
+										{notif.type !== "follow" && notif.type !== "like" && notif.type !== "comment" && notif.type !== "repost" && `${notif.type} on your post.`}
 									</p>
 									{notif.target_id && notif.type !== "follow" && (
 										<Link href={`/update/${notif.target_id}`} className="text-blue-500 text-xs mt-1 hover:underline block">
