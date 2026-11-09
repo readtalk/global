@@ -22,7 +22,7 @@ export async function GET() {
 	const authUrl = new URL("https://auth.readtalk.workers.dev/authorize");
 	authUrl.searchParams.set("response_type", "code");
 	authUrl.searchParams.set("client_id", "your-client-id");
-	authUrl.searchParams.set("redirect_uri", "https://global.readtalk.web.id/callback");
+	authUrl.searchParams.set("redirect_uri", "https://global.readtalk.workers.dev/callback");
 	authUrl.searchParams.set("code_challenge", challenge);
 	authUrl.searchParams.set("code_challenge_method", "S256");
 
