@@ -12,6 +12,7 @@ import {
 import ShareButton from "@/components/ShareButton";
 import CopyUsername from "@/components/CopyUsername";
 import LikeRepost from "@/components/LikeRepost";
+import Preview from "@/components/Preview";
 
 type User = { 
 	id: string; 
@@ -191,26 +192,10 @@ function ProfileContent() {
 									<p className="text-gray-500 text-xs">@{update.author_username || update.user_id.substring(0, 8)}</p>
 								</div>
 							</div>
+							<Link href={`/update/${update.id}`} className="block"><p className="text-gray-800 text-sm">{update.content}</p>{update.image_url && <img src={update.image_url} alt="Post" className="mt-2 rounded-lg max-h-60 object-cover" />}</Link>
 							
-							<Link href={`/update/${update.id}`} className="block">
-								<p className="text-gray-800 text-sm">{update.content}</p>
-								{update.link_preview && (
-									<div className="mt-3 block w-full rounded-xl border border-gray-200 overflow-hidden pointer-events-none">
-										{update.link_preview.image && (
-											<div className="w-full h-48 bg-gray-200 overflow-hidden">
-												<img src={update.link_preview.image} alt={update.link_preview.title} className="w-full h-full object-cover" />
-											</div>
-										)}
-										<div className="p-3">
-											<p className="text-xs text-gray-500 uppercase tracking-wide truncate">{new URL(update.link_preview.url).hostname}</p>
-											<h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mt-1">{update.link_preview.title}</h3>
-											{update.link_preview.description && <p className="text-xs text-gray-500 line-clamp-2 mt-1">{update.link_preview.description}</p>}
-										</div>
-									</div>
-								)}
-								{update.image_url && <img src={update.image_url} alt="Post" className="mt-2 rounded-lg max-h-60 object-cover" />}
-							</Link>
-							
+							{update.link_preview && <Preview data={update.link_preview} />}
+
 							<div className="mt-3 flex items-center gap-6 text-gray-500 text-sm">
 								<Link href={`/update/${update.id}`} className="flex items-center gap-1 hover:text-gray-900 transition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>{update.comment_count || 0}</Link>
 								<LikeRepost
