@@ -12,7 +12,7 @@ function ForumContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const fileInputRef = useRef<HTMLInputElement>(null);
-	
+
 	const [content, setContent] = useState("");
 	const [imageUrl, setImageUrl] = useState<string | null>(null);
 	const [updates, setUpdates] = useState<UpdatelistItem[]>([]);
@@ -81,28 +81,28 @@ function ForumContent() {
 		const token = localStorage.getItem("session");
 		if (!token) return alert("You must be logged in.");
 
-		const tempUser = currentUser ? { username: currentUser.username, yourname: currentUser.yourname } : { username: "You", yourname: "You" };
+		setIsPosting(true);
+		const contentToSend = content;
+		const imageUrlToSend = imageUrl;
 		
-		const newPost: UpdatelistItem = {
-			id: crypto.randomUUID(), user_id: "temp", content: content, image_url: imageUrl,
-			created_at: Math.floor(Date.now() / 1000), like_count: 0, comment_count: 0, repost_count: 0,
-			is_liked: false, is_reposted: false, user: tempUser,
-		};
-
-		setUpdates((prev) => [newPost, ...prev]);
 		setContent("");
 		setImageUrl(null);
-		setIsPosting(true);
 
 		try {
 			await fetch("/api/updates", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-				body: JSON.stringify({ content: content, image_url: imageUrl }),
+				body: JSON.stringify({ content: contentToSend, image_url: imageUrlToSend }),
 			});
-			
+
 			await fetchData(false);
-		} catch (error) { console.error(error); } finally { setIsPosting(false); }
+		} catch (error) { 
+			console.error(error); 
+			setContent(contentToSend);
+			setImageUrl(imageUrlToSend);
+		} finally { 
+			setIsPosting(false); 
+		}
 	};
 
 	return (
