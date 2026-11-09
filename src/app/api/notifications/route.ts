@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 export async function GET(request: NextRequest) {
 	try {
 		const authHeader = request.headers.get("Authorization");
@@ -13,8 +16,12 @@ export async function GET(request: NextRequest) {
 			cache: "no-store",
 		});
 
+		if (!res.ok) {
+			return NextResponse.json({ success: false, error: "Backend error" }, { status: res.status });
+		}
+
 		const data = await res.json();
-		return NextResponse.json(data, { status: res.status });
+		return NextResponse.json(data);
 	} catch (error) {
 		return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
 	}
