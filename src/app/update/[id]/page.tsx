@@ -6,7 +6,7 @@ import Link from "next/link";
 import { timeAgo } from "@/lib/timer";
 import LikeRepost from "@/components/LikeRepost";
 
-type UpdatelistItem = { id: string; user_id: string; content: string; image_url: string | null; created_at: number; like_count: number; comment_count: number; repost_count: number; is_liked?: boolean; is_reposted?: boolean; author_username?: string; author_yourname?: string; author_avatar?: string | null; };
+type UpdatelistItem = { id: string; user_id: string; content: string; image_url: string | null; created_at: number; like_count: number; comment_count: number; repost_count: number; is_liked?: boolean; is_reposted?: boolean; author_username?: string; author_yourname?: string; author_avatar?: string | null; link_preview?: any; };
 type Comment = { id: string; updatelist_id: string; user_id: string; content: string; created_at: number; author_username?: string; author_yourname?: string; author_avatar?: string | null; };
 
 function UpdateDetailContent() {
@@ -105,7 +105,7 @@ function UpdateDetailContent() {
 				{post && (
 					<div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
 						<div className="flex items-center gap-3 mb-2">
-							<Link href={`/profile/@${post.author_username}`} className="shrink-0"><div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden">{post.author_avatar ? <img src={post.author_avatar} className="w-full h-full object-cover" /> : post.author_username?.[0]?.toUpperCase()}</div></Link>
+							<Link href={`/profile/@${post.author_username}`} className="shrink-0"><div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold overflow-hidden">{post.author_avatar ? <img src={post.author_avatar} className="w-full h-full object-cover" /> : post.author_username?.[0]?.toUpperCase()}</div></Link>
 							<div>
 								<div className="flex items-center gap-2">
 									<Link href={`/profile/@${post.author_username}`} className="text-gray-900 font-semibold hover:underline">{post.author_yourname}</Link>
@@ -115,9 +115,25 @@ function UpdateDetailContent() {
 							</div>
 						</div>
 						<p className="text-gray-800 whitespace-pre-wrap text-[15px]">{post.content}</p>
+						
+						{post.link_preview && (
+							<a href={post.link_preview.url} target="_blank" rel="noopener noreferrer" className="mt-3 block w-full rounded-xl border border-gray-200 overflow-hidden hover:bg-gray-50 transition">
+								{post.link_preview.image && (
+									<div className="w-full h-48 bg-gray-200 overflow-hidden">
+										<img src={post.link_preview.image} alt={post.link_preview.title} className="w-full h-full object-cover" />
+									</div>
+								)}
+								<div className="p-3">
+									<p className="text-xs text-gray-500 uppercase tracking-wide truncate">{new URL(post.link_preview.url).hostname}</p>
+									<h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mt-1">{post.link_preview.title}</h3>
+									{post.link_preview.description && <p className="text-xs text-gray-500 line-clamp-2 mt-1">{post.link_preview.description}</p>}
+								</div>
+							</a>
+						)}
+
 						{post.image_url && <img src={post.image_url} alt="Post Image" className="mt-3 rounded-lg max-h-80 w-full object-cover" />}
 						<div className="mt-4 flex items-center gap-6 text-gray-500 text-sm border-t border-gray-200 pt-3">
-							<Link href={`/update/${post.id}`} className="flex items-center gap-1 hover:text-blue-500 transition"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>{post.comment_count || 0}</Link>
+							<Link href={`/update/${post.id}`} className="flex items-center gap-1 hover:text-gray-900 transition"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>{post.comment_count || 0}</Link>
 							<LikeRepost 
 								id={post.id} 
 								like_count={post.like_count} 
@@ -133,7 +149,7 @@ function UpdateDetailContent() {
 				{comments.length > 0 ? (
 					comments.map((comment) => (
 						<div key={comment.id} className="flex gap-3 items-start">
-							<Link href={`/profile/@${comment.author_username}`} className="shrink-0"><div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold text-xs overflow-hidden">{comment.author_avatar ? <img src={comment.author_avatar} className="w-full h-full object-cover" /> : comment.author_username?.[0]?.toUpperCase()}</div></Link>
+							<Link href={`/profile/@${comment.author_username}`} className="shrink-0"><div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs overflow-hidden">{comment.author_avatar ? <img src={comment.author_avatar} className="w-full h-full object-cover" /> : comment.author_username?.[0]?.toUpperCase()}</div></Link>
 							<div className="bg-gray-100 rounded-2xl px-4 py-2 max-w-[85%]">
 								<div className="flex items-center gap-2">
 									<Link href={`/profile/@${comment.author_username}`} className="text-gray-900 font-semibold text-sm hover:underline">{comment.author_yourname}</Link>
@@ -146,8 +162,8 @@ function UpdateDetailContent() {
 				) : (<p className="text-center text-gray-500 text-sm mt-4">No comments yet. Be the first to reply!</p>)}
 			</div>
 			<div className="flex-none bg-white border-t border-gray-200 p-3 flex gap-2 pb-safe pb-[max(12px,env(safe-area-inset-bottom))]">
-				<input type="text" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Write a comment..." className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" onKeyDown={(e) => e.key === "Enter" && handlePostComment()} />
-				<button onClick={handlePostComment} disabled={isPosting || !content.trim()} className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold disabled:opacity-50">{isPosting ? "..." : "Reply"}</button>
+				<input type="text" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Write a comment..." className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500" onKeyDown={(e) => e.key === "Enter" && handlePostComment()} />
+				<button onClick={handlePostComment} disabled={isPosting || !content.trim()} className="bg-black text-white px-4 py-2 rounded-full text-sm font-semibold disabled:opacity-50">{isPosting ? "..." : "Reply"}</button>
 			</div>
 		</div>
 	);
