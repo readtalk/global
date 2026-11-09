@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 			body: new URLSearchParams({
 				grant_type: "authorization_code",
 				code: code,
-				redirect_uri: "https://global.readtalk.web.id/callback",
+				redirect_uri: "https://global.readtalk.workers.dev/callback",
 				client_id: "your-client-id",
 				code_verifier: verifier,
 			}),
