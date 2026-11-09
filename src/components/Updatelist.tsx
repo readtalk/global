@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { timeAgo } from "@/lib/timer";
+import Preview from "./Preview";
 
 export type UpdatelistItem = {
 	id: string;
@@ -16,12 +17,7 @@ export type UpdatelistItem = {
 	is_liked: boolean;
 	is_reposted: boolean;
 	user?: { username: string; yourname: string; avatar?: string | null } | null;
-	link_preview?: {
-		url: string;
-		title: string;
-		description: string | null;
-		image: string | null;
-	} | null;
+	link_preview?: { url: string; title: string; description: string | null; image: string | null; } | null;
 };
 
 export default function Updatelist({ data, limit = Infinity, onUpdate }: { data: UpdatelistItem[]; limit?: number; onUpdate: () => void }) {
@@ -76,20 +72,7 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 
 					{update.content && <p className="mt-3 text-gray-800 whitespace-pre-wrap">{update.content}</p>}
 
-					{update.link_preview && (
-						<a href={update.link_preview.url} target="_blank" rel="noopener noreferrer" className="mt-3 block w-full rounded-xl border border-gray-200 overflow-hidden hover:bg-gray-50 transition">
-							{update.link_preview.image && (
-								<div className="w-full h-48 bg-gray-200 overflow-hidden">
-									<img src={update.link_preview.image} alt={update.link_preview.title} className="w-full h-full object-cover" />
-								</div>
-							)}
-							<div className="p-3">
-								<p className="text-xs text-gray-500 uppercase tracking-wide truncate">{new URL(update.link_preview.url).hostname}</p>
-								<h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mt-1">{update.link_preview.title}</h3>
-								{update.link_preview.description && <p className="text-xs text-gray-500 line-clamp-2 mt-1">{update.link_preview.description}</p>}
-							</div>
-						</a>
-					)}
+					{update.link_preview && <Preview data={update.link_preview} />}
 
 					{update.image_url && (
 						<div className="mt-3 rounded-xl overflow-hidden border border-gray-200">
