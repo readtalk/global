@@ -5,5 +5,5 @@ export async function GET() {
 	const cookieStore = await cookies();
 	cookieStore.delete("session");
 
-	return NextResponse.redirect("https://global.readtalk.wwb.id/");
+	return NextResponse.redirect("https://global.readtalk.workers.dev/");
 }
