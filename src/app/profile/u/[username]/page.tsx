@@ -28,7 +28,7 @@ type User = {
 	follower_count?: number;
 	following_count?: number;
 };
-type Update = { id: string; user_id: string; content: string; image_url: string | null; created_at: number; reposter_id?: string | null; type?: string; author_username?: string; author_yourname?: string; author_avatar?: string | null; like_count?: number; comment_count?: number; repost_count?: number; is_liked?: boolean; is_reposted?: boolean; };
+type Update = { id: string; user_id: string; content: string; image_url: string | null; created_at: number; reposter_id?: string | null; type?: string; author_username?: string; author_yourname?: string; author_avatar?: string | null; like_count?: number; comment_count?: number; repost_count?: number; is_liked?: boolean; is_reposted?: boolean; link_preview?: any; };
 
 function ProfileContent() {
 	const params = useParams();
@@ -97,7 +97,7 @@ function ProfileContent() {
 			<div className="max-w-2xl mx-auto bg-white shadow-sm rounded-b-xl overflow-hidden my-4 md:my-8">
 				<div className="h-40 w-full bg-gray-300 relative">{user.header && <img src={user.header} alt="Header" className="w-full h-full object-cover" />}</div>
 				<div className="px-6 relative pb-6">
-					<div className="absolute -top-12 left-6 z-10 w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-4xl font-bold border-4 border-white overflow-hidden shadow-sm">
+					<div className="absolute -top-12 left-6 z-10 w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-4xl font-bold border-4 border-white overflow-hidden shadow-sm">
 						{user.avatar ? <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" /> : user.username?.[0]?.toUpperCase()}
 					</div>
 					
@@ -168,9 +168,9 @@ function ProfileContent() {
 					)}
 				</div>
 				<div className="flex border-t border-gray-200">
-					<button onClick={() => setActiveTab("all")} className={`flex-1 py-3 text-sm font-semibold transition ${activeTab === "all" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-50"}`}>All</button>
-					<button onClick={() => setActiveTab("post")} className={`flex-1 py-3 text-sm font-semibold transition ${activeTab === "post" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-50"}`}>Post</button>
-					<button onClick={() => setActiveTab("repost")} className={`flex-1 py-3 text-sm font-semibold transition ${activeTab === "repost" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-50"}`}>Repost</button>
+					<button onClick={() => setActiveTab("all")} className={`flex-1 py-3 text-sm font-semibold transition ${activeTab === "all" ? "text-gray-900 border-b-2 border-gray-900" : "text-gray-500 hover:bg-gray-50"}`}>All</button>
+					<button onClick={() => setActiveTab("post")} className={`flex-1 py-3 text-sm font-semibold transition ${activeTab === "post" ? "text-gray-900 border-b-2 border-gray-900" : "text-gray-500 hover:bg-gray-50"}`}>Post</button>
+					<button onClick={() => setActiveTab("repost")} className={`flex-1 py-3 text-sm font-semibold transition ${activeTab === "repost" ? "text-gray-900 border-b-2 border-gray-900" : "text-gray-500 hover:bg-gray-50"}`}>Repost</button>
 				</div>
 				<div className="divide-y divide-gray-100">
 					{displayUpdates.length === 0 ? <p className="text-center text-gray-500 text-sm py-10">Belum ada konten.</p> : displayUpdates.map(update => (
@@ -182,7 +182,7 @@ function ProfileContent() {
 								</div>
 							)}
 							<div className="flex items-center gap-3 mb-2">
-								<Link href={`/profile/@${update.author_username || update.user_id}`} className="shrink-0"><div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs overflow-hidden">{update.author_avatar ? <img src={update.author_avatar} className="w-full h-full object-cover" /> : (update.author_username?.[0]?.toUpperCase() || "?")}</div></Link>
+								<Link href={`/profile/@${update.author_username || update.user_id}`} className="shrink-0"><div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs overflow-hidden">{update.author_avatar ? <img src={update.author_avatar} className="w-full h-full object-cover" /> : (update.author_username?.[0]?.toUpperCase() || "?")}</div></Link>
 								<div>
 									<div className="flex items-center gap-2">
 										<Link href={`/profile/@${update.author_username || update.user_id}`} className="text-gray-900 font-semibold text-sm hover:underline">{update.author_yourname || update.author_username || "Unknown User"}</Link>
@@ -191,9 +191,28 @@ function ProfileContent() {
 									<p className="text-gray-500 text-xs">@{update.author_username || update.user_id.substring(0, 8)}</p>
 								</div>
 							</div>
-							<Link href={`/update/${update.id}`} className="block"><p className="text-gray-800 text-sm">{update.content}</p>{update.image_url && <img src={update.image_url} alt="Post" className="mt-2 rounded-lg max-h-60 object-cover" />}</Link>
+							
+							<Link href={`/update/${update.id}`} className="block">
+								<p className="text-gray-800 text-sm">{update.content}</p>
+								{update.link_preview && (
+									<div className="mt-3 block w-full rounded-xl border border-gray-200 overflow-hidden pointer-events-none">
+										{update.link_preview.image && (
+											<div className="w-full h-48 bg-gray-200 overflow-hidden">
+												<img src={update.link_preview.image} alt={update.link_preview.title} className="w-full h-full object-cover" />
+											</div>
+										)}
+										<div className="p-3">
+											<p className="text-xs text-gray-500 uppercase tracking-wide truncate">{new URL(update.link_preview.url).hostname}</p>
+											<h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mt-1">{update.link_preview.title}</h3>
+											{update.link_preview.description && <p className="text-xs text-gray-500 line-clamp-2 mt-1">{update.link_preview.description}</p>}
+										</div>
+									</div>
+								)}
+								{update.image_url && <img src={update.image_url} alt="Post" className="mt-2 rounded-lg max-h-60 object-cover" />}
+							</Link>
+							
 							<div className="mt-3 flex items-center gap-6 text-gray-500 text-sm">
-								<Link href={`/update/${update.id}`} className="flex items-center gap-1 hover:text-blue-500 transition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>{update.comment_count || 0}</Link>
+								<Link href={`/update/${update.id}`} className="flex items-center gap-1 hover:text-gray-900 transition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>{update.comment_count || 0}</Link>
 								<LikeRepost
 									id={update.id}
 									like_count={update.like_count}
