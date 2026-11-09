@@ -32,9 +32,10 @@ export default function NotificationsPage() {
 			try {
 				const res = await fetch("/api/notifications", {
 					headers: { "Authorization": `Bearer ${token}` },
+					cache: "no-store"
 				});
 				const data = (await res.json()) as { success: boolean; notifications: Notification[] };
-				if (data.success) {
+				if (data.success && data.notifications) {
 					setNotifications(data.notifications);
 
 					if (data.notifications.some((n) => !n.is_read)) {
