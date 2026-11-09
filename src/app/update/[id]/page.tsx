@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { timeAgo } from "@/lib/timer";
 import LikeRepost from "@/components/LikeRepost";
+import Preview from "@/components/Preview";
 
 type UpdatelistItem = { id: string; user_id: string; content: string; image_url: string | null; created_at: number; like_count: number; comment_count: number; repost_count: number; is_liked?: boolean; is_reposted?: boolean; author_username?: string; author_yourname?: string; author_avatar?: string | null; link_preview?: any; };
 type Comment = { id: string; updatelist_id: string; user_id: string; content: string; created_at: number; author_username?: string; author_yourname?: string; author_avatar?: string | null; };
@@ -116,20 +117,7 @@ function UpdateDetailContent() {
 						</div>
 						<p className="text-gray-800 whitespace-pre-wrap text-[15px]">{post.content}</p>
 						
-						{post.link_preview && (
-							<a href={post.link_preview.url} target="_blank" rel="noopener noreferrer" className="mt-3 block w-full rounded-xl border border-gray-200 overflow-hidden hover:bg-gray-50 transition">
-								{post.link_preview.image && (
-									<div className="w-full h-48 bg-gray-200 overflow-hidden">
-										<img src={post.link_preview.image} alt={post.link_preview.title} className="w-full h-full object-cover" />
-									</div>
-								)}
-								<div className="p-3">
-									<p className="text-xs text-gray-500 uppercase tracking-wide truncate">{new URL(post.link_preview.url).hostname}</p>
-									<h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mt-1">{post.link_preview.title}</h3>
-									{post.link_preview.description && <p className="text-xs text-gray-500 line-clamp-2 mt-1">{post.link_preview.description}</p>}
-								</div>
-							</a>
-						)}
+						{post.link_preview && <Preview data={post.link_preview} />}
 
 						{post.image_url && <img src={post.image_url} alt="Post Image" className="mt-3 rounded-lg max-h-80 w-full object-cover" />}
 						<div className="mt-4 flex items-center gap-6 text-gray-500 text-sm border-t border-gray-200 pt-3">
