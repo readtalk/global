@@ -91,7 +91,8 @@ export default function NotificationsPage() {
 										{notif.type === "like" && "liked your post."}
 										{notif.type === "comment" && "commented on your post."}
 										{notif.type === "repost" && "reposted your post."}
-										{notif.type !== "follow" && notif.type !== "like" && notif.type !== "comment" && notif.type !== "repost" && `${notif.type} on your post.`}
+										{notif.type === "reply" && "replied to your comment."}
+										{notif.type !== "follow" && notif.type !== "like" && notif.type !== "comment" && notif.type !== "repost" && notif.type !== "reply" && `${notif.type} on your post.`}
 									</p>
 									{notif.target_id && notif.type !== "follow" && (
 										<Link href={`/update/${notif.target_id}`} className="text-blue-500 text-xs mt-1 hover:underline block">
