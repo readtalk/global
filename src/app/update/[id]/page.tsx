@@ -101,8 +101,55 @@ function UpdateDetailContent() {
 		}
 	};
 
+	const handleReplyClick = (targetComment: Comment) => {
+		setReplyTo(targetComment);
+		setContent(`@${targetComment.author_username} `);
+	};
+
 	const rootComments = comments.filter(c => !c.parent_id);
-	const getReplies = (parentId: string) => comments.filter(c => c.parent_id === parentId);
+	
+	const getAllDescendants = (parentId: string): Comment[] => {
+		const directReplies = comments.filter(c => c.parent_id === parentId);
+		let all = [...directReplies];
+		for (const reply of directReplies) {
+			all = [...all, ...getAllDescendants(reply.id)];
+		}
+		return all;
+	};
+
+	const renderComment = (comment: Comment, isReply = false, depth = 0) => {
+		const replies = comments.filter(c => c.parent_id === comment.id);
+
+		return (
+			<div key={comment.id} className={`flex flex-col gap-2 ${isReply ? 'ml-8 mt-2' : ''}`}>
+				<div className="flex gap-3 items-start">
+					<Link href={`/profile/@${comment.author_username}`} className="shrink-0">
+						<div className={`${isReply ? 'w-6 h-6 text-[10px]' : 'w-8 h-8 text-xs'} rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold overflow-hidden`}>
+							{comment.author_avatar ? <img src={comment.author_avatar} className="w-full h-full object-cover" /> : comment.author_username?.[0]?.toUpperCase()}
+						</div>
+					</Link>
+					<div className="flex-1">
+						<div className={`${isReply ? 'bg-gray-50' : 'bg-gray-100'} rounded-2xl px-4 py-2 max-w-[85%] inline-block`}>
+							<div className="flex items-center gap-2">
+								<Link href={`/profile/@${comment.author_username}`} className={`text-gray-900 font-semibold ${isReply ? 'text-xs' : 'text-sm'} hover:underline`}>{comment.author_yourname}</Link>
+								{comment.author_username === post?.author_username && (
+									<span className="bg-blue-100 text-blue-600 text-[10px] px-1.5 py-0.5 rounded font-semibold">Creator</span>
+								)}
+								{comment.created_at && (<><span className="text-gray-400 text-[10px]">·</span><span className="text-gray-500 text-[10px]">{timeAgo(comment.created_at)}</span></>)}
+							</div>
+							<p className={`text-gray-800 ${isReply ? 'text-[14px]' : 'text-[15px]'}`}>{comment.content}</p>
+						</div>
+						<button onClick={() => handleReplyClick(comment)} className="text-xs text-gray-500 font-semibold mt-1 ml-2 hover:text-gray-900">Reply</button>
+					</div>
+				</div>
+				{replies.length > 0 && (
+					<div className="flex flex-col">
+						{replies.map((reply) => renderComment(reply, true, depth + 1))}
+					</div>
+				)}
+			</div>
+		);
+	};
 
 	if (isLoading) return <div className="w-full h-full flex justify-center items-center"><p className="text-gray-500">Loading...</p></div>;
 
@@ -146,39 +193,7 @@ function UpdateDetailContent() {
 				<div className="border-b border-gray-200 pb-2 mb-4"><p className="text-xs text-gray-500 text-center">Comments</p></div>
 				
 				{rootComments.length > 0 ? (
-					rootComments.map((comment) => (
-						<div key={comment.id} className="flex flex-col gap-2">
-							<div className="flex gap-3 items-start">
-								<Link href={`/profile/@${comment.author_username}`} className="shrink-0"><div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs overflow-hidden">{comment.author_avatar ? <img src={comment.author_avatar} className="w-full h-full object-cover" /> : comment.author_username?.[0]?.toUpperCase()}</div></Link>
-								<div className="flex-1">
-									<div className="bg-gray-100 rounded-2xl px-4 py-2 max-w-[85%] inline-block">
-										<div className="flex items-center gap-2">
-											<Link href={`/profile/@${comment.author_username}`} className="text-gray-900 font-semibold text-sm hover:underline">{comment.author_yourname}</Link>
-											{comment.created_at && (<><span className="text-gray-400 text-[10px]">·</span><span className="text-gray-500 text-[10px]">{timeAgo(comment.created_at)}</span></>)}
-										</div>
-										<p className="text-gray-800 text-[15px]">{comment.content}</p>
-									</div>
-									<button onClick={() => { setReplyTo(comment); setContent(`@${comment.author_username} `); }} className="text-xs text-gray-500 font-semibold mt-1 ml-2 hover:text-gray-900">Reply</button>
-								</div>
-							</div>
-							
-							{getReplies(comment.id).map((reply) => (
-								<div key={reply.id} className="flex gap-3 items-start ml-10">
-									<Link href={`/profile/@${reply.author_username}`} className="shrink-0"><div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-[10px] overflow-hidden">{reply.author_avatar ? <img src={reply.author_avatar} className="w-full h-full object-cover" /> : reply.author_username?.[0]?.toUpperCase()}</div></Link>
-									<div className="bg-gray-50 rounded-2xl px-4 py-2 max-w-[85%]">
-										<div className="flex items-center gap-2">
-											<Link href={`/profile/@${reply.author_username}`} className="text-gray-900 font-semibold text-xs hover:underline">{reply.author_yourname}</Link>
-											{reply.author_username === post?.author_username && (
-												<span className="bg-blue-100 text-blue-600 text-[10px] px-1.5 py-0.5 rounded font-semibold">Creator</span>
-											)}
-											{reply.created_at && (<><span className="text-gray-400 text-[10px]">·</span><span className="text-gray-500 text-[10px]">{timeAgo(reply.created_at)}</span></>)}
-										</div>
-										<p className="text-gray-800 text-[14px]">{reply.content}</p>
-									</div>
-								</div>
-							))}
-						</div>
-					))
+					rootComments.map((comment) => renderComment(comment))
 				) : (<p className="text-center text-gray-500 text-sm mt-4">No comments yet. Be the first to reply!</p>)}
 			</div>
 			
