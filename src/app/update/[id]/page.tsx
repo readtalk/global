@@ -21,8 +21,6 @@ function UpdateDetailContent() {
 	const [isPosting, setIsPosting] = useState(false);
 	const [currentUser, setCurrentUser] = useState<{ username: string; yourname: string; avatar: string | null } | null>(null);
 	const [replyTo, setReplyTo] = useState<Comment | null>(null);
-	
-	// State untuk fitur "Render Ulang Fokus"
 	const [focusedComment, setFocusedComment] = useState<Comment | null>(null);
 
 	const fetchData = async (showLoading = true) => {
@@ -165,7 +163,6 @@ function UpdateDetailContent() {
 
 	if (isLoading) return <div className="w-full h-full flex justify-center items-center"><p className="text-gray-500">Loading...</p></div>;
 
-	// Tampilan Fokus (Halaman Rendering Ulang)
 	if (focusedComment) {
 		const focusedReplies = getReplies(focusedComment.id);
 		
@@ -179,7 +176,6 @@ function UpdateDetailContent() {
 				</div>
 				
 				<div className="flex-1 overflow-y-auto p-4">
-					{/* Postingan Utama (Si A) */}
 					{post && (
 						<div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm mb-4">
 							<div className="flex items-center gap-3 mb-2">
@@ -198,9 +194,7 @@ function UpdateDetailContent() {
 						</div>
 					)}
 
-					{/* Garis Benang dari Postingan ke Fokus Komentar */}
 					<div className="flex flex-col ml-5 pl-5 border-l-2 border-gray-300 pb-4">
-						{/* Komentar yang Difokuskan (Si D) */}
 						<div className="bg-white -ml-5 rounded-xl border border-gray-200 p-3 shadow-sm mb-4">
 							<div className="flex gap-3 items-start">
 								<Link href={`/profile/@${focusedComment.author_username}`} className="shrink-0">
@@ -221,7 +215,6 @@ function UpdateDetailContent() {
 							</div>
 						</div>
 
-						{/* Balasan dari Komentar yang Difokuskan */}
 						<div className="flex flex-col gap-3">
 							{focusedReplies.map(reply => (
 								<div key={reply.id} className="flex gap-3 items-start">
@@ -246,7 +239,6 @@ function UpdateDetailContent() {
 					</div>
 				</div>
 
-				{/* Input Balasan Fokus */}
 				<div className="flex-none bg-white border-t border-gray-200 p-3 pb-safe pb-[max(12px,env(safe-area-inset-bottom))]">
 					{replyTo && (
 						<div className="flex justify-between items-center bg-gray-50 px-3 py-1.5 rounded-t-lg border border-b-0 border-gray-200 text-xs text-gray-500 mb-[-1px]">
@@ -270,7 +262,6 @@ function UpdateDetailContent() {
 		);
 	}
 
-	// Tampilan Normal (Daftar Komentar Utama)
 	const rootComments = comments.filter(c => !c.parent_id);
 
 	return (
@@ -314,10 +305,9 @@ function UpdateDetailContent() {
 					rootComments.map((comment) => (
 						<div key={comment.id} className="w-full">
 							{renderComment(comment)}
-							{/* Tombol untuk merender ulang fokus ke komentar ini */}
 							<div className="ml-10 mb-4">
 								<button onClick={() => setFocusedComment(comment)} className="text-xs font-semibold text-blue-500 hover:text-blue-700">
-									Fokus ke benang ini →
+									View this thread →
 								</button>
 							</div>
 						</div>
