@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { timeAgo } from "@/lib/timer";
-import { ChatCircle } from "@phosphor-icons/react";
+import { ArrowBendUpLeft } from "@phosphor-icons/react";
 import LikeRepost from "@/components/LikeRepost";
 import Preview from "@/components/Preview";
 
@@ -107,12 +107,22 @@ function UpdateDetailContent() {
 		setContent(`@${targetComment.author_username} `);
 	};
 
+	const renderContentWithMentions = (text: string) => {
+		const parts = text.split(/(@[a-zA-Z0-9_]+)/g);
+		return parts.map((part, i) => 
+			part.startsWith("@") ? (
+				<span key={i} className="text-blue-500 hover:underline cursor-pointer">{part}</span>
+			) : (
+				part
+			)
+		);
+	};
+
 	const rootComments = comments.filter(c => !c.parent_id);
 	
 	const renderComment = (comment: Comment, isReply = false) => {
 		const replies = comments.filter(c => c.parent_id === comment.id);
 		const isOwnComment = currentUser?.username === comment.author_username;
-		const isRoot = !comment.parent_id;
 
 		return (
 			<div key={comment.id} className={`flex flex-col gap-2 ${isReply ? 'ml-8 mt-2' : ''}`}>
@@ -122,8 +132,8 @@ function UpdateDetailContent() {
 							{comment.author_avatar ? <img src={comment.author_avatar} className="w-full h-full object-cover" /> : comment.author_username?.[0]?.toUpperCase()}
 						</div>
 					</Link>
-					<div className="flex-1">
-						<div className={`${isReply ? 'bg-gray-50' : 'bg-gray-100'} rounded-2xl px-4 py-2 max-w-[85%] inline-block`}>
+					<div className="flex-1 flex justify-between items-start gap-4">
+						<div className={`${isReply ? 'bg-gray-50' : 'bg-gray-100'} rounded-2xl px-4 py-2 max-w-[85%]`}>
 							<div className="flex items-center gap-2">
 								<Link href={`/profile/@${comment.author_username}`} className={`text-gray-900 font-semibold ${isReply ? 'text-xs' : 'text-sm'} hover:underline`}>{comment.author_yourname}</Link>
 								{comment.author_username === post?.author_username && (
@@ -131,12 +141,12 @@ function UpdateDetailContent() {
 								)}
 								{comment.created_at && (<><span className="text-gray-400 text-[10px]">·</span><span className="text-gray-500 text-[10px]">{timeAgo(comment.created_at)}</span></>)}
 							</div>
-							<p className={`text-gray-800 ${isReply ? 'text-[14px]' : 'text-[15px]'}`}>{comment.content}</p>
+							<p className={`text-gray-800 ${isReply ? 'text-[14px]' : 'text-[15px]'}`}>{renderContentWithMentions(comment.content)}</p>
 						</div>
+						
 						{!isOwnComment && (
-							<button onClick={() => handleReplyClick(comment)} className="flex items-center gap-1 text-xs text-gray-500 font-semibold mt-1 ml-2 hover:text-gray-900">
-								<ChatCircle size={14} weight="bold" />
-								{isRoot ? "Reply" : ""}
+							<button onClick={() => handleReplyClick(comment)} className="flex items-center gap-1 text-gray-500 hover:text-gray-900 transition mt-1">
+								<ArrowBendUpLeft size={16} weight="bold" />
 							</button>
 						)}
 					</div>
@@ -171,7 +181,7 @@ function UpdateDetailContent() {
 								<p className="text-gray-500 text-xs">@{post.author_username}</p>
 							</div>
 						</div>
-						<p className="text-gray-800 whitespace-pre-wrap text-[15px]">{post.content}</p>
+						<p className="text-gray-800 whitespace-pre-wrap text-[15px]">{renderContentWithMentions(post.content)}</p>
 						
 						{post.link_preview && <Preview data={post.link_preview} />}
 
