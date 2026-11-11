@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { timeAgo } from "@/lib/timer";
+import { ChatCircle } from "@phosphor-icons/react";
 import LikeRepost from "@/components/LikeRepost";
 import Preview from "@/components/Preview";
 
@@ -108,17 +109,10 @@ function UpdateDetailContent() {
 
 	const rootComments = comments.filter(c => !c.parent_id);
 	
-	const getAllDescendants = (parentId: string): Comment[] => {
-		const directReplies = comments.filter(c => c.parent_id === parentId);
-		let all = [...directReplies];
-		for (const reply of directReplies) {
-			all = [...all, ...getAllDescendants(reply.id)];
-		}
-		return all;
-	};
-
-	const renderComment = (comment: Comment, isReply = false, depth = 0) => {
+	const renderComment = (comment: Comment, isReply = false) => {
 		const replies = comments.filter(c => c.parent_id === comment.id);
+		const isOwnComment = currentUser?.username === comment.author_username;
+		const isRoot = !comment.parent_id;
 
 		return (
 			<div key={comment.id} className={`flex flex-col gap-2 ${isReply ? 'ml-8 mt-2' : ''}`}>
@@ -139,12 +133,17 @@ function UpdateDetailContent() {
 							</div>
 							<p className={`text-gray-800 ${isReply ? 'text-[14px]' : 'text-[15px]'}`}>{comment.content}</p>
 						</div>
-						<button onClick={() => handleReplyClick(comment)} className="text-xs text-gray-500 font-semibold mt-1 ml-2 hover:text-gray-900">Reply</button>
+						{!isOwnComment && (
+							<button onClick={() => handleReplyClick(comment)} className="flex items-center gap-1 text-xs text-gray-500 font-semibold mt-1 ml-2 hover:text-gray-900">
+								<ChatCircle size={14} weight="bold" />
+								{isRoot ? "Reply" : ""}
+							</button>
+						)}
 					</div>
 				</div>
 				{replies.length > 0 && (
 					<div className="flex flex-col">
-						{replies.map((reply) => renderComment(reply, true, depth + 1))}
+						{replies.map((reply) => renderComment(reply, true))}
 					</div>
 				)}
 			</div>
