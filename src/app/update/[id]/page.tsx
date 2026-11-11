@@ -21,6 +21,7 @@ function UpdateDetailContent() {
 	const [isPosting, setIsPosting] = useState(false);
 	const [currentUser, setCurrentUser] = useState<{ username: string; yourname: string; avatar: string | null } | null>(null);
 	const [replyTo, setReplyTo] = useState<Comment | null>(null);
+	const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
 
 	const fetchData = async (showLoading = true) => {
 		if (showLoading) setIsLoading(true);
@@ -105,6 +106,10 @@ function UpdateDetailContent() {
 	const handleReplyClick = (targetComment: Comment) => {
 		setReplyTo(targetComment);
 		setContent(`@${targetComment.author_username} `);
+		
+		if (targetComment.parent_id) {
+			setExpandedThreads(prev => new Set(prev).add(targetComment.parent_id as string));
+		}
 	};
 
 	const renderContentWithMentions = (text: string) => {
@@ -120,28 +125,44 @@ function UpdateDetailContent() {
 
 	const rootComments = comments.filter(c => !c.parent_id);
 	
+	const toggleThread = (commentId: string) => {
+		setExpandedThreads(prev => {
+			const next = new Set(prev);
+			if (next.has(commentId)) {
+				next.delete(commentId);
+			} else {
+				next.add(commentId);
+			}
+			return next;
+		});
+	};
+
 	const renderComment = (comment: Comment, isReply = false) => {
 		const replies = comments.filter(c => c.parent_id === comment.id);
 		const isOwnComment = currentUser?.username === comment.author_username;
+		const isExpanded = expandedThreads.has(comment.id);
+
+		const displayReplies = isExpanded ? replies : replies.slice(0, 2);
+		const hasMoreReplies = replies.length > 2;
 
 		return (
-			<div key={comment.id} className={`flex flex-col gap-2 ${isReply ? 'ml-8 mt-2' : ''}`}>
+			<div key={comment.id} className={`flex flex-col gap-2 ${isReply ? 'mt-2' : ''}`}>
 				<div className="flex gap-3 items-start">
 					<Link href={`/profile/@${comment.author_username}`} className="shrink-0">
-						<div className={`${isReply ? 'w-6 h-6 text-[10px]' : 'w-8 h-8 text-xs'} rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold overflow-hidden`}>
+						<div className={`${isReply ? 'w-8 h-8 text-xs' : 'w-8 h-8 text-xs'} rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold overflow-hidden`}>
 							{comment.author_avatar ? <img src={comment.author_avatar} className="w-full h-full object-cover" /> : comment.author_username?.[0]?.toUpperCase()}
 						</div>
 					</Link>
 					<div className="flex-1 flex justify-between items-start gap-4">
 						<div className={`${isReply ? 'bg-gray-50' : 'bg-gray-100'} rounded-2xl px-4 py-2 max-w-[85%]`}>
 							<div className="flex items-center gap-2">
-								<Link href={`/profile/@${comment.author_username}`} className={`text-gray-900 font-semibold ${isReply ? 'text-xs' : 'text-sm'} hover:underline`}>{comment.author_yourname}</Link>
+								<Link href={`/profile/@${comment.author_username}`} className={`text-gray-900 font-semibold text-sm hover:underline`}>{comment.author_yourname}</Link>
 								{comment.author_username === post?.author_username && (
 									<span className="bg-blue-100 text-blue-600 text-[10px] px-1.5 py-0.5 rounded font-semibold">Creator</span>
 								)}
 								{comment.created_at && (<><span className="text-gray-400 text-[10px]">·</span><span className="text-gray-500 text-[10px]">{timeAgo(comment.created_at)}</span></>)}
 							</div>
-							<p className={`text-gray-800 ${isReply ? 'text-[14px]' : 'text-[15px]'}`}>{renderContentWithMentions(comment.content)}</p>
+							<p className={`text-gray-800 text-[14px]`}>{renderContentWithMentions(comment.content)}</p>
 						</div>
 						
 						{!isOwnComment && (
@@ -151,9 +172,31 @@ function UpdateDetailContent() {
 						)}
 					</div>
 				</div>
+				
 				{replies.length > 0 && (
-					<div className="flex flex-col">
-						{replies.map((reply) => renderComment(reply, true))}
+					<div className={`flex flex-col ml-11 border-l-2 border-gray-100 pl-3`}>
+						{displayReplies.map((reply) => (
+							<div key={reply.id} className="mb-2">
+								{renderComment(reply, true)}
+							</div>
+						))}
+						
+						{hasMoreReplies && !isExpanded && (
+							<button 
+								onClick={() => toggleThread(comment.id)}
+								className="text-sm font-semibold text-gray-500 hover:text-gray-900 text-left mb-2 mt-1"
+							>
+								Lihat {replies.length - 2} balasan lainnya
+							</button>
+						)}
+						{hasMoreReplies && isExpanded && (
+							<button 
+								onClick={() => toggleThread(comment.id)}
+								className="text-sm font-semibold text-gray-500 hover:text-gray-900 text-left mb-2 mt-1"
+							>
+								Sembunyikan balasan
+							</button>
+						)}
 					</div>
 				)}
 			</div>
