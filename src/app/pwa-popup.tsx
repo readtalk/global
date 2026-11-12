@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ChatText, Phone, Heart, Globe, LockKey } from "@phosphor-icons/react/dist/ssr";
 
 type UserProfile = {
 	username: string | null;
@@ -22,7 +21,6 @@ export default function PwaPopup() {
 	const [isStandalone, setIsStandalone] = useState<boolean | null>(null);
 	const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 	const [isVisible, setIsVisible] = useState(false);
-	const [showLogo, setShowLogo] = useState(true);
 
 	const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 	const [isLoading, setIsLoading] = useState(false);
@@ -34,13 +32,6 @@ export default function PwaPopup() {
 	const [formYourname, setFormYourname] = useState("");
 	const [formDob, setFormDob] = useState("");
 	const [isSaving, setIsSaving] = useState(false);
-
-	useEffect(() => {
-		const interval = setInterval(() => {
-			setShowLogo(prev => !prev);
-		}, 2500);
-		return () => clearInterval(interval);
-	}, []);
 
 	useEffect(() => {
 		if (pathname.startsWith("/@") || pathname.startsWith("/u/") || pathname === "/callback") {
@@ -180,8 +171,8 @@ export default function PwaPopup() {
 
 		if (profile && (!profile.username || !profile.yourname || !profile.date_of_birth)) {
 			return (
-				<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-					<div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl dark:bg-zinc-900">
+				<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-4">
+					<div className="w-full h-full md:h-auto md:max-w-sm md:rounded-2xl rounded-none bg-white p-6 text-center shadow-2xl dark:bg-zinc-900 flex flex-col justify-center">
 						<h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
 							Complete Your Profile
 						</h2>
@@ -238,8 +229,8 @@ export default function PwaPopup() {
 
 	if (!isStandalone) {
 		return (
-			<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-				<div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl dark:bg-zinc-900">
+			<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-4">
+				<div className="w-full h-full md:h-auto md:max-w-sm md:rounded-2xl rounded-none bg-white p-6 text-center shadow-2xl dark:bg-zinc-900 flex flex-col justify-center">
 					<button
 						onClick={handleInstallClick}
 						disabled={!deferredPrompt}
@@ -267,20 +258,9 @@ export default function PwaPopup() {
 	}
 
 	return (
-		<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-			<div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl dark:bg-zinc-900">
-				<div className="flex justify-center mb-6">
-					<div className="relative w-40 h-40 flex items-center justify-center">
-						<div className={`absolute w-full h-full transition-all duration-500 ${!showLogo ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}>
-							<ChatText size={120} weight="fill" className="absolute top-6 left-2 text-neutral-200 dark:text-neutral-800 rotate-[-8deg]" />
-							<Phone size={28} weight="fill" className="absolute top-2 left-4 text-neutral-400 dark:text-neutral-500 rotate-[-15deg]" />
-							<Heart size={26} weight="fill" className="absolute bottom-10 left-0 text-neutral-400 dark:text-neutral-500" />
-							<Globe size={50} weight="fill" className="absolute top-0 right-0 text-neutral-300 dark:text-neutral-700" />
-							<LockKey size={36} weight="fill" className="absolute bottom-2 right-4 text-neutral-400 dark:text-neutral-500" />
-						</div>
-						<div className={`absolute w-20 h-20 bg-red-500 rounded-2xl shadow-xl z-10 transition-all duration-500 ease-in-out ${showLogo ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`} />
-					</div>
-				</div>
+		<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-4">
+			<div className="w-full h-full md:h-auto md:max-w-sm md:rounded-2xl rounded-none bg-white p-6 text-center shadow-2xl dark:bg-zinc-900 flex flex-col justify-center items-center">
+				<img src="/192x192.png" alt="READTalk Logo" className="w-24 h-24 rounded-2xl shadow-xl mb-6" />
 
 				<h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
 					Welcome to READTalk
