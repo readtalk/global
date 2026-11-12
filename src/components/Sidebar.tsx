@@ -37,7 +37,13 @@ export default function Sidebar() {
 		return () => window.removeEventListener("session-changed", checkSession);
 	}, []);
 
-	if (pathname.startsWith("/@") || pathname.startsWith("/u/") || pathname.startsWith("/update/")) {
+	const isImmersive = 
+		pathname.startsWith("/@") || 
+		pathname.startsWith("/u/") || 
+		pathname.startsWith("/update/") || 
+		(pathname.startsWith("/chats/") && pathname !== "/chats" && pathname !== "/chats/");
+
+	if (isImmersive) {
 		return null;
 	}
 
