@@ -27,10 +27,10 @@ export default function PanelOpen({ isOpen, onClose, children, title }: PanelOpe
 	return (
 		<>
 			<div
-				className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity"
+				className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity md:hidden"
 				onClick={onClose}
 			/>
-			<div className="fixed top-0 right-0 h-full w-80 max-w-[80vw] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col">
+			<div className="fixed top-0 right-0 h-full w-full md:w-80 md:max-w-[80vw] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col">
 				<div className="flex items-center justify-between p-4 border-b border-gray-200">
 					<h2 className="text-lg font-bold text-gray-900">{title || "Menu"}</h2>
 					<button
