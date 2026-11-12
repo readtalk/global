@@ -48,6 +48,7 @@ export default function Sidebar() {
 					<Link href="/" className="text-2xl font-bold text-gray-900">READTalk</Link>
 				</div>
 				<nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+					<Link href="/chats" className={`block p-3 rounded-lg ${pathname.startsWith("/chats") ? "bg-gray-100 font-semibold" : "hover:bg-gray-50"}`}>Chat</Link>
 					<Link href="/" className={`block p-3 rounded-lg ${pathname === "/" ? "bg-gray-100 font-semibold" : "hover:bg-gray-50"}`}>Update</Link>
 					{user && (
 						<>
@@ -64,6 +65,10 @@ export default function Sidebar() {
 			</aside>
 
 			<nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around p-2 z-50">
+				<Link href="/chats" className={`flex flex-col items-center p-2 text-xs ${pathname.startsWith("/chats") ? "text-black" : "text-gray-500"}`}>
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+					<span>Chat</span>
+				</Link>
 				<Link href="/" className={`flex flex-col items-center p-2 text-xs ${pathname === "/" ? "text-black" : "text-gray-500"}`}>
 					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
 					<span>Update</span>
