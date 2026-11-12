@@ -32,55 +32,51 @@ export default function ChatsPage() {
 	const [isPanelOpen, setIsPanelOpen] = useState(false);
 	const [mutuals, setMutuals] = useState<MutualUser[]>([]);
 	const [isFetchingMutuals, setIsFetchingMutuals] = useState(false);
-
-	const fetchChats = async () => {
-		const token = localStorage.getItem("session");
-		if (!token) {
-			setIsLoading(false);
-			return;
-		}
-
-		try {
-			const res = await fetch("/api/chats", {
-				headers: { "Authorization": `Bearer ${token}` },
-			});
-			const data = (await res.json()) as { success: boolean; chats: Chat[] };
-			if (data.success) {
-				setChats(data.chats);
-			}
-		} catch (error) {
-			console.error(error);
-		} finally {
-			setIsLoading(false);
-		}
-	};
+	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
 	useEffect(() => {
-		fetchChats();
+		const session = localStorage.getItem("session");
+		if (session) {
+			try {
+				const payload = JSON.parse(atob(session.split(".")[1]));
+				const uid = payload.properties?.id || payload.sub;
+				if (uid) setCurrentUserId(uid);
+			} catch {}
+		}
 	}, []);
 
 	useEffect(() => {
-		if (isPanelOpen) {
-			const fetchMutuals = async () => {
-				setIsFetchingMutuals(true);
-				const token = localStorage.getItem("session");
-				try {
-					const res = await fetch("/api/users/mutual", {
-						headers: { "Authorization": `Bearer ${token}` },
-					});
-					const data = (await res.json()) as { success: boolean; users: MutualUser[] };
-					if (data.success) {
-						setMutuals(data.users);
-					}
-				} catch (error) {
-					console.error(error);
-				} finally {
-					setIsFetchingMutuals(false);
+		const fetchChats = async () => {
+			const token = localStorage.getItem("session");
+			if (!token) {
+				setIsLoading(false);
+				return;
+			}
+
+			try {
+				const [resChats, resMutuals] = await Promise.all([
+					fetch("/api/chats", { headers: { "Authorization": `Bearer ${token}` } }),
+					fetch("/api/users/mutual", { headers: { "Authorization": `Bearer ${token}` } })
+				]);
+				
+				const dataChats = (await resChats.json()) as { success: boolean; chats: Chat[] };
+				if (dataChats.success) {
+					setChats(dataChats.chats);
 				}
-			};
-			fetchMutuals();
-		}
-	}, [isPanelOpen]);
+				
+				const dataMutuals = (await resMutuals.json()) as { success: boolean; users: MutualUser[] };
+				if (dataMutuals.success) {
+					setMutuals(dataMutuals.users);
+				}
+			} catch (error) {
+				console.error(error);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchChats();
+	}, []);
 
 	const handleStartChat = async (targetUser: MutualUser) => {
 		const token = localStorage.getItem("session");
@@ -111,6 +107,25 @@ export default function ChatsPage() {
 			console.error(error);
 			alert("Terjadi kesalahan saat memulai chat");
 		}
+	};
+
+	const getChatDisplay = (chat: Chat) => {
+		if (chat.is_private && currentUserId) {
+			const otherId = chat.member_ids.find(id => id !== currentUserId);
+			const otherUser = mutuals.find(u => u.id === otherId);
+			if (otherUser) {
+				return {
+					name: otherUser.yourname,
+					initial: otherUser.yourname?.[0]?.toUpperCase() || "?",
+					avatar: otherUser.avatar
+				};
+			}
+		}
+		return {
+			name: chat.name,
+			initial: chat.name.substring(0, 2).toUpperCase(),
+			avatar: null
+		};
 	};
 
 	const privateChats = chats.filter((c) => c.is_private);
@@ -147,21 +162,24 @@ export default function ChatsPage() {
 									<div className="px-4 py-2 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
 										Private
 									</div>
-									{privateChats.map((chat) => (
-										<Link
-											key={chat.id}
-											href={`/chats/${chat.id}`}
-											className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition border-b border-gray-100 last:border-0"
-										>
-											<div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold shrink-0 overflow-hidden">
-												{chat.name.substring(0, 2).toUpperCase()}
-											</div>
-											<div className="flex-1 min-w-0">
-												<p className="text-gray-900 font-semibold truncate">{chat.name}</p>
-												<p className="text-gray-500 text-sm truncate">{chat.description || "Private chat"}</p>
-											</div>
-										</Link>
-									))}
+									{privateChats.map((chat) => {
+										const display = getChatDisplay(chat);
+										return (
+											<Link
+												key={chat.id}
+												href={`/chats/${chat.id}`}
+												className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition border-b border-gray-100 last:border-0"
+											>
+												<div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold shrink-0 overflow-hidden">
+													{display.avatar ? <img src={display.avatar} alt={display.name} className="w-full h-full object-cover" /> : display.initial}
+												</div>
+												<div className="flex-1 min-w-0">
+													<p className="text-gray-900 font-semibold truncate">{display.name}</p>
+													<p className="text-gray-500 text-sm truncate">{chat.description || "Private chat"}</p>
+												</div>
+											</Link>
+										);
+									})}
 								</div>
 							)}
 
