@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ChatCircleDots, Plus, UsersThree, UserPlus } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircleDots, Plus, UsersThree, UserPlus, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import PanelOpen from "@/components/PanelOpen";
 
 type Chat = {
@@ -15,11 +15,21 @@ type Chat = {
 	member_ids: string[];
 };
 
+type MutualUser = {
+	id: string;
+	username: string;
+	yourname: string;
+	avatar: string | null;
+};
+
 export default function ChatsPage() {
 	const [chats, setChats] = useState<Chat[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [onlineCount, setOnlineCount] = useState(0);
 	const [isPanelOpen, setIsPanelOpen] = useState(false);
+	const [mutuals, setMutuals] = useState<MutualUser[]>([]);
+	const [isFetchingMutuals, setIsFetchingMutuals] = useState(false);
+	const [showMutuals, setShowMutuals] = useState(false);
 	const wsRef = useRef<WebSocket | null>(null);
 
 	useEffect(() => {
@@ -97,6 +107,25 @@ export default function ChatsPage() {
 		};
 	}, []);
 
+	const fetchMutuals = async () => {
+		setIsFetchingMutuals(true);
+		const token = localStorage.getItem("session");
+		try {
+			const res = await fetch("/api/users/mutual", {
+				headers: { "Authorization": `Bearer ${token}` },
+			});
+			const data = (await res.json()) as { success: boolean; mutuals: MutualUser[] };
+			if (data.success) {
+				setMutuals(data.mutuals);
+				setShowMutuals(true);
+			}
+		} catch (error) {
+			console.error(error);
+		} finally {
+			setIsFetchingMutuals(false);
+		}
+	};
+
 	const privateChats = chats.filter((c) => c.is_private);
 	const groupChats = chats.filter((c) => !c.is_private);
 
@@ -109,7 +138,10 @@ export default function ChatsPage() {
 						<h1 className="text-xl font-bold text-gray-900">{onlineCount} Online</h1>
 					</div>
 					<button 
-						onClick={() => setIsPanelOpen(true)}
+						onClick={() => {
+							setIsPanelOpen(true);
+							setShowMutuals(false);
+						}}
 						className="p-2 hover:bg-gray-100 rounded-full transition"
 					>
 						<Plus size={20} weight="bold" className="text-gray-600" />
@@ -176,28 +208,60 @@ export default function ChatsPage() {
 				</div>
 			</div>
 
-			<PanelOpen isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} title="New Chat">
-				<div className="p-4 space-y-2">
-					<button className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition">
-						<div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
-							<UsersThree size={20} weight="bold" />
-						</div>
-						<div className="flex-1 text-left">
-							<p className="text-gray-900 font-semibold">New Group</p>
-							<p className="text-xs text-gray-500">Create a new group chat</p>
-						</div>
-					</button>
-					
-					<button className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition">
-						<div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
-							<UserPlus size={20} weight="bold" />
-						</div>
-						<div className="flex-1 text-left">
-							<p className="text-gray-900 font-semibold">Followback on READTalk</p>
-							<p className="text-xs text-gray-500">Start a private chat with mutuals</p>
-						</div>
-					</button>
-				</div>
+			<PanelOpen 
+				isOpen={isPanelOpen} 
+				onClose={() => {
+					setIsPanelOpen(false);
+					setShowMutuals(false);
+				}} 
+				title={showMutuals ? "Followback" : "New Chat"}
+			>
+				{!showMutuals ? (
+					<div className="p-4 space-y-2">
+						<button className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition">
+							<div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
+								<UsersThree size={20} weight="bold" />
+							</div>
+							<div className="flex-1 text-left">
+								<p className="text-gray-900 font-semibold">New Group</p>
+								<p className="text-xs text-gray-500">Create a new group chat</p>
+							</div>
+						</button>
+						
+						<button 
+							onClick={fetchMutuals}
+							disabled={isFetchingMutuals}
+							className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+						>
+							<div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
+								<UserPlus size={20} weight="bold" />
+							</div>
+							<div className="flex-1 text-left">
+								<p className="text-gray-900 font-semibold">Followback on READTalk</p>
+								<p className="text-xs text-gray-500">{isFetchingMutuals ? "Memuat data..." : "Start a private chat with mutuals"}</p>
+							</div>
+							<ArrowRight size={16} className="text-gray-400" />
+						</button>
+					</div>
+				) : (
+					<div className="p-2">
+						{mutuals.length === 0 ? (
+							<p className="text-center text-gray-500 text-sm py-4">Belum ada mutual.</p>
+						) : (
+							mutuals.map((m) => (
+								<div key={m.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition">
+									<div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold shrink-0 overflow-hidden">
+										{m.avatar ? <img src={m.avatar} alt={m.username} className="w-full h-full object-cover" /> : m.username?.[0]?.toUpperCase()}
+									</div>
+									<div className="flex-1 min-w-0">
+										<p className="text-gray-900 font-semibold text-sm truncate">{m.yourname}</p>
+										<p className="text-gray-500 text-xs truncate">@{m.username}</p>
+									</div>
+								</div>
+							))
+						)}
+					</div>
+				)}
 			</PanelOpen>
 		</div>
 	);
