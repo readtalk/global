@@ -1,4 +1,3 @@
-//
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
@@ -30,8 +29,8 @@ export async function GET(request: NextRequest) {
 		const data = (await response.json()) as { access_token?: string };
 
 		if (data.access_token) {
-			// Lempar token ke URL sementara, biar Client Component yang simpen ke localStorage
-			const url = new URL("/", request.url);
+			
+			const url = new URL("/chats", request.url);
 			url.searchParams.set("token", data.access_token);
 			return NextResponse.redirect(url);
 		}
@@ -39,5 +38,5 @@ export async function GET(request: NextRequest) {
 		console.error(error);
 	}
 
-	return NextResponse.redirect(new URL("/", request.url));
+	return NextResponse.redirect(new URL("/chats", request.url));
 }
