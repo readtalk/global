@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { ChatCircleDots, Plus } from "@phosphor-icons/react/dist/ssr";
 
@@ -17,6 +17,7 @@ type Chat = {
 export default function ChatsPage() {
 	const [chats, setChats] = useState<Chat[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
+	const wsRef = useRef<WebSocket | null>(null);
 
 	useEffect(() => {
 		const fetchChats = async () => {
@@ -42,6 +43,40 @@ export default function ChatsPage() {
 		};
 
 		fetchChats();
+
+		const session = localStorage.getItem("session");
+		if (session) {
+			const wsUrl = `wss://auth.readtalk.workers.dev/ws?token=${session}`;
+			const ws = new WebSocket(wsUrl);
+			wsRef.current = ws;
+
+			ws.onopen = () => {
+				console.log("WebSocket connected to READTalk");
+			};
+
+			ws.onmessage = (event) => {
+				try {
+					const data = JSON.parse(event.data);
+					console.log("WS Message:", data);
+					if (data.type === "NEW_MESSAGE" || data.type === "USER_CONNECTED" || data.type === "USER_DISCONNECTED") {
+						fetchChats();
+					}
+				} catch (err) {
+					console.error("Failed to parse WS message", err);
+				}
+			};
+
+			ws.onclose = () => {
+				console.log("WebSocket disconnected from READTalk");
+			};
+		}
+
+		return () => {
+			if (wsRef.current) {
+				wsRef.current.close();
+				wsRef.current = null;
+			}
+		};
 	}, []);
 
 	const privateChats = chats.filter((c) => c.is_private);
