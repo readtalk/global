@@ -17,6 +17,7 @@ type Chat = {
 export default function ChatsPage() {
 	const [chats, setChats] = useState<Chat[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
+	const [onlineCount, setOnlineCount] = useState(0);
 	const wsRef = useRef<WebSocket | null>(null);
 
 	useEffect(() => {
@@ -42,7 +43,20 @@ export default function ChatsPage() {
 			}
 		};
 
+		const fetchOnlineUsers = async () => {
+			try {
+				const res = await fetch("https://auth.readtalk.workers.dev/users/online");
+				const data = (await res.json()) as { success: boolean; onlineUsers: string[] };
+				if (data.success) {
+					setOnlineCount(data.onlineUsers.length);
+				}
+			} catch (error) {
+				console.error(error);
+			}
+		};
+
 		fetchChats();
+		fetchOnlineUsers();
 
 		const session = localStorage.getItem("session");
 		if (session) {
@@ -52,14 +66,15 @@ export default function ChatsPage() {
 
 			ws.onopen = () => {
 				console.log("WebSocket connected to READTalk");
+				fetchOnlineUsers();
 			};
 
 			ws.onmessage = (event) => {
 				try {
 					const data = JSON.parse(event.data);
-					console.log("WS Message:", data);
 					if (data.type === "NEW_MESSAGE" || data.type === "USER_CONNECTED" || data.type === "USER_DISCONNECTED") {
 						fetchChats();
+						fetchOnlineUsers();
 					}
 				} catch (err) {
 					console.error("Failed to parse WS message", err);
@@ -68,6 +83,7 @@ export default function ChatsPage() {
 
 			ws.onclose = () => {
 				console.log("WebSocket disconnected from READTalk");
+				fetchOnlineUsers();
 			};
 		}
 
@@ -86,7 +102,10 @@ export default function ChatsPage() {
 		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0 bg-white">
 			<div className="max-w-2xl mx-auto bg-white min-h-full shadow-sm">
 				<div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-					<h1 className="text-xl font-bold text-gray-900">READTalk</h1>
+					<div className="flex items-center gap-2">
+						<div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+						<h1 className="text-xl font-bold text-gray-900">{onlineCount} Online</h1>
+					</div>
 					<button className="p-2 hover:bg-gray-100 rounded-full transition">
 						<Plus size={20} weight="bold" className="text-gray-600" />
 					</button>
