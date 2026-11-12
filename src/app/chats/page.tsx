@@ -117,9 +117,9 @@ export default function ChatsPage() {
 					const res = await fetch("/api/users/mutual", {
 						headers: { "Authorization": `Bearer ${token}` },
 					});
-					const data = (await res.json()) as { success: boolean; mutuals: MutualUser[] };
+					const data = (await res.json()) as { success: boolean; users: MutualUser[] };
 					if (data.success) {
-						setMutuals(data.mutuals);
+						setMutuals(data.users);
 					}
 				} catch (error) {
 					console.error(error);
