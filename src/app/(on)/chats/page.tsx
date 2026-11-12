@@ -140,13 +140,14 @@ function ChatsContent() {
 
 	const privateChats = chats.filter((c) => c.is_private);
 	const groupChats = chats.filter((c) => !c.is_private);
+	const isAnyoneOnline = onlineUsers.length > 0;
 
 	return (
 		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0 bg-white">
 			<div className="max-w-2xl mx-auto bg-white min-h-full shadow-sm">
 				<div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 py-3 flex items-center justify-between">
 					<div className="flex items-center gap-2">
-						<div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+						<div className={`w-2.5 h-2.5 rounded-full ${isAnyoneOnline ? "bg-green-500" : "bg-gray-400"}`} />
 						<h1 className="text-xl font-bold text-gray-900">{onlineUsers.length} Online</h1>
 					</div>
 					<button 
