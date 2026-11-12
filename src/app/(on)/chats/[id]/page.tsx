@@ -17,14 +17,13 @@ function ChatRoomContent() {
 	const params = useParams();
 	const router = useRouter();
 	const id = params.id as string;
-	
+
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [content, setContent] = useState("");
 	const [isLoading, setIsLoading] = useState(true);
 	const [isSending, setIsSending] = useState(false);
 	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-	
-	const wsRef = useRef<WebSocket | null>(null);
+
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 
 	const scrollToBottom = () => {
@@ -64,27 +63,6 @@ function ChatRoomContent() {
 		};
 
 		fetchMessages();
-
-		const token = localStorage.getItem("session");
-		if (token) {
-			const wsUrl = `wss://auth.readtalk.workers.dev/ws?token=${token}`;
-			const ws = new WebSocket(wsUrl);
-			wsRef.current = ws;
-
-			ws.onmessage = (event) => {
-				try {
-					const data = JSON.parse(event.data);
-					if (data.type === "NEW_MESSAGE" && data.chatId === id) {
-						setMessages((prev) => [...prev, data.message]);
-						scrollToBottom();
-					}
-				} catch (err) {}
-			};
-		}
-
-		return () => {
-			if (wsRef.current) wsRef.current.close();
-		};
 	}, [id]);
 
 	const handleSend = async () => {
