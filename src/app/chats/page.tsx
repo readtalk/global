@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ChatCircleDots, Plus } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircleDots, Plus, UsersThree, UserPlus } from "@phosphor-icons/react/dist/ssr";
+import PanelOpen from "@/components/PanelOpen";
 
 type Chat = {
 	id: string;
@@ -18,6 +19,7 @@ export default function ChatsPage() {
 	const [chats, setChats] = useState<Chat[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [onlineCount, setOnlineCount] = useState(0);
+	const [isPanelOpen, setIsPanelOpen] = useState(false);
 	const wsRef = useRef<WebSocket | null>(null);
 
 	useEffect(() => {
@@ -106,7 +108,10 @@ export default function ChatsPage() {
 						<div className="w-2.5 h-2.5 rounded-full bg-green-500" />
 						<h1 className="text-xl font-bold text-gray-900">{onlineCount} Online</h1>
 					</div>
-					<button className="p-2 hover:bg-gray-100 rounded-full transition">
+					<button 
+						onClick={() => setIsPanelOpen(true)}
+						className="p-2 hover:bg-gray-100 rounded-full transition"
+					>
 						<Plus size={20} weight="bold" className="text-gray-600" />
 					</button>
 				</div>
@@ -170,6 +175,30 @@ export default function ChatsPage() {
 					)}
 				</div>
 			</div>
+
+			<PanelOpen isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} title="New Chat">
+				<div className="p-4 space-y-2">
+					<button className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition">
+						<div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
+							<UsersThree size={20} weight="bold" />
+						</div>
+						<div className="flex-1 text-left">
+							<p className="text-gray-900 font-semibold">New Group</p>
+							<p className="text-xs text-gray-500">Create a new group chat</p>
+						</div>
+					</button>
+					
+					<button className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition">
+						<div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
+							<UserPlus size={20} weight="bold" />
+						</div>
+						<div className="flex-1 text-left">
+							<p className="text-gray-900 font-semibold">Followback on READTalk</p>
+							<p className="text-xs text-gray-500">Start a private chat with mutuals</p>
+						</div>
+					</button>
+				</div>
+			</PanelOpen>
 		</div>
 	);
 }
