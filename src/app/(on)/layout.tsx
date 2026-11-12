@@ -41,7 +41,7 @@ export default function OnLayout({ children }: { children: React.ReactNode }) {
 		wsRef.current = ws;
 
 		ws.onopen = () => {
-			// Pastikan user yang sedang login masuk ke daftar online saat konek
+			
 			setOnlineUsers((prev) => {
 				if (!prev.includes(currentUserId)) {
 					return [...prev, currentUserId];
