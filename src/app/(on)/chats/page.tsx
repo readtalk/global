@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChatCircleDots, Plus, UsersThree } from "@phosphor-icons/react/dist/ssr";
 import PanelOpen from "@/components/PanelOpen";
+import { useWebSocket } from "../layout";
 
 type Chat = {
 	id: string;
@@ -25,87 +26,37 @@ type MutualUser = {
 
 export default function ChatsPage() {
 	const router = useRouter();
+	const { onlineUsers } = useWebSocket();
 	const [chats, setChats] = useState<Chat[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
-	const [onlineCount, setOnlineCount] = useState(0);
 	const [isPanelOpen, setIsPanelOpen] = useState(false);
 	const [mutuals, setMutuals] = useState<MutualUser[]>([]);
 	const [isFetchingMutuals, setIsFetchingMutuals] = useState(false);
-	const wsRef = useRef<WebSocket | null>(null);
 
-	useEffect(() => {
-		const fetchChats = async () => {
-			const token = localStorage.getItem("session");
-			if (!token) {
-				setIsLoading(false);
-				return;
-			}
-
-			try {
-				const res = await fetch("/api/chats", {
-					headers: { "Authorization": `Bearer ${token}` },
-				});
-				const data = (await res.json()) as { success: boolean; chats: Chat[] };
-				if (data.success) {
-					setChats(data.chats);
-				}
-			} catch (error) {
-				console.error(error);
-			} finally {
-				setIsLoading(false);
-			}
-		};
-
-		const fetchOnlineUsers = async () => {
-			try {
-				const res = await fetch("https://auth.readtalk.workers.dev/users/online");
-				const data = (await res.json()) as { success: boolean; onlineUsers: string[] };
-				if (data.success) {
-					setOnlineCount(data.onlineUsers.length);
-				}
-			} catch (error) {
-				console.error(error);
-			}
-		};
-
-		fetchChats();
-		fetchOnlineUsers();
-
-		const session = localStorage.getItem("session");
-		if (session) {
-			const wsUrl = `wss://auth.readtalk.workers.dev/ws?token=${session}`;
-			const ws = new WebSocket(wsUrl);
-			wsRef.current = ws;
-
-			ws.onopen = () => {
-				console.log("WebSocket connected to READTalk");
-				fetchOnlineUsers();
-			};
-
-			ws.onmessage = (event) => {
-				try {
-					const data = JSON.parse(event.data);
-					if (data.type === "NEW_MESSAGE" || data.type === "USER_CONNECTED" || data.type === "USER_DISCONNECTED") {
-						fetchChats();
-						fetchOnlineUsers();
-					}
-				} catch (err) {
-					console.error("Failed to parse WS message", err);
-				}
-			};
-
-			ws.onclose = () => {
-				console.log("WebSocket disconnected from READTalk");
-				fetchOnlineUsers();
-			};
+	const fetchChats = async () => {
+		const token = localStorage.getItem("session");
+		if (!token) {
+			setIsLoading(false);
+			return;
 		}
 
-		return () => {
-			if (wsRef.current) {
-				wsRef.current.close();
-				wsRef.current = null;
+		try {
+			const res = await fetch("/api/chats", {
+				headers: { "Authorization": `Bearer ${token}` },
+			});
+			const data = (await res.json()) as { success: boolean; chats: Chat[] };
+			if (data.success) {
+				setChats(data.chats);
 			}
-		};
+		} catch (error) {
+			console.error(error);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchChats();
 	}, []);
 
 	useEffect(() => {
@@ -149,7 +100,7 @@ export default function ChatsPage() {
 				}),
 			});
 			const data = await res.json() as { success: boolean; chat_id?: string, error?: string };
-			
+
 			if (data.success && data.chat_id) {
 				setIsPanelOpen(false);
 				router.push(`/chats/${data.chat_id}`);
@@ -171,7 +122,7 @@ export default function ChatsPage() {
 				<div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 py-3 flex items-center justify-between">
 					<div className="flex items-center gap-2">
 						<div className="w-2.5 h-2.5 rounded-full bg-green-500" />
-						<h1 className="text-xl font-bold text-gray-900">{onlineCount} Online</h1>
+						<h1 className="text-xl font-bold text-gray-900">{onlineUsers.length} Online</h1>
 					</div>
 					<button 
 						onClick={() => setIsPanelOpen(true)}
