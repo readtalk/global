@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChatCircleDots, Plus, UsersThree } from "@phosphor-icons/react/dist/ssr";
 import PanelOpen from "@/components/PanelOpen";
@@ -23,14 +24,13 @@ type MutualUser = {
 };
 
 export default function ChatsPage() {
+	const router = useRouter();
 	const [chats, setChats] = useState<Chat[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [onlineCount, setOnlineCount] = useState(0);
 	const [isPanelOpen, setIsPanelOpen] = useState(false);
-	
 	const [mutuals, setMutuals] = useState<MutualUser[]>([]);
 	const [isFetchingMutuals, setIsFetchingMutuals] = useState(false);
-
 	const wsRef = useRef<WebSocket | null>(null);
 
 	useEffect(() => {
@@ -130,6 +130,37 @@ export default function ChatsPage() {
 			fetchMutuals();
 		}
 	}, [isPanelOpen]);
+
+	const handleStartChat = async (targetUser: MutualUser) => {
+		const token = localStorage.getItem("session");
+		if (!token) return alert("You must be logged in.");
+
+		try {
+			const res = await fetch("/api/chats", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"Authorization": `Bearer ${token}`,
+				},
+				body: JSON.stringify({
+					name: targetUser.yourname,
+					is_private: 1,
+					member_ids: [targetUser.id],
+				}),
+			});
+			const data = await res.json() as { success: boolean; chat_id?: string, error?: string };
+			
+			if (data.success && data.chat_id) {
+				setIsPanelOpen(false);
+				router.push(`/chats/${data.chat_id}`);
+			} else {
+				alert(data.error || "Gagal memulai chat");
+			}
+		} catch (error) {
+			console.error(error);
+			alert("Terjadi kesalahan saat memulai chat");
+		}
+	};
 
 	const privateChats = chats.filter((c) => c.is_private);
 	const groupChats = chats.filter((c) => !c.is_private);
@@ -237,7 +268,11 @@ export default function ChatsPage() {
 						<p className="text-center text-gray-500 text-sm py-4">Belum ada mutual.</p>
 					) : (
 						mutuals.map((m) => (
-							<div key={m.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition">
+							<button 
+								key={m.id} 
+								onClick={() => handleStartChat(m)}
+								className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition text-left"
+							>
 								<div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold shrink-0 overflow-hidden">
 									{m.avatar ? <img src={m.avatar} alt={m.username} className="w-full h-full object-cover" /> : m.username?.[0]?.toUpperCase()}
 								</div>
@@ -245,7 +280,7 @@ export default function ChatsPage() {
 									<p className="text-gray-900 font-semibold text-sm truncate">{m.yourname}</p>
 									<p className="text-gray-500 text-xs truncate">@{m.username}</p>
 								</div>
-							</div>
+							</button>
 						))
 					)}
 				</div>
