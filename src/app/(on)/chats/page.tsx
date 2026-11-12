@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ChatCircleDots, Plus, UsersThree } from "@phosphor-icons/react/dist/ssr";
 import PanelOpen from "@/components/PanelOpen";
@@ -24,8 +24,9 @@ type MutualUser = {
 	avatar: string | null;
 };
 
-export default function ChatsPage() {
+function ChatsContent() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
 	const { onlineUsers } = useWebSocket();
 	const [chats, setChats] = useState<Chat[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +34,15 @@ export default function ChatsPage() {
 	const [mutuals, setMutuals] = useState<MutualUser[]>([]);
 	const [isFetchingMutuals, setIsFetchingMutuals] = useState(false);
 	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+	useEffect(() => {
+		const token = searchParams.get("token");
+		if (token) {
+			localStorage.setItem("session", token);
+			window.dispatchEvent(new Event("session-changed"));
+			router.replace("/chats");
+		}
+	}, [searchParams, router]);
 
 	useEffect(() => {
 		const session = localStorage.getItem("session");
@@ -76,7 +86,7 @@ export default function ChatsPage() {
 		};
 
 		fetchChats();
-	}, []);
+	}, [searchParams]);
 
 	const handleStartChat = async (targetUser: MutualUser) => {
 		const token = localStorage.getItem("session");
@@ -256,4 +266,8 @@ export default function ChatsPage() {
 			</PanelOpen>
 		</div>
 	);
+}
+
+export default function ChatsPage() {
+	return <Suspense fallback={<div className="p-4 text-center">Loading...</div>}><ChatsContent /></Suspense>;
 }
