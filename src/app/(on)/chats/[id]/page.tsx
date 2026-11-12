@@ -70,12 +70,24 @@ function ChatRoomContent() {
 		const token = localStorage.getItem("session");
 		if (!token) return;
 
-		setIsSending(true);
 		const text = content;
 		setContent("");
+		setIsSending(true);
+
+		const tempMessage: Message = {
+			id: crypto.randomUUID(),
+			chat_id: id,
+			user_id: currentUserId || "",
+			content: text,
+			assets: "[]",
+			created_at: Math.floor(Date.now() / 1000)
+		};
+
+		setMessages((prev) => [...prev, tempMessage]);
+		setTimeout(scrollToBottom, 50);
 
 		try {
-			await fetch(`/api/chats/${id}/messages`, {
+			const res = await fetch(`/api/chats/${id}/messages`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -83,8 +95,14 @@ function ChatRoomContent() {
 				},
 				body: JSON.stringify({ content: text, assets: [] }),
 			});
+			const data = await res.json() as { success: boolean; message?: Message };
+			
+			if (data.success && data.message) {
+				setMessages((prev) => prev.map(m => m.id === tempMessage.id ? data.message! : m));
+			}
 		} catch (error) {
 			console.error(error);
+			setMessages((prev) => prev.filter(m => m.id !== tempMessage.id));
 			setContent(text);
 		} finally {
 			setIsSending(false);
