@@ -50,11 +50,7 @@ export default function Sidebar() {
 
 	return (
 		<>
-			<aside className="hidden md:flex flex-col w-16 h-full border-r border-gray-200 bg-white z-20 shrink-0 items-center py-4 gap-6">
-				<Link href="/" className="mb-2">
-					<div className="w-8 h-8 rounded bg-red-500 flex items-center justify-center text-white font-bold text-xs">RT</div>
-				</Link>
-
+			<aside className="hidden md:flex flex-col w-16 h-full border-r border-gray-200 bg-white z-20 shrink-0 items-center py-4 gap-4">
 				<nav className="flex flex-col gap-4 flex-1">
 					<Link href="/chats" className={`p-2 rounded-lg transition ${pathname.startsWith("/chats") ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
 						<ChatCircleDots size={24} weight={pathname.startsWith("/chats") ? "fill" : "regular"} />
