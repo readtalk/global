@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ChatCircleDots, House, Bell, User, Gear } from "@phosphor-icons/react/dist/ssr";
 
 export default function Sidebar() {
 	const pathname = usePathname();
@@ -49,25 +50,38 @@ export default function Sidebar() {
 
 	return (
 		<>
-			<aside className="hidden md:flex flex-col w-64 h-full border-r border-gray-200 bg-white z-20 shrink-0">
-				<div className="p-6 border-b border-gray-200">
-					<Link href="/" className="text-2xl font-bold text-gray-900">READTalk</Link>
-				</div>
-				<nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-					<Link href="/chats" className={`block p-3 rounded-lg ${pathname.startsWith("/chats") ? "bg-gray-100 font-semibold" : "hover:bg-gray-50"}`}>Chat</Link>
-					<Link href="/" className={`block p-3 rounded-lg ${pathname === "/" ? "bg-gray-100 font-semibold" : "hover:bg-gray-50"}`}>Update</Link>
+			<aside className="hidden md:flex flex-col w-16 h-full border-r border-gray-200 bg-white z-20 shrink-0 items-center py-4 gap-6">
+				<Link href="/" className="mb-2">
+					<div className="w-8 h-8 rounded bg-red-500 flex items-center justify-center text-white font-bold text-xs">RT</div>
+				</Link>
+
+				<nav className="flex flex-col gap-4 flex-1">
+					<Link href="/chats" className={`p-2 rounded-lg transition ${pathname.startsWith("/chats") ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
+						<ChatCircleDots size={24} weight={pathname.startsWith("/chats") ? "fill" : "regular"} />
+					</Link>
+					<Link href="/" className={`p-2 rounded-lg transition ${pathname === "/" ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
+						<House size={24} weight={pathname === "/" ? "fill" : "regular"} />
+					</Link>
 					{user && (
 						<>
-							<Link href="/notifications" className={`block p-3 rounded-lg ${pathname === "/notifications" ? "bg-gray-100 font-semibold" : "hover:bg-gray-50"}`}>Notifications</Link>
-							<Link href={`/profile/@${user.username}`} className={`block p-3 rounded-lg ${pathname.startsWith("/profile") ? "bg-gray-100 font-semibold" : "hover:bg-gray-50"}`}>
-								Profile
+							<Link href="/notifications" className={`p-2 rounded-lg transition ${pathname === "/notifications" ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
+								<Bell size={24} weight={pathname === "/notifications" ? "fill" : "regular"} />
 							</Link>
-							<Link href="/settings" className={`block p-3 rounded-lg ${pathname.startsWith("/settings") ? "bg-gray-100 font-semibold" : "hover:bg-gray-50"}`}>
-								Settings
+							<Link href={`/profile/@${user.username}`} className={`p-2 rounded-lg transition ${pathname.startsWith("/profile") ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
+								<User size={24} weight={pathname.startsWith("/profile") ? "fill" : "regular"} />
+							</Link>
+							<Link href="/settings" className={`p-2 rounded-lg transition ${pathname.startsWith("/settings") ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
+								<Gear size={24} weight={pathname.startsWith("/settings") ? "fill" : "regular"} />
 							</Link>
 						</>
 					)}
 				</nav>
+
+				{!user && (
+					<Link href="/api/auth/login" className="p-2 rounded-lg text-gray-500 hover:bg-gray-50 transition">
+						<User size={24} />
+					</Link>
+				)}
 			</aside>
 
 			<nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around p-2 z-50">
