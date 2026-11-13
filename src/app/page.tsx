@@ -1,25 +1,28 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Suspense } from "react";
 
 function RootRedirect() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
+	const [isProcessing, setIsProcessing] = useState(true);
 
 	useEffect(() => {
 		const token = searchParams.get("token");
+		
 		if (token) {
 			localStorage.setItem("session", token);
 			window.dispatchEvent(new Event("session-changed"));
+			router.replace("/");
 		}
-		
-		const timeout = setTimeout(() => {
-			router.replace("/chats");
-		}, 1000);
 
-		return () => clearTimeout(timeout);
+		const timer = setTimeout(() => {
+			setIsProcessing(false);
+			router.push("/chats");
+		}, 1500);
+
+		return () => clearTimeout(timer);
 	}, [searchParams, router]);
 
 	return (
