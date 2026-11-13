@@ -18,12 +18,6 @@ export default function OnLayout({ children }: { children: React.ReactNode }) {
 		const session = localStorage.getItem("session");
 		if (!session) return;
 
-		let currentUserId = "";
-		try {
-			const payload = JSON.parse(atob(session.split(".")[1]));
-			currentUserId = payload.properties?.id || payload.sub;
-		} catch {}
-
 		const fetchOnlineUsers = async () => {
 			try {
 				const res = await fetch("https://auth.readtalk.workers.dev/users/online");
@@ -41,25 +35,14 @@ export default function OnLayout({ children }: { children: React.ReactNode }) {
 		wsRef.current = ws;
 
 		ws.onopen = () => {
-			
-			setOnlineUsers((prev) => {
-				if (!prev.includes(currentUserId)) {
-					return [...prev, currentUserId];
-				}
-				return prev;
-			});
+			fetchOnlineUsers();
 		};
 
 		ws.onmessage = (event) => {
 			try {
 				const data = JSON.parse(event.data);
-				if (data.type === "USER_CONNECTED") {
-					setOnlineUsers((prev) => {
-						if (!prev.includes(data.userId)) return [...prev, data.userId];
-						return prev;
-					});
-				} else if (data.type === "USER_DISCONNECTED") {
-					setOnlineUsers((prev) => prev.filter(id => id !== data.userId));
+				if (data.type === "USER_CONNECTED" || data.type === "USER_DISCONNECTED") {
+					fetchOnlineUsers();
 				}
 			} catch (err) {
 				console.error("WS Error:", err);
