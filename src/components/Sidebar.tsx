@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChatCircleDots, House, Bell, User, Gear } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircleDots, At, Bell, User, Gear } from "@phosphor-icons/react/dist/ssr";
 
 export default function Sidebar() {
 	const pathname = usePathname();
@@ -55,8 +55,8 @@ export default function Sidebar() {
 					<Link href="/chats" className={`p-2 rounded-lg transition ${pathname.startsWith("/chats") ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
 						<ChatCircleDots size={24} weight={pathname.startsWith("/chats") ? "fill" : "regular"} />
 					</Link>
-					<Link href="/" className={`p-2 rounded-lg transition ${pathname === "/" ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
-						<House size={24} weight={pathname === "/" ? "fill" : "regular"} />
+					<Link href="/update" className={`p-2 rounded-lg transition ${pathname.startsWith("/update") ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
+						<At size={24} weight={pathname.startsWith("/update") ? "fill" : "regular"} />
 					</Link>
 					{user && (
 						<>
@@ -85,8 +85,8 @@ export default function Sidebar() {
 					<ChatCircleDots size={24} weight={pathname.startsWith("/chats") ? "fill" : "regular"} />
 					<span>Chat</span>
 				</Link>
-				<Link href="/" className={`flex flex-col items-center p-2 text-xs ${pathname === "/" ? "text-black" : "text-gray-500"}`}>
-					<House size={24} weight={pathname === "/" ? "fill" : "regular"} />
+				<Link href="/update" className={`flex flex-col items-center p-2 text-xs ${pathname.startsWith("/update") ? "text-black" : "text-gray-500"}`}>
+					<At size={24} weight={pathname.startsWith("/update") ? "fill" : "regular"} />
 					<span>Update</span>
 				</Link>
 				{user ? (
