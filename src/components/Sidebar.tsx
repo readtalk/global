@@ -52,21 +52,21 @@ export default function Sidebar() {
 		<>
 			<aside className="hidden md:flex flex-col w-16 h-full border-r border-gray-200 bg-white z-20 shrink-0 items-center py-4 gap-4">
 				<nav className="flex flex-col gap-4 flex-1">
-					<Link href="/chats" className={`p-2 rounded-lg transition ${pathname.startsWith("/chats") ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
+					<Link href="/chats" className={`flex items-center justify-center w-10 h-10 rounded-lg transition ${pathname.startsWith("/chats") ? "bg-gray-200 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
 						<ChatCircleDots size={24} weight={pathname.startsWith("/chats") ? "fill" : "regular"} />
 					</Link>
-					<Link href="/update" className={`p-2 rounded-lg transition ${pathname.startsWith("/update") ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
-						<At size={24} weight={pathname.startsWith("/update") ? "fill" : "regular"} />
+					<Link href="/update" className={`flex items-center justify-center w-10 h-10 rounded-lg transition ${pathname.startsWith("/update") ? "bg-gray-200 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
+						<At size={24} weight={pathname.startsWith("/update") ? "bold" : "regular"} />
 					</Link>
 					{user && (
 						<>
-							<Link href="/notifications" className={`p-2 rounded-lg transition ${pathname === "/notifications" ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
+							<Link href="/notifications" className={`flex items-center justify-center w-10 h-10 rounded-lg transition ${pathname === "/notifications" ? "bg-gray-200 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
 								<Bell size={24} weight={pathname === "/notifications" ? "fill" : "regular"} />
 							</Link>
-							<Link href={`/profile/@${user.username}`} className={`p-2 rounded-lg transition ${pathname.startsWith("/profile") ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
+							<Link href={`/profile/@${user.username}`} className={`flex items-center justify-center w-10 h-10 rounded-lg transition ${pathname.startsWith("/profile") ? "bg-gray-200 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
 								<User size={24} weight={pathname.startsWith("/profile") ? "fill" : "regular"} />
 							</Link>
-							<Link href="/settings" className={`p-2 rounded-lg transition ${pathname.startsWith("/settings") ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
+							<Link href="/settings" className={`flex items-center justify-center w-10 h-10 rounded-lg transition ${pathname.startsWith("/settings") ? "bg-gray-200 text-black" : "text-gray-500 hover:bg-gray-50"}`}>
 								<Gear size={24} weight={pathname.startsWith("/settings") ? "fill" : "regular"} />
 							</Link>
 						</>
@@ -74,7 +74,7 @@ export default function Sidebar() {
 				</nav>
 
 				{!user && (
-					<Link href="/api/auth/login" className="p-2 rounded-lg text-gray-500 hover:bg-gray-50 transition">
+					<Link href="/api/auth/login" className="flex items-center justify-center w-10 h-10 rounded-lg text-gray-500 hover:bg-gray-50 transition">
 						<User size={24} />
 					</Link>
 				)}
@@ -86,7 +86,7 @@ export default function Sidebar() {
 					<span>Chat</span>
 				</Link>
 				<Link href="/update" className={`flex flex-col items-center p-2 text-xs ${pathname.startsWith("/update") ? "text-black" : "text-gray-500"}`}>
-					<At size={24} weight={pathname.startsWith("/update") ? "fill" : "regular"} />
+					<At size={24} weight={pathname.startsWith("/update") ? "bold" : "regular"} />
 					<span>Update</span>
 				</Link>
 				{user ? (
