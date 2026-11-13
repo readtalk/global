@@ -267,7 +267,7 @@ function UpdateDetailContent() {
 	return (
 		<div className="w-full flex-1 min-h-0 flex flex-col overflow-hidden">
 			<div className="flex-none bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-4 z-10">
-				<Link href="/" className="text-gray-600 hover:text-gray-900"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5"></path><polyline points="12 19 5 12 12 5"></polyline></svg></Link>
+				<Link href="/update" className="text-gray-600 hover:text-gray-900"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5"></path><polyline points="12 19 5 12 12 5"></polyline></svg></Link>
 				<h1 className="text-lg font-bold text-gray-900">Post's Activity</h1>
 			</div>
 			<div className="flex-1 overflow-y-auto p-4 space-y-4">
