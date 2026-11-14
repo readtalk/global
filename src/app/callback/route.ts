@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
 		if (data.access_token) {
 			
-			const url = new URL("/chats", request.url);
+			const url = new URL("/", request.url);
 			url.searchParams.set("token", data.access_token);
 			return NextResponse.redirect(url);
 		}
@@ -38,5 +38,5 @@ export async function GET(request: NextRequest) {
 		console.error(error);
 	}
 
-	return NextResponse.redirect(new URL("/chats", request.url));
+	return NextResponse.redirect(new URL("/", request.url));
 }
