@@ -155,7 +155,7 @@ function ChatsContent() {
 					</button>
 				</div>
 
-				<div className="flex-1 overflow-y-auto">
+				<div>
 					{isLoading ? (
 						<div className="p-8 text-center text-gray-500">Loading chats...</div>
 					) : chats.length === 0 ? (
