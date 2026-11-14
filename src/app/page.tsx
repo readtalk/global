@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ChatCircleDots, Plus, UsersThree } from "@phosphor-icons/react/dist/ssr";
 import PanelOpen from "@/components/PanelOpen";
-import { useWebSocket } from "../layout";
+import { useWebSocket } from "./layout";
 
 type Chat = {
 	id: string;
