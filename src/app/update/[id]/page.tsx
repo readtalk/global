@@ -307,7 +307,7 @@ function UpdateDetailContent() {
 							{renderComment(comment)}
 							<div className="ml-10 mb-4">
 								<button onClick={() => setFocusedComment(comment)} className="text-xs font-semibold text-blue-500 hover:text-blue-700">
-									View this thread →
+									See more  →
 								</button>
 							</div>
 						</div>
