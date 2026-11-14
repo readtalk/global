@@ -78,16 +78,11 @@ function ChatRoomContent() {
 			
 			setMessages((prev) => {
 				if (prev.some(m => m.id === incomingMsg.id)) return prev;
-
-				if (incomingMsg.user_id === currentUserId) {
-					setIsSending(false);
-				}
-				
 				return [...prev, { ...incomingMsg, status: "delivered" }];
 			});
 			scrollToBottom();
 		}
-	}, [lastMessage, id, currentUserId]);
+	}, [lastMessage, id]);
 
 	const handleSend = async () => {
 		if (!content.trim()) return;
@@ -97,6 +92,9 @@ function ChatRoomContent() {
 		const text = content;
 		setContent("");
 		setIsSending(true);
+
+		const audio = new Audio('/sound/all-eyes-on-me.mp3');
+		audio.play().catch(() => {});
 
 		try {
 			await fetch(`/api/chats/${id}/messages`, {
@@ -110,6 +108,7 @@ function ChatRoomContent() {
 		} catch (error) {
 			console.error(error);
 			setContent(text);
+		} finally {
 			setIsSending(false);
 		}
 	};
