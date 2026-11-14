@@ -12,7 +12,7 @@ type Message = {
 	content: string;
 	assets: string;
 	created_at: number;
-	is_delivered?: boolean;
+	status?: "sent" | "delivered";
 };
 
 function ChatRoomContent() {
@@ -55,7 +55,10 @@ function ChatRoomContent() {
 				});
 				const data = (await res.json()) as { success: boolean; messages: Message[] };
 				if (data.success) {
-					const fetchedMessages = data.messages.reverse().map((m: Message) => ({ ...m, is_delivered: true }));
+					const fetchedMessages = data.messages.reverse().map((m: Message) => ({
+						...m,
+						status: "delivered" as const
+					}));
 					setMessages(fetchedMessages);
 					setTimeout(scrollToBottom, 100);
 				}
@@ -71,28 +74,30 @@ function ChatRoomContent() {
 
 	useEffect(() => {
 		if (lastMessage && lastMessage.chatId === id) {
+			const incomingMsg = lastMessage.message;
+			
 			setMessages((prev) => {
-				const msg = lastMessage.message;
-				
-				if (prev.some(m => m.id === msg.id)) return prev;
+				if (prev.some(m => m.id === incomingMsg.id)) return prev;
 
-				const matchIndex = prev.findIndex(m => 
-					m.user_id === msg.user_id && 
-					m.content === msg.content && 
-					Math.abs(m.created_at - msg.created_at) < 5
-				);
+				if (incomingMsg.user_id === currentUserId) {
+					const tempIndex = prev.findIndex(m => 
+						m.id.startsWith("temp-") && 
+						m.content === incomingMsg.content && 
+						Math.abs(m.created_at - incomingMsg.created_at) < 5
+					);
 
-				if (matchIndex !== -1) {
-					const newMessages = [...prev];
-					newMessages[matchIndex] = { ...msg, is_delivered: true };
-					return newMessages;
+					if (tempIndex !== -1) {
+						const newMessages = [...prev];
+						newMessages[tempIndex] = { ...incomingMsg, status: "delivered" };
+						return newMessages;
+					}
 				}
 
-				return [...prev, { ...msg, is_delivered: true }];
+				return [...prev, { ...incomingMsg, status: "delivered" }];
 			});
 			scrollToBottom();
 		}
-	}, [lastMessage, id]);
+	}, [lastMessage, id, currentUserId]);
 
 	const handleSend = async () => {
 		if (!content.trim()) return;
@@ -103,14 +108,15 @@ function ChatRoomContent() {
 		setContent("");
 		setIsSending(true);
 
+		const tempId = `temp-${crypto.randomUUID()}`;
 		const tempMessage: Message = {
-			id: crypto.randomUUID(),
+			id: tempId,
 			chat_id: id,
 			user_id: currentUserId || "",
 			content: text,
 			assets: "[]",
 			created_at: Math.floor(Date.now() / 1000),
-			is_delivered: false
+			status: "sent"
 		};
 
 		setMessages((prev) => [...prev, tempMessage]);
@@ -129,14 +135,14 @@ function ChatRoomContent() {
 
 			if (data.success && data.message) {
 				setMessages((prev) => prev.map(m => 
-					m.id === tempMessage.id 
-						? { ...data.message!, is_delivered: true } 
+					m.id === tempId 
+						? { ...data.message!, status: "sent" } 
 						: m
 				));
 			}
 		} catch (error) {
 			console.error(error);
-			setMessages((prev) => prev.filter(m => m.id !== tempMessage.id));
+			setMessages((prev) => prev.filter(m => m.id !== tempId));
 			setContent(text);
 		} finally {
 			setIsSending(false);
@@ -166,11 +172,12 @@ function ChatRoomContent() {
 						const isMe = msg.user_id === currentUserId;
 						return (
 							<div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-								<div className={`max-w-[75%] px-4 py-2 rounded-2xl flex items-center gap-2 ${isMe ? "bg-blue-100 text-gray-900 rounded-br-sm" : "bg-gray-100 text-gray-800 rounded-bl-sm"} ${!msg.is_delivered ? "opacity-70" : ""}`}>
+								<div className={`max-w-[75%] px-4 py-2 rounded-2xl flex items-end gap-2 ${isMe ? "bg-gray-200 text-gray-900 rounded-br-sm" : "bg-gray-100 text-gray-800 rounded-bl-sm"}`}>
 									<p className="text-[15px] whitespace-pre-wrap break-words">{msg.content}</p>
 									{isMe && (
-										<span className={`text-xs ${msg.is_delivered ? "text-blue-500" : "text-gray-400"}`}>
-											{msg.is_delivered ? <Check size={14} weight="bold" /> : <span className="animate-pulse">...</span>}
+										<span className="flex text-gray-400 mb-0.5">
+											<Check size={14} weight="bold" className={msg.status === "delivered" ? "-mr-1.5" : ""} />
+											<Check size={14} weight="bold" />
 										</span>
 									)}
 								</div>
