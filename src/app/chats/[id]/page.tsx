@@ -15,6 +15,33 @@ type Message = {
 	status?: "delivered";
 };
 
+const isSameDay = (a: number, b: number) => {
+	const da = new Date(a * 1000);
+	const db = new Date(b * 1000);
+	return da.getFullYear() === db.getFullYear()
+		&& da.getMonth() === db.getMonth()
+		&& da.getDate() === db.getDate();
+};
+
+const formatDay = (timestamp: number) => {
+	const d = new Date(timestamp * 1000);
+	const today = new Date();
+	const yesterday = new Date();
+	yesterday.setDate(today.getDate() - 1);
+
+	if (d.toDateString() === today.toDateString()) return 'Today';
+	if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+
+	return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+};
+
+const formatTime = (timestamp: number) => {
+	return new Date(timestamp * 1000).toLocaleTimeString('id-ID', {
+		hour: '2-digit',
+		minute: '2-digit',
+	});
+};
+
 function ChatRoomContent() {
 	const params = useParams();
 	const router = useRouter();
@@ -132,18 +159,33 @@ function ChatRoomContent() {
 						<p className="text-gray-500 text-sm">No messages yet. Start the conversation!</p>
 					</div>
 				) : (
-					messages.map((msg) => {
+					messages.map((msg, index) => {
 						const isMe = msg.user_id === currentUserId;
+						const prev = messages[index - 1];
+						const isNewDay = !prev || !isSameDay(prev.created_at, msg.created_at);
+
 						return (
-							<div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-								<div className={`max-w-[75%] px-4 py-2 rounded-2xl flex items-end gap-2 ${isMe ? "bg-gray-200 text-gray-900 rounded-br-sm" : "bg-gray-100 text-gray-800 rounded-bl-sm"}`}>
-									<p className="text-[15px] whitespace-pre-wrap break-words">{msg.content}</p>
-									{isMe && (
-										<span className="flex text-gray-400 mb-0.5">
-											<Check size={14} weight="bold" className="-mr-1.5" />
-											<Check size={14} weight="bold" />
+							<div key={msg.id}>
+								{isNewDay && (
+									<div className="flex justify-center my-4">
+										<span className="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-500">
+											{formatDay(msg.created_at)}
 										</span>
-									)}
+									</div>
+								)}
+								<div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+									<div className={`max-w-[75%] px-4 py-2 rounded-2xl flex flex-col gap-1 ${isMe ? "bg-gray-200 text-gray-900 rounded-br-sm" : "bg-gray-100 text-gray-800 rounded-bl-sm"}`}>
+										<p className="text-[15px] whitespace-pre-wrap break-words">{msg.content}</p>
+										<div className={`flex items-center justify-end gap-1 ${isMe ? "text-gray-500" : "text-gray-400"}`}>
+											<span className="text-[10px]">{formatTime(msg.created_at)}</span>
+											{isMe && (
+												<span className="flex mb-0.5">
+													<Check size={12} weight="bold" className="-mr-1" />
+													<Check size={12} weight="bold" />
+												</span>
+											)}
+										</div>
+									</div>
 								</div>
 							</div>
 						);
