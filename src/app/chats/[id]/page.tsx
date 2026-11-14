@@ -127,7 +127,7 @@ function ChatRoomContent() {
 					</div>
 				) : messages.length === 0 ? (
 					<div className="flex justify-center items-center h-full">
-						<p className="text-gray-500 text-sm">Belum ada pesan. Mulai obrolan!</p>
+						<p className="text-gray-500 text-sm">No messages yet. Start the conversation!</p>
 					</div>
 				) : (
 					messages.map((msg) => {
