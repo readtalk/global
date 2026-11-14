@@ -4,14 +4,16 @@ import { useEffect, useRef, createContext, useContext, useState } from "react";
 
 type WebSocketContextType = {
 	onlineUsers: string[];
+	isWsReady: boolean;
 };
 
-const WebSocketContext = createContext<WebSocketContextType>({ onlineUsers: [] });
+const WebSocketContext = createContext<WebSocketContextType>({ onlineUsers: [], isWsReady: false });
 
 export const useWebSocket = () => useContext(WebSocketContext);
 
 export default function WebSocketProvider({ children }: { children: React.ReactNode }) {
 	const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+	const [isWsReady, setIsWsReady] = useState(false);
 	const wsRef = useRef<WebSocket | null>(null);
 
 	useEffect(() => {
@@ -29,23 +31,28 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
 				currentUserId = payload.properties?.id || payload.sub;
 			} catch {}
 
+			setIsWsReady(false);
+
 			const fetchOnlineUsers = async () => {
 				try {
 					const res = await fetch("https://auth.readtalk.workers.dev/users/online");
 					const data = (await res.json()) as { success: boolean; onlineUsers: string[] };
-					if (data.success && isMounted) setOnlineUsers(data.onlineUsers);
+					if (data.success && isMounted) {
+						setOnlineUsers(prev => {
+							const merged = new Set([...prev, ...data.onlineUsers, currentUserId]);
+							return Array.from(merged).filter(Boolean);
+						});
+					}
 				} catch (error) {
 					console.error(error);
 				}
 			};
 
-			fetchOnlineUsers();
-
 			const wsUrl = `wss://auth.readtalk.workers.dev/ws?token=${session}`;
 			const ws = new WebSocket(wsUrl);
 			wsRef.current = ws;
 
-			ws.onopen = () => {
+			ws.onopen = async () => {
 				if (!isMounted) return;
 				setOnlineUsers((prev) => {
 					if (!prev.includes(currentUserId)) {
@@ -53,6 +60,8 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
 					}
 					return prev;
 				});
+				await fetchOnlineUsers();
+				if (isMounted) setIsWsReady(true);
 			};
 
 			ws.onmessage = (event) => {
@@ -92,7 +101,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
 	}, []);
 
 	return (
-		<WebSocketContext.Provider value={{ onlineUsers }}>
+		<WebSocketContext.Provider value={{ onlineUsers, isWsReady }}>
 			{children}
 		</WebSocketContext.Provider>
 	);
