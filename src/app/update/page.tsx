@@ -133,7 +133,7 @@ function ForumContent() {
 									</button>
 								</div>
 								<button onClick={handlePost} disabled={isPosting || (!content.trim() && !imageUrl) || !!uploadingFile} className="bg-blue-600 text-white px-5 py-1.5 rounded-full font-bold text-sm hover:bg-blue-700 transition disabled:opacity-50">
-									{isPosting ? "Posting..." : "Post"}
+									{isPosting ? "Posted..." : "Post"}
 								</button>
 							</div>
 						</div>
