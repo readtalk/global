@@ -18,7 +18,7 @@ function ChatRoomContent() {
 	const params = useParams();
 	const router = useRouter();
 	const id = params.id as string;
-	const { onlineUsers } = useWebSocket();
+	const { lastMessage } = useWebSocket();
 
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [content, setContent] = useState("");
@@ -66,6 +66,16 @@ function ChatRoomContent() {
 
 		fetchMessages();
 	}, [id]);
+
+	useEffect(() => {
+		if (lastMessage && lastMessage.chatId === id) {
+			setMessages((prev) => {
+				if (prev.some(m => m.id === lastMessage.message.id)) return prev;
+				return [...prev, lastMessage.message];
+			});
+			scrollToBottom();
+		}
+	}, [lastMessage, id]);
 
 	const handleSend = async () => {
 		if (!content.trim()) return;
