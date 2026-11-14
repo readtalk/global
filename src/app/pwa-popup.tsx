@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { ChatText, Phone, Heart, Globe, LockKey } from "@phosphor-icons/react/dist/ssr";
 
 type UserProfile = {
@@ -19,6 +19,7 @@ type UserProfile = {
 export default function PwaPopup() {
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
+	const router = useRouter();
 	const [isStandalone, setIsStandalone] = useState<boolean | null>(null);
 	const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 	const [isVisible, setIsVisible] = useState(false);
