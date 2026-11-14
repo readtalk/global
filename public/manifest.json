@@ -2,7 +2,7 @@
   "name": "READ-Talk",
   "short_name": "READ-Talk",
   "description": "READ-Talk",
-  "start_url": "/chats",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
