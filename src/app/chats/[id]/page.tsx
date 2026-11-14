@@ -94,7 +94,7 @@ function ChatRoomContent() {
 		setIsSending(true);
 
 		try {
-			await fetch(`/api/chats/${id}/messages`, {
+			const res = await fetch(`/api/chats/${id}/messages`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -102,6 +102,11 @@ function ChatRoomContent() {
 				},
 				body: JSON.stringify({ content: text, assets: [] }),
 			});
+
+			if (res.ok) {
+				const audio = new Audio('/sound/all-eyes-on-me.mp3');
+				audio.play().catch(() => {});
+			}
 		} catch (error) {
 			console.error(error);
 			setContent(text);
