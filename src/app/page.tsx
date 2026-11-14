@@ -111,11 +111,11 @@ function ChatsContent() {
 				setIsPanelOpen(false);
 				router.push(`/chats/${data.chat_id}`);
 			} else {
-				alert(data.error || "Gagal memulai chat");
+				alert(data.error || "Failed to start chat");
 			}
 		} catch (error) {
 			console.error(error);
-			alert("Terjadi kesalahan saat memulai chat");
+			alert("Error starting chat");
 		}
 	};
 
@@ -164,7 +164,7 @@ function ChatsContent() {
 					) : chats.length === 0 ? (
 						<div className="p-8 text-center text-gray-500 flex flex-col items-center gap-2">
 							<ChatCircleDots size={48} className="text-gray-300" />
-							<p>Belum ada obrolan.</p>
+							<p>No chats yet.</p>
 						</div>
 					) : (
 						<>
@@ -243,9 +243,9 @@ function ChatsContent() {
 						Followback on READTalk
 					</div>
 					{isFetchingMutuals ? (
-						<p className="text-center text-gray-500 text-sm py-4">Memuat data...</p>
+						<p className="text-center text-gray-500 text-sm py-4">Loading data...</p>
 					) : mutuals.length === 0 ? (
-						<p className="text-center text-gray-500 text-sm py-4">Belum ada mutual.</p>
+						<p className="text-center text-gray-500 text-sm py-4">No mutuals yet.</p>
 					) : (
 						mutuals.map((m) => (
 							<button 
