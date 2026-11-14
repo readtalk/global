@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ChatCircleDots, Plus, UsersThree } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircleDots, Plus, UsersThree, DotsThree, Sun, Moon } from "@phosphor-icons/react/dist/ssr";
 import PanelOpen from "@/components/PanelOpen";
 import { useWebSocket } from "./WebSocketProvider";
 
@@ -34,6 +34,30 @@ function ChatsContent() {
 	const [mutuals, setMutuals] = useState<MutualUser[]>([]);
 	const [isFetchingMutuals, setIsFetchingMutuals] = useState(false);
 	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+	const [theme, setTheme] = useState<"light" | "dark">("light");
+
+	useEffect(() => {
+		const savedTheme = localStorage.getItem("theme");
+		if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+			setTheme("dark");
+			document.documentElement.classList.add("dark");
+		} else {
+			setTheme("light");
+			document.documentElement.classList.remove("dark");
+		}
+	}, []);
+
+	const toggleTheme = (newTheme: "light" | "dark") => {
+		setTheme(newTheme);
+		localStorage.setItem("theme", newTheme);
+		if (newTheme === "dark") {
+			document.documentElement.classList.add("dark");
+		} else {
+			document.documentElement.classList.remove("dark");
+		}
+		setIsDropdownOpen(false);
+	};
 
 	useEffect(() => {
 		const token = searchParams.get("token");
@@ -147,12 +171,40 @@ function ChatsContent() {
 			<div className="max-w-2xl mx-auto bg-white min-h-full shadow-sm">
 				<div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 py-3 flex items-center justify-between">
 					<h1 className="text-xl font-bold text-gray-900">READTalk</h1>
-					<button 
-						onClick={() => setIsPanelOpen(true)}
-						className="hidden md:block bg-black text-white p-1.5 rounded-md transition hover:bg-gray-800"
-					>
-						<Plus size={20} weight="bold" />
-					</button>
+					<div className="flex items-center gap-2">
+						<button 
+							onClick={() => setIsPanelOpen(true)}
+							className="hidden md:block bg-black text-white p-1.5 rounded-md transition hover:bg-gray-800"
+						>
+							<Plus size={20} weight="bold" />
+						</button>
+						<div className="relative">
+							<button 
+								onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+								className="text-gray-600 hover:text-gray-900 p-1"
+							>
+								<DotsThree size={24} weight="bold" />
+							</button>
+							{isDropdownOpen && (
+								<div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
+									<button
+										onClick={() => toggleTheme("light")}
+										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
+									>
+										<Sun size={16} />
+										Light
+									</button>
+									<button
+										onClick={() => toggleTheme("dark")}
+										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
+									>
+										<Moon size={16} />
+										Dark
+									</button>
+								</div>
+							)}
+						</div>
+					</div>
 				</div>
 
 				<div className="bg-white">
