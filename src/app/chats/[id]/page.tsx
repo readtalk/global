@@ -12,7 +12,7 @@ type Message = {
 	content: string;
 	assets: string;
 	created_at: number;
-	status?: "sent" | "delivered";
+	status?: "delivered";
 };
 
 function ChatRoomContent() {
@@ -78,26 +78,11 @@ function ChatRoomContent() {
 			
 			setMessages((prev) => {
 				if (prev.some(m => m.id === incomingMsg.id)) return prev;
-
-				if (incomingMsg.user_id === currentUserId) {
-					const tempIndex = prev.findIndex(m => 
-						m.id.startsWith("temp-") && 
-						m.content === incomingMsg.content && 
-						Math.abs(m.created_at - incomingMsg.created_at) < 5
-					);
-
-					if (tempIndex !== -1) {
-						const newMessages = [...prev];
-						newMessages[tempIndex] = { ...incomingMsg, status: "delivered" };
-						return newMessages;
-					}
-				}
-
 				return [...prev, { ...incomingMsg, status: "delivered" }];
 			});
 			scrollToBottom();
 		}
-	}, [lastMessage, id, currentUserId]);
+	}, [lastMessage, id]);
 
 	const handleSend = async () => {
 		if (!content.trim()) return;
@@ -108,22 +93,8 @@ function ChatRoomContent() {
 		setContent("");
 		setIsSending(true);
 
-		const tempId = `temp-${crypto.randomUUID()}`;
-		const tempMessage: Message = {
-			id: tempId,
-			chat_id: id,
-			user_id: currentUserId || "",
-			content: text,
-			assets: "[]",
-			created_at: Math.floor(Date.now() / 1000),
-			status: "sent"
-		};
-
-		setMessages((prev) => [...prev, tempMessage]);
-		setTimeout(scrollToBottom, 50);
-
 		try {
-			const res = await fetch(`/api/chats/${id}/messages`, {
+			await fetch(`/api/chats/${id}/messages`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -131,18 +102,8 @@ function ChatRoomContent() {
 				},
 				body: JSON.stringify({ content: text, assets: [] }),
 			});
-			const data = await res.json() as { success: boolean; message?: Message };
-
-			if (data.success && data.message) {
-				setMessages((prev) => prev.map(m => 
-					m.id === tempId 
-						? { ...data.message!, status: "sent" } 
-						: m
-				));
-			}
 		} catch (error) {
 			console.error(error);
-			setMessages((prev) => prev.filter(m => m.id !== tempId));
 			setContent(text);
 		} finally {
 			setIsSending(false);
@@ -176,7 +137,7 @@ function ChatRoomContent() {
 									<p className="text-[15px] whitespace-pre-wrap break-words">{msg.content}</p>
 									{isMe && (
 										<span className="flex text-gray-400 mb-0.5">
-											<Check size={14} weight="bold" className={msg.status === "delivered" ? "-mr-1.5" : ""} />
+											<Check size={14} weight="bold" className="-mr-1.5" />
 											<Check size={14} weight="bold" />
 										</span>
 									)}
@@ -184,6 +145,13 @@ function ChatRoomContent() {
 							</div>
 						);
 					})
+				)}
+				{isSending && (
+					<div className="flex justify-end">
+						<span className="text-xs text-gray-400 flex items-center gap-1 animate-pulse">
+							Sending...
+						</span>
+					</div>
 				)}
 				<div ref={messagesEndRef} />
 			</div>
