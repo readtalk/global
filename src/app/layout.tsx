@@ -1,4 +1,3 @@
-//
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -64,8 +63,11 @@ export default function RootLayout({
 				<WebSocketProvider>
 					<div className="flex h-[100dvh] w-full overflow-hidden">
 						<Sidebar />
-						<main className="flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col bg-white">
-							{children}
+						<main className="flex-1 min-w-0 min-h-0 overflow-hidden flex bg-white">
+							<div className="w-full md:w-[35vw] md:min-w-[35vw] md:max-w-[35vw] md:border-r md:border-gray-200 h-full flex flex-col">
+								{children}
+							</div>
+							<div id="desktop-popup-panel" className="hidden md:flex flex-1 h-full bg-white border-l border-gray-200" />
 						</main>
 					</div>
 				</WebSocketProvider>
