@@ -146,15 +146,12 @@ function ChatsContent() {
 		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0 bg-white">
 			<div className="max-w-2xl mx-auto bg-white min-h-full shadow-sm">
 				<div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-					<div className="flex items-center gap-2">
-						<div className={`w-2.5 h-2.5 rounded-full ${isAnyoneOnline ? "bg-green-500" : "bg-gray-400"}`} />
-						<h1 className="text-xl font-bold text-gray-900">{onlineUsers.length} Online</h1>
-					</div>
+					<h1 className="text-xl font-bold text-gray-900">READTalk</h1>
 					<button 
 						onClick={() => setIsPanelOpen(true)}
-						className="p-2 hover:bg-gray-100 rounded-full transition"
+						className="bg-black text-white p-1.5 rounded-md transition hover:bg-gray-800"
 					>
-						<Plus size={20} weight="bold" className="text-gray-600" />
+						<Plus size={20} weight="bold" />
 					</button>
 				</div>
 
@@ -170,8 +167,9 @@ function ChatsContent() {
 						<>
 							{privateChats.length > 0 && (
 								<div>
-									<div className="px-4 py-2 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-										Private
+									<div className="px-4 py-2 bg-gray-50 flex items-center gap-2">
+										<div className={`w-2 h-2 rounded-full ${isAnyoneOnline ? "bg-green-500" : "bg-gray-400"}`} />
+										<span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{onlineUsers.length} Online</span>
 									</div>
 									{privateChats.map((chat) => {
 										const display = getChatDisplay(chat);
