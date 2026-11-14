@@ -71,6 +71,19 @@ function ChatRoomContent() {
 		if (lastMessage && lastMessage.chatId === id) {
 			setMessages((prev) => {
 				if (prev.some(m => m.id === lastMessage.message.id)) return prev;
+				
+				const matchIndex = prev.findIndex(m => 
+					m.content === lastMessage.message.content && 
+					m.user_id === lastMessage.message.user_id && 
+					Math.abs(m.created_at - lastMessage.message.created_at) < 3
+				);
+
+				if (matchIndex !== -1) {
+					const newMessages = [...prev];
+					newMessages[matchIndex] = lastMessage.message;
+					return newMessages;
+				}
+
 				return [...prev, lastMessage.message];
 			});
 			scrollToBottom();
