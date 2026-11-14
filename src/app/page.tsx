@@ -1,10 +1,9 @@
-//
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ChatCircleDots, Plus, UsersThree, DotsThreeVertical, Sun, Moon } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircleDots, Plus, UsersThree, DotsThreeVertical, Sun, Moon, Gear } from "@phosphor-icons/react/dist/ssr";
 import PanelOpen from "@/components/PanelOpen";
 import { useWebSocket } from "./WebSocketProvider";
 
@@ -187,7 +186,16 @@ function ChatsContent() {
 								<DotsThreeVertical size={24} weight="bold" />
 							</button>
 							{isDropdownOpen && (
-								<div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
+								<div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden flex flex-col py-1">
+									<Link
+										href="/settings"
+										onClick={() => setIsDropdownOpen(false)}
+										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
+									>
+										<Gear size={16} />
+										Settings
+									</Link>
+									<div className="h-px bg-gray-100 my-1" />
 									<button
 										onClick={() => toggleTheme("light")}
 										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
