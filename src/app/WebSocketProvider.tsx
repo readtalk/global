@@ -2,18 +2,29 @@
 
 import { useEffect, useRef, createContext, useContext, useState } from "react";
 
+type Message = {
+	id: string;
+	chat_id: string;
+	user_id: string;
+	content: string;
+	assets: string;
+	created_at: number;
+};
+
 type WebSocketContextType = {
 	onlineUsers: string[];
 	isWsReady: boolean;
+	lastMessage: { chatId: string; message: Message } | null;
 };
 
-const WebSocketContext = createContext<WebSocketContextType>({ onlineUsers: [], isWsReady: false });
+const WebSocketContext = createContext<WebSocketContextType>({ onlineUsers: [], isWsReady: false, lastMessage: null });
 
 export const useWebSocket = () => useContext(WebSocketContext);
 
 export default function WebSocketProvider({ children }: { children: React.ReactNode }) {
 	const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
 	const [isWsReady, setIsWsReady] = useState(false);
+	const [lastMessage, setLastMessage] = useState<{ chatId: string; message: Message } | null>(null);
 	const wsRef = useRef<WebSocket | null>(null);
 
 	useEffect(() => {
@@ -75,6 +86,15 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
 						});
 					} else if (data.type === "USER_DISCONNECTED") {
 						setOnlineUsers((prev) => prev.filter(id => id !== data.userId));
+					} else if (data.type === "NEW_MESSAGE") {
+						setLastMessage({ chatId: data.chatId, message: data.message });
+						
+						const audio = new Audio('/notification/all-eyes-on-me-465.mp3');
+						audio.play().catch(() => {});
+						
+						if (navigator.vibrate) {
+							navigator.vibrate([200, 100, 200]);
+						}
 					}
 				} catch (err) {
 					console.error("WS Error:", err);
@@ -101,7 +121,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
 	}, []);
 
 	return (
-		<WebSocketContext.Provider value={{ onlineUsers, isWsReady }}>
+		<WebSocketContext.Provider value={{ onlineUsers, isWsReady, lastMessage }}>
 			{children}
 		</WebSocketContext.Provider>
 	);
