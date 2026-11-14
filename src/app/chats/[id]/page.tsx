@@ -28,6 +28,7 @@ function ChatRoomContent() {
 	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+	const hasPlayedSoundRef = useRef<Set<string>>(new Set());
 
 	const scrollToBottom = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -78,11 +79,21 @@ function ChatRoomContent() {
 			
 			setMessages((prev) => {
 				if (prev.some(m => m.id === incomingMsg.id)) return prev;
+				
+				if (incomingMsg.user_id === currentUserId) {
+					setIsSending(false);
+					if (!hasPlayedSoundRef.current.has(incomingMsg.id)) {
+						const audio = new Audio('/sound/hello-friend.mp3');
+						audio.play().catch(() => {});
+						hasPlayedSoundRef.current.add(incomingMsg.id);
+					}
+				}
+				
 				return [...prev, { ...incomingMsg, status: "delivered" }];
 			});
 			scrollToBottom();
 		}
-	}, [lastMessage, id]);
+	}, [lastMessage, id, currentUserId]);
 
 	const handleSend = async () => {
 		if (!content.trim()) return;
@@ -94,7 +105,7 @@ function ChatRoomContent() {
 		setIsSending(true);
 
 		try {
-			const res = await fetch(`/api/chats/${id}/messages`, {
+			await fetch(`/api/chats/${id}/messages`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -102,15 +113,9 @@ function ChatRoomContent() {
 				},
 				body: JSON.stringify({ content: text, assets: [] }),
 			});
-
-			if (res.ok) {
-				const audio = new Audio('/sound/all-eyes-on-me.mp3');
-				audio.play().catch(() => {});
-			}
 		} catch (error) {
 			console.error(error);
 			setContent(text);
-		} finally {
 			setIsSending(false);
 		}
 	};
