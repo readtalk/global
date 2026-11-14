@@ -143,10 +143,10 @@ function ChatsContent() {
 	const isAnyoneOnline = onlineUsers.length > 0;
 
 	return (
-		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0 bg-white relative">
+		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0">
 			<div className="max-w-2xl mx-auto bg-white min-h-full shadow-sm">
 				<div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-					<h1 className="text-2xl font-bold text-gray-900">READTalk</h1>
+					<h1 className="text-xl font-bold text-gray-900">READTalk</h1>
 					<button 
 						onClick={() => setIsPanelOpen(true)}
 						className="hidden md:block bg-black text-white p-1.5 rounded-md transition hover:bg-gray-800"
@@ -155,7 +155,7 @@ function ChatsContent() {
 					</button>
 				</div>
 
-				<div>
+				<div className="bg-white">
 					{isLoading ? (
 						<div className="p-8 text-center text-gray-500">Loading chats...</div>
 					) : chats.length === 0 ? (
