@@ -1,9 +1,10 @@
+//
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ChatCircleDots, Plus, UsersThree, DotsThree, Sun, Moon } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircleDots, Plus, UsersThree, DotsThreeVertical, Sun, Moon } from "@phosphor-icons/react/dist/ssr";
 import PanelOpen from "@/components/PanelOpen";
 import { useWebSocket } from "./WebSocketProvider";
 
@@ -183,7 +184,7 @@ function ChatsContent() {
 								onClick={() => setIsDropdownOpen(!isDropdownOpen)}
 								className="text-gray-600 hover:text-gray-900 p-1"
 							>
-								<DotsThree size={24} weight="bold" />
+								<DotsThreeVertical size={24} weight="bold" />
 							</button>
 							{isDropdownOpen && (
 								<div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
