@@ -90,7 +90,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
 						setLastMessage({ chatId: data.chatId, message: data.message });
 
 						if (data.message.user_id !== currentUserId) {
-							const audio = new Audio('/sound/to-the-point-568.mp3');
+							const audio = new Audio('/sound/happy-to-help-notification.mp3');
 							audio.play().catch(() => {});
 							
 							if (navigator.vibrate) {
