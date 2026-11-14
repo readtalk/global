@@ -144,7 +144,7 @@ function ChatsContent() {
 
 	return (
 		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0 bg-white">
-			<div className="max-w-2xl mx-auto bg-white min-h-full shadow-sm">
+			<div className="w-full h-full bg-white shadow-sm md:border-r md:border-gray-200">
 				<div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 py-3 flex items-center justify-between">
 					<div className="flex items-center gap-2">
 						<div className={`w-2.5 h-2.5 rounded-full ${isAnyoneOnline ? "bg-green-500" : "bg-gray-400"}`} />
