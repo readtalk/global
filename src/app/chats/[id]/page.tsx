@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, PaperPlaneRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, PaperPlaneRight, Check } from "@phosphor-icons/react/dist/ssr";
 import { useWebSocket } from "../../WebSocketProvider";
 
 type Message = {
@@ -12,6 +12,7 @@ type Message = {
 	content: string;
 	assets: string;
 	created_at: number;
+	is_delivered?: boolean;
 };
 
 function ChatRoomContent() {
@@ -54,7 +55,8 @@ function ChatRoomContent() {
 				});
 				const data = (await res.json()) as { success: boolean; messages: Message[] };
 				if (data.success) {
-					setMessages(data.messages.reverse());
+					const fetchedMessages = data.messages.reverse().map((m: Message) => ({ ...m, is_delivered: true }));
+					setMessages(fetchedMessages);
 					setTimeout(scrollToBottom, 100);
 				}
 			} catch (error) {
@@ -70,21 +72,23 @@ function ChatRoomContent() {
 	useEffect(() => {
 		if (lastMessage && lastMessage.chatId === id) {
 			setMessages((prev) => {
-				if (prev.some(m => m.id === lastMessage.message.id)) return prev;
+				const msg = lastMessage.message;
 				
+				if (prev.some(m => m.id === msg.id)) return prev;
+
 				const matchIndex = prev.findIndex(m => 
-					m.content === lastMessage.message.content && 
-					m.user_id === lastMessage.message.user_id && 
-					Math.abs(m.created_at - lastMessage.message.created_at) < 3
+					m.user_id === msg.user_id && 
+					m.content === msg.content && 
+					Math.abs(m.created_at - msg.created_at) < 5
 				);
 
 				if (matchIndex !== -1) {
 					const newMessages = [...prev];
-					newMessages[matchIndex] = lastMessage.message;
+					newMessages[matchIndex] = { ...msg, is_delivered: true };
 					return newMessages;
 				}
 
-				return [...prev, lastMessage.message];
+				return [...prev, { ...msg, is_delivered: true }];
 			});
 			scrollToBottom();
 		}
@@ -105,7 +109,8 @@ function ChatRoomContent() {
 			user_id: currentUserId || "",
 			content: text,
 			assets: "[]",
-			created_at: Math.floor(Date.now() / 1000)
+			created_at: Math.floor(Date.now() / 1000),
+			is_delivered: false
 		};
 
 		setMessages((prev) => [...prev, tempMessage]);
@@ -123,7 +128,11 @@ function ChatRoomContent() {
 			const data = await res.json() as { success: boolean; message?: Message };
 
 			if (data.success && data.message) {
-				setMessages((prev) => prev.map(m => m.id === tempMessage.id ? data.message! : m));
+				setMessages((prev) => prev.map(m => 
+					m.id === tempMessage.id 
+						? { ...data.message!, is_delivered: true } 
+						: m
+				));
 			}
 		} catch (error) {
 			console.error(error);
@@ -157,8 +166,13 @@ function ChatRoomContent() {
 						const isMe = msg.user_id === currentUserId;
 						return (
 							<div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-								<div className={`max-w-[75%] px-4 py-2 rounded-2xl ${isMe ? "bg-gray-200 text-gray-900 rounded-br-sm" : "bg-gray-100 text-gray-800 rounded-bl-sm"}`}>
+								<div className={`max-w-[75%] px-4 py-2 rounded-2xl flex items-center gap-2 ${isMe ? "bg-blue-100 text-gray-900 rounded-br-sm" : "bg-gray-100 text-gray-800 rounded-bl-sm"} ${!msg.is_delivered ? "opacity-70" : ""}`}>
 									<p className="text-[15px] whitespace-pre-wrap break-words">{msg.content}</p>
+									{isMe && (
+										<span className={`text-xs ${msg.is_delivered ? "text-blue-500" : "text-gray-400"}`}>
+											{msg.is_delivered ? <Check size={14} weight="bold" /> : <span className="animate-pulse">...</span>}
+										</span>
+									)}
 								</div>
 							</div>
 						);
