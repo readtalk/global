@@ -28,7 +28,6 @@ function ChatRoomContent() {
 	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
 	const messagesEndRef = useRef<HTMLDivElement>(null);
-	const hasPlayedSoundRef = useRef<Set<string>>(new Set());
 
 	const scrollToBottom = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -79,14 +78,9 @@ function ChatRoomContent() {
 			
 			setMessages((prev) => {
 				if (prev.some(m => m.id === incomingMsg.id)) return prev;
-				
+
 				if (incomingMsg.user_id === currentUserId) {
 					setIsSending(false);
-					if (!hasPlayedSoundRef.current.has(incomingMsg.id)) {
-						const audio = new Audio('/sound/hello-friend.mp3');
-						audio.play().catch(() => {});
-						hasPlayedSoundRef.current.add(incomingMsg.id);
-					}
 				}
 				
 				return [...prev, { ...incomingMsg, status: "delivered" }];
