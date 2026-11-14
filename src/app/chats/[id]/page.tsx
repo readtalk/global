@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, PaperPlaneRight } from "@phosphor-icons/react/dist/ssr";
+import { useWebSocket } from "../../WebSocketProvider";
 
 type Message = {
 	id: string;
@@ -17,6 +18,7 @@ function ChatRoomContent() {
 	const params = useParams();
 	const router = useRouter();
 	const id = params.id as string;
+	const { onlineUsers } = useWebSocket();
 
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [content, setContent] = useState("");
@@ -96,7 +98,7 @@ function ChatRoomContent() {
 				body: JSON.stringify({ content: text, assets: [] }),
 			});
 			const data = await res.json() as { success: boolean; message?: Message };
-			
+
 			if (data.success && data.message) {
 				setMessages((prev) => prev.map(m => m.id === tempMessage.id ? data.message! : m));
 			}
@@ -112,7 +114,7 @@ function ChatRoomContent() {
 	return (
 		<div className="w-full flex-1 min-h-0 flex flex-col overflow-hidden bg-white">
 			<div className="flex-none bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-4 z-10">
-				<button onClick={() => router.push("/chats")} className="text-gray-600 hover:text-gray-900">
+				<button onClick={() => router.push("/")} className="text-gray-600 hover:text-gray-900">
 					<ArrowLeft size={24} />
 				</button>
 				<h1 className="text-lg font-bold text-gray-900">Chat Room</h1>
