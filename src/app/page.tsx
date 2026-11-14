@@ -40,7 +40,7 @@ function ChatsContent() {
 		if (token) {
 			localStorage.setItem("session", token);
 			window.dispatchEvent(new Event("session-changed"));
-			router.replace("/chats");
+			router.replace("/");
 		}
 	}, [searchParams, router]);
 
