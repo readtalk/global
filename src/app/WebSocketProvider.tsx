@@ -88,12 +88,14 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
 						setOnlineUsers((prev) => prev.filter(id => id !== data.userId));
 					} else if (data.type === "NEW_MESSAGE") {
 						setLastMessage({ chatId: data.chatId, message: data.message });
-						
-						const audio = new Audio('/notification/all-eyes-on-me-465.mp3');
-						audio.play().catch(() => {});
-						
-						if (navigator.vibrate) {
-							navigator.vibrate([200, 100, 200]);
+
+						if (data.message.user_id !== currentUserId) {
+							const audio = new Audio('/sound/all-eyes-on-me-465.mp3');
+							audio.play().catch(() => {});
+							
+							if (navigator.vibrate) {
+								navigator.vibrate(200);
+							}
 						}
 					}
 				} catch (err) {
