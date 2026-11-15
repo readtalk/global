@@ -60,7 +60,7 @@ export default function PanelUpload({ file, onClose, onSave }: PanelUploadProps)
 				<button 
 					onClick={handleSave} 
 					disabled={isProcessing}
-					className="bg-blue-600 text-white px-4 py-1.5 rounded-full font-bold text-sm hover:bg-blue-700 transition disabled:opacity-50"
+					className="bg-gray-200 dark:bg-white text-black dark:text-black px-4 py-1.5 rounded-full font-bold text-sm hover:bg-gray-300 dark:hover:bg-gray-200 transition disabled:opacity-50"
 				>
 					{isProcessing ? "Processing..." : "Save"}
 				</button>
@@ -91,7 +91,7 @@ export default function PanelUpload({ file, onClose, onSave }: PanelUploadProps)
 						step={0.1}
 						aria-labelledby="Zoom"
 						onChange={(e) => setZoom(Number(e.target.value))}
-						className="flex-1 accent-blue-500"
+						className="flex-1 accent-gray-400"
 					/>
 				</div>
 			</div>
