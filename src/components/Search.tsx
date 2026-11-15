@@ -52,7 +52,7 @@ export default function Search() {
 
 	return (
 		<div className="w-full relative" ref={wrapperRef}>
-			<div className="flex items-center gap-2 bg-gray-100 dark:bg-zinc-900 p-1.5 rounded-xl border border-gray-200 dark:border-zinc-800 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+			<div className="flex items-center gap-2 bg-gray-100 dark:bg-zinc-900 p-1.5 rounded-xl border border-gray-200 dark:border-zinc-800 focus-within:ring-2 focus-within:ring-gray-400 dark:focus-within:ring-zinc-600 focus-within:border-transparent transition-all">
 				
 				<input
 					className="flex-1 bg-transparent text-gray-800 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 focus:outline-none h-9 pl-3 text-sm transition-colors"
