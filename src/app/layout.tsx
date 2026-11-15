@@ -38,8 +38,28 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<head>
+				<Script id="theme-init" strategy="beforeInteractive">
+					{`
+						(function() {
+							try {
+								var theme = localStorage.getItem('theme');
+								var font = localStorage.getItem('fontSize');
+								
+								if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+									document.documentElement.classList.add('dark');
+								} else {
+									document.documentElement.classList.remove('dark');
+								}
+
+								if (font === 'small') document.documentElement.classList.add('text-small');
+								else if (font === 'large') document.documentElement.classList.add('text-large');
+								else document.documentElement.classList.add('text-medium');
+							} catch (e) {}
+						})();
+					`}
+				</Script>
 				<Script id="google-tag-manager" strategy="afterInteractive">
 					{`
 						(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -50,7 +70,7 @@ export default function RootLayout({
 					`}
 				</Script>
 			</head>
-			<body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}>
+			<body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-zinc-50 transition-colors`}>
 				<noscript>
 					<iframe
 						src="https://www.googletagmanager.com/ns.html?id=GTM-NZBG294V"
@@ -63,11 +83,11 @@ export default function RootLayout({
 				<WebSocketProvider>
 					<div className="flex h-[100dvh] w-full overflow-hidden">
 						<Sidebar />
-						<main className="flex-1 min-w-0 min-h-0 overflow-hidden flex bg-white">
-							<div className="w-full md:w-[35vw] md:min-w-[35vw] md:max-w-[35vw] md:border-r md:border-gray-200 h-full flex flex-col">
+						<main className="flex-1 min-w-0 min-h-0 overflow-hidden flex bg-white dark:bg-zinc-950 transition-colors">
+							<div className="w-full md:w-[35vw] md:min-w-[35vw] md:max-w-[35vw] md:border-r border-gray-200 dark:border-zinc-800 h-full flex flex-col">
 								{children}
 							</div>
-							<div id="desktop-popup-panel" className="hidden md:flex flex-1 h-full bg-white border-l border-gray-200" />
+							<div id="desktop-popup-panel" className="hidden md:flex flex-1 h-full bg-white dark:bg-zinc-950 border-l border-gray-200 dark:border-zinc-800 transition-colors" />
 						</main>
 					</div>
 				</WebSocketProvider>
