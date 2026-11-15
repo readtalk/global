@@ -52,10 +52,10 @@ export default function Search() {
 
 	return (
 		<div className="w-full relative" ref={wrapperRef}>
-			<div className="flex items-center gap-2 bg-gray-100 p-1.5 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+			<div className="flex items-center gap-2 bg-gray-100 dark:bg-zinc-900 p-1.5 rounded-xl border border-gray-200 dark:border-zinc-800 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
 				
 				<input
-					className="flex-1 bg-transparent text-gray-800 placeholder-gray-500 focus:outline-none h-9 pl-3 text-sm"
+					className="flex-1 bg-transparent text-gray-800 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 focus:outline-none h-9 pl-3 text-sm transition-colors"
 					placeholder="Search..."
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
@@ -66,16 +66,16 @@ export default function Search() {
 				<select
 					value={searchType}
 					onChange={(e) => { setSearchType(e.target.value); setResults([]); setIsOpen(false); }}
-					className="bg-transparent text-gray-600 text-sm focus:outline-none font-medium cursor-pointer border-l border-gray-300 pl-2"
+					className="bg-transparent text-gray-600 dark:text-zinc-400 text-sm focus:outline-none font-medium cursor-pointer border-l border-gray-300 dark:border-zinc-700 pl-2 transition-colors"
 				>
-					<option value="threads">Posts</option>
-					<option value="posts">Users</option>
+					<option value="threads" className="dark:bg-zinc-900">Posts</option>
+					<option value="posts" className="dark:bg-zinc-900">Users</option>
 				</select>
 
 				<button
 					onClick={handleSearch}
 					disabled={isLoading}
-					className="bg-gray-800 text-white px-3 py-1.5 rounded-lg hover:bg-gray-700 transition disabled:opacity-50 flex items-center gap-2 text-sm font-semibold"
+					className="bg-gray-800 dark:bg-zinc-800 text-white px-3 py-1.5 rounded-lg hover:bg-gray-700 dark:hover:bg-zinc-700 transition disabled:opacity-50 flex items-center gap-2 text-sm font-semibold"
 				>
 					{isLoading ? (
 						<svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -90,27 +90,27 @@ export default function Search() {
 			</div>
 			
 			{isOpen && results.length > 0 && (
-				<div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden max-h-60 overflow-y-auto">
-					<ul className="divide-y divide-gray-100">
+				<div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl shadow-xl z-50 overflow-hidden max-h-60 overflow-y-auto transition-colors">
+					<ul className="divide-y divide-gray-100 dark:divide-zinc-800">
 						{results.map((item, index) => (
 							<li key={index}>
 								{searchType === "threads" ? (
 									<Link 
 										href={`/update/${item.id}`} 
-										className="block px-4 py-3 hover:bg-gray-50 transition"
+										className="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors"
 										onClick={() => setIsOpen(false)}
 									>
-										<p className="font-medium text-gray-900 text-sm truncate">{item.content}</p>
-										<p className="text-xs text-gray-500 mt-0.5">by @{item.user?.username || "unknown"}</p>
+										<p className="font-medium text-gray-900 dark:text-zinc-100 text-sm truncate">{item.content}</p>
+										<p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">by @{item.user?.username || "unknown"}</p>
 									</Link>
 								) : (
 									<Link 
 										href={`/profile/@${item.username}`} 
-										className="block px-4 py-3 hover:bg-gray-50 transition"
+										className="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors"
 										onClick={() => setIsOpen(false)}
 									>
-										<p className="font-medium text-gray-900 text-sm">{item.yourname}</p>
-										<p className="text-xs text-gray-500 mt-0.5">@{item.username}</p>
+										<p className="font-medium text-gray-900 dark:text-zinc-100 text-sm">{item.yourname}</p>
+										<p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">@{item.username}</p>
 									</Link>
 								)}
 							</li>
