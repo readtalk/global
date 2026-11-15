@@ -1,10 +1,9 @@
-//
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
 import Cropper from "react-easy-crop";
 import { X } from "@phosphor-icons/react/dist/ssr";
-import getCroppedImg from "@/lib/cropImage";
+import getCroppedMedia from "@/lib/cropMedia";
 
 type PanelUploadProps = {
 	file: File | null;
@@ -37,7 +36,7 @@ export default function PanelUpload({ file, onClose, onSave }: PanelUploadProps)
 		if (!imageSrc || !croppedAreaPixels || !file) return;
 		setIsProcessing(true);
 		try {
-			const croppedFile = await getCroppedImg(imageSrc, croppedAreaPixels, isVideo ? "video" : "image");
+			const croppedFile = await getCroppedMedia(imageSrc, croppedAreaPixels, isVideo ? "video" : "image");
 			if (croppedFile) {
 				onSave(croppedFile);
 			}
