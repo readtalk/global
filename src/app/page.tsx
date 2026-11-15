@@ -56,6 +56,10 @@ function ChatsContent() {
 		} else {
 			document.documentElement.classList.remove("dark");
 		}
+		const meta = document.getElementById('theme-color-meta');
+		if (meta) {
+			meta.setAttribute('content', newTheme === 'dark' ? '#09090b' : '#ffffff');
+		}
 		setIsDropdownOpen(false);
 	};
 
