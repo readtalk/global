@@ -30,7 +30,7 @@ export default function PanelOpen({ isOpen, onClose, children, title }: PanelOpe
 				className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity md:hidden"
 				onClick={onClose}
 			/>
-			<div className="fixed top-0 right-0 h-full w-full md:w-[65vw] bg-white dark:bg-zinc-950 z-50 transform transition-transform duration-300 ease-in-out flex flex-col transition-colors md:shadow-none shadow-2xl border-l border-gray-200 dark:border-zinc-800">
+			<div className="fixed top-0 right-0 h-full w-full md:w-[60vw] bg-white dark:bg-zinc-950 z-50 transform transition-transform duration-300 ease-in-out flex flex-col transition-colors md:shadow-none shadow-2xl border-l border-gray-200 dark:border-zinc-800">
 				<div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-zinc-800 transition-colors">
 					<button
 						onClick={onClose}
