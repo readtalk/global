@@ -56,22 +56,22 @@ export default function NotificationsPage() {
 		fetchNotifications();
 	}, []);
 
-	if (isLoading) return <div className="p-8 text-center text-gray-500">Loading notifications...</div>;
+	if (isLoading) return <div className="p-8 text-center text-gray-500 dark:text-zinc-400 transition-colors">Loading notifications...</div>;
 
 	return (
-		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0">
-			<div className="max-w-2xl mx-auto bg-white min-h-full shadow-sm">
-				<div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 py-3">
-					<h1 className="text-xl font-bold text-gray-900">Notifications</h1>
+		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0 bg-white dark:bg-zinc-950 transition-colors">
+			<div className="max-w-2xl mx-auto bg-white dark:bg-zinc-950 min-h-full shadow-sm transition-colors">
+				<div className="sticky top-0 z-10 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 transition-colors">
+					<h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50 transition-colors">Notifications</h1>
 				</div>
-				<div className="divide-y divide-gray-100">
+				<div className="divide-y divide-gray-100 dark:divide-zinc-800 transition-colors">
 					{notifications.length === 0 ? (
-						<p className="text-center text-gray-500 text-sm py-10">Belum ada notifikasi.</p>
+						<p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-10 transition-colors">Belum ada notifikasi.</p>
 					) : (
 						notifications.map((notif) => (
-							<div key={notif.id} className={`p-4 flex gap-3 ${notif.is_read ? 'bg-white' : 'bg-blue-50/30'}`}>
+							<div key={notif.id} className={`p-4 flex gap-3 transition-colors ${notif.is_read ? 'bg-white dark:bg-zinc-950' : 'bg-blue-50/30 dark:bg-blue-900/10'}`}>
 								<Link href={`/profile/@${notif.actor_username || notif.actor_id}`} className="shrink-0">
-									<div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden">
+									<div className="w-10 h-10 rounded-full bg-blue-500 dark:bg-blue-600 flex items-center justify-center text-white font-bold overflow-hidden transition-colors">
 										{notif.actor_avatar ? (
 											<img src={notif.actor_avatar} className="w-full h-full object-cover" alt={notif.actor_username} />
 										) : (
@@ -81,12 +81,12 @@ export default function NotificationsPage() {
 								</Link>
 								<div className="flex-1 min-w-0">
 									<div className="flex items-center gap-2">
-										<Link href={`/profile/@${notif.actor_username || notif.actor_id}`} className="text-gray-900 font-semibold text-sm hover:underline">
+										<Link href={`/profile/@${notif.actor_username || notif.actor_id}`} className="text-gray-900 dark:text-zinc-100 font-semibold text-sm hover:underline transition-colors">
 											{notif.actor_yourname || notif.actor_username || "Unknown User"}
 										</Link>
-										<span className="text-gray-500 text-xs">{timeAgo(notif.created_at)}</span>
+										<span className="text-gray-500 dark:text-zinc-400 text-xs transition-colors">{timeAgo(notif.created_at)}</span>
 									</div>
-									<p className="text-gray-600 text-sm mt-0.5">
+									<p className="text-gray-600 dark:text-zinc-300 text-sm mt-0.5 transition-colors">
 										{notif.type === "follow" && "followed you."}
 										{notif.type === "like" && "liked your post."}
 										{notif.type === "comment" && "commented on your post."}
@@ -95,13 +95,13 @@ export default function NotificationsPage() {
 										{notif.type !== "follow" && notif.type !== "like" && notif.type !== "comment" && notif.type !== "repost" && notif.type !== "reply" && `${notif.type} on your post.`}
 									</p>
 									{notif.target_id && notif.type !== "follow" && (
-										<Link href={`/update/${notif.target_id}`} className="text-blue-500 text-xs mt-1 hover:underline block">
+										<Link href={`/update/${notif.target_id}`} className="text-blue-500 dark:text-blue-400 text-xs mt-1 hover:underline block transition-colors">
 											View post
 										</Link>
 									)}
 								</div>
 								{!notif.is_read && (
-									<div className="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-2" />
+									<div className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400 shrink-0 mt-2 transition-colors" />
 								)}
 							</div>
 						))
