@@ -80,7 +80,7 @@ export default function Sidebar() {
 				)}
 			</aside>
 
-			<nav className="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-zinc-950 border-t border-gray-200 dark:border-zinc-800 flex justify-around p-2 pb-[env(safe-area-inset-bottom)] z-50 transition-colors">
+			<nav className="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-zinc-950 border-t border-gray-200 dark:border-zinc-800 flex justify-around p-2 z-50 transition-colors">
 				<Link href="/" className={`flex flex-col items-center p-2 text-xs transition-colors ${pathname === "/" ? "text-black dark:text-white" : "text-gray-500 dark:text-zinc-400"}`}>
 					<ChatCircleDots size={24} weight={pathname === "/" ? "fill" : "regular"} />
 					<span>Chat</span>
