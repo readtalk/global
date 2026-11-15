@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { upload } from "@vercel/blob/client";
 import Search from "@/components/Search";
 import Updatelist, { UpdatelistItem } from "@/components/Updatelist";
+import PanelUpload from "@/components/PanelUpload";
 
 type CurrentUser = { username: string; yourname: string; avatar: string | null; };
 
@@ -20,6 +21,7 @@ function ForumContent() {
 	const [isPosting, setIsPosting] = useState(false);
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 	const [uploadingFile, setUploadingFile] = useState<string | null>(null);
+	const [fileToCrop, setFileToCrop] = useState<File | null>(null);
 
 	useEffect(() => {
 		const token = searchParams.get("token");
@@ -57,13 +59,19 @@ function ForumContent() {
 		}
 	}, [fetchData]);
 
-	const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
 		if (!file) return;
-		setUploadingFile(file.name);
+		setFileToCrop(file);
+		if (fileInputRef.current) fileInputRef.current.value = "";
+	};
+
+	const handleCropSave = async (croppedFile: File) => {
+		setFileToCrop(null);
+		setUploadingFile(croppedFile.name);
 		try {
-			const folder = file.type.startsWith("video/") ? "video" : "image";
-			const newBlob = await upload(`${folder}/${file.name}`, file, {
+			const folder = croppedFile.type.startsWith("video/") ? "video" : "image";
+			const newBlob = await upload(`${folder}/${croppedFile.name}`, croppedFile, {
 				access: 'public',
 				handleUploadUrl: 'https://upload-readtalk.vercel.app/api/upload',
 			});
@@ -72,7 +80,6 @@ function ForumContent() {
 			alert("Upload failed.");
 		} finally {
 			setUploadingFile(null);
-			if (fileInputRef.current) fileInputRef.current.value = "";
 		}
 	};
 
@@ -145,6 +152,12 @@ function ForumContent() {
 					{isLoading ? <div className="p-8 text-center text-gray-500 dark:text-zinc-400">Loading updates...</div> : updates.length > 0 ? <Updatelist data={updates} onUpdate={() => fetchData(false)} /> : <div className="p-8 text-center text-gray-500 dark:text-zinc-400">No updates yet. Be the first to post!</div>}
 				</div>
 			</div>
+
+			<PanelUpload 
+				file={fileToCrop} 
+				onClose={() => setFileToCrop(null)} 
+				onSave={handleCropSave} 
+			/>
 		</div>
 	);
 }
