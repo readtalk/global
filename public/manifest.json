@@ -1,6 +1,6 @@
 {
   "name": "READTalk Messenger",
-  "short_name": "READ-Talk",
+  "short_name": "READTalk",
   "description": "READTalk Messenger App",
   "start_url": "/",
   "display": "standalone",
