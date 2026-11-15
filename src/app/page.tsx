@@ -167,45 +167,45 @@ function ChatsContent() {
 	const isAnyoneOnline = onlineUsers.length > 0;
 
 	return (
-		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0">
-			<div className="max-w-2xl mx-auto bg-white min-h-full shadow-sm">
-				<div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-					<h1 className="text-xl font-bold text-gray-900">READTalk</h1>
+		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0 bg-white dark:bg-zinc-950 transition-colors">
+			<div className="max-w-2xl mx-auto bg-white dark:bg-zinc-950 min-h-full shadow-sm">
+				<div className="sticky top-0 z-10 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
+					<h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50">READTalk</h1>
 					<div className="flex items-center gap-2">
 						<button 
 							onClick={() => setIsPanelOpen(true)}
-							className="hidden md:block bg-black text-white p-1.5 rounded-md transition hover:bg-gray-800"
+							className="hidden md:block bg-black dark:bg-white text-white dark:text-black p-1.5 rounded-md transition hover:bg-gray-800 dark:hover:bg-gray-200"
 						>
 							<Plus size={20} weight="bold" />
 						</button>
 						<div className="relative">
 							<button 
 								onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-								className="text-gray-600 hover:text-gray-900 p-1"
+								className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 p-1 transition-colors"
 							>
 								<DotsThreeVertical size={24} weight="bold" />
 							</button>
 							{isDropdownOpen && (
-								<div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden flex flex-col py-1">
+								<div className="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-800 z-50 overflow-hidden flex flex-col py-1 transition-colors">
 									<Link
 										href="/settings"
 										onClick={() => setIsDropdownOpen(false)}
-										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
+										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
 									>
 										<Gear size={16} />
 										Settings
 									</Link>
-									<div className="h-px bg-gray-100 my-1" />
+									<div className="h-px bg-gray-100 dark:bg-zinc-800 my-1 transition-colors" />
 									<button
 										onClick={() => toggleTheme("light")}
-										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
+										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
 									>
 										<Sun size={16} />
 										Light
 									</button>
 									<button
 										onClick={() => toggleTheme("dark")}
-										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
+										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
 									>
 										<Moon size={16} />
 										Dark
@@ -216,21 +216,21 @@ function ChatsContent() {
 					</div>
 				</div>
 
-				<div className="bg-white">
+				<div className="bg-white dark:bg-zinc-950 transition-colors">
 					{isLoading ? (
-						<div className="p-8 text-center text-gray-500">Loading chats...</div>
+						<div className="p-8 text-center text-gray-500 dark:text-zinc-400">Loading chats...</div>
 					) : chats.length === 0 ? (
-						<div className="p-8 text-center text-gray-500 flex flex-col items-center gap-2">
-							<ChatCircleDots size={48} className="text-gray-300" />
+						<div className="p-8 text-center text-gray-500 dark:text-zinc-400 flex flex-col items-center gap-2">
+							<ChatCircleDots size={48} className="text-gray-300 dark:text-zinc-700" />
 							<p>No chats yet.</p>
 						</div>
 					) : (
 						<>
 							{privateChats.length > 0 && (
 								<div>
-									<div className="px-4 py-2 bg-gray-50 flex items-center gap-2">
-										<div className={`w-2 h-2 rounded-full ${isAnyoneOnline ? "bg-green-500" : "bg-gray-400"}`} />
-										<span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{onlineUsers.length} Online</span>
+									<div className="px-4 py-2 bg-gray-50 dark:bg-zinc-900 flex items-center gap-2 transition-colors">
+										<div className={`w-2 h-2 rounded-full ${isAnyoneOnline ? "bg-green-500" : "bg-gray-400 dark:bg-zinc-600"}`} />
+										<span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">{onlineUsers.length} Online</span>
 									</div>
 									{privateChats.map((chat) => {
 										const display = getChatDisplay(chat);
@@ -238,14 +238,14 @@ function ChatsContent() {
 											<Link
 												key={chat.id}
 												href={`/chats/${chat.id}`}
-												className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition border-b border-gray-100 last:border-0"
+												className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors border-b border-gray-100 dark:border-zinc-800/50 last:border-0"
 											>
-												<div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold shrink-0 overflow-hidden">
+												<div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold shrink-0 overflow-hidden transition-colors">
 													{display.avatar ? <img src={display.avatar} alt={display.name} className="w-full h-full object-cover" /> : display.initial}
 												</div>
 												<div className="flex-1 min-w-0">
-													<p className="text-gray-900 font-semibold truncate">{display.name}</p>
-													<p className="text-gray-500 text-sm truncate">{chat.description || "Private chat"}</p>
+													<p className="text-gray-900 dark:text-zinc-100 font-semibold truncate">{display.name}</p>
+													<p className="text-gray-500 dark:text-zinc-400 text-sm truncate">{chat.description || "Private chat"}</p>
 												</div>
 											</Link>
 										);
@@ -255,21 +255,21 @@ function ChatsContent() {
 
 							{groupChats.length > 0 && (
 								<div>
-									<div className="px-4 py-2 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+									<div className="px-4 py-2 bg-gray-50 dark:bg-zinc-900 text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider transition-colors">
 										Groups
 									</div>
 									{groupChats.map((chat) => (
 										<Link
 											key={chat.id}
 											href={`/chats/${chat.id}`}
-											className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition border-b border-gray-100 last:border-0"
+											className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors border-b border-gray-100 dark:border-zinc-800/50 last:border-0"
 										>
-											<div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold shrink-0 overflow-hidden">
+											<div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold shrink-0 overflow-hidden transition-colors">
 												{chat.name.substring(0, 2).toUpperCase()}
 											</div>
 											<div className="flex-1 min-w-0">
-												<p className="text-gray-900 font-semibold truncate">{chat.name}</p>
-												<p className="text-gray-500 text-sm truncate">{chat.description || `${chat.member_count} members`}</p>
+												<p className="text-gray-900 dark:text-zinc-100 font-semibold truncate">{chat.name}</p>
+												<p className="text-gray-500 dark:text-zinc-400 text-sm truncate">{chat.description || `${chat.member_count} members`}</p>
 											</div>
 										</Link>
 									))}
@@ -282,7 +282,7 @@ function ChatsContent() {
 
 			<button 
 				onClick={() => setIsPanelOpen(true)}
-				className="md:hidden fixed bottom-20 right-4 bg-black text-white p-3.5 rounded-full shadow-lg transition hover:bg-gray-800 z-40 flex items-center justify-center"
+				className="md:hidden fixed bottom-20 right-4 bg-black dark:bg-white text-white dark:text-black p-3.5 rounded-full shadow-lg transition hover:bg-gray-800 dark:hover:bg-gray-200 z-40 flex items-center justify-center"
 			>
 				<Plus size={24} weight="bold" />
 			</button>
@@ -292,39 +292,39 @@ function ChatsContent() {
 				onClose={() => setIsPanelOpen(false)} 
 				title="New Chat"
 			>
-				<div className="p-4 space-y-2 border-b border-gray-100">
-					<button className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition">
-						<div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
+				<div className="p-4 space-y-2 border-b border-gray-100 dark:border-zinc-800 transition-colors">
+					<button className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors">
+						<div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-700 dark:text-zinc-300 transition-colors">
 							<UsersThree size={20} weight="bold" />
 						</div>
 						<div className="flex-1 text-left">
-							<p className="text-gray-900 font-semibold">New Group</p>
-							<p className="text-xs text-gray-500">Create a new group chat</p>
+							<p className="text-gray-900 dark:text-zinc-100 font-semibold">New Group</p>
+							<p className="text-xs text-gray-500 dark:text-zinc-400">Create a new group chat</p>
 						</div>
 					</button>
 				</div>
 
 				<div className="p-2">
-					<div className="px-3 pt-2 pb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+					<div className="px-3 pt-2 pb-1 text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider transition-colors">
 						Followback on READTalk
 					</div>
 					{isFetchingMutuals ? (
-						<p className="text-center text-gray-500 text-sm py-4">Loading data...</p>
+						<p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-4">Loading data...</p>
 					) : mutuals.length === 0 ? (
-						<p className="text-center text-gray-500 text-sm py-4">No mutuals yet.</p>
+						<p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-4">No mutuals yet.</p>
 					) : (
 						mutuals.map((m) => (
 							<button 
 								key={m.id} 
 								onClick={() => handleStartChat(m)}
-								className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition text-left"
+								className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-zinc-900 rounded-lg cursor-pointer transition-colors text-left"
 							>
-								<div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold shrink-0 overflow-hidden">
+								<div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold shrink-0 overflow-hidden transition-colors">
 									{m.avatar ? <img src={m.avatar} alt={m.username} className="w-full h-full object-cover" /> : m.username?.[0]?.toUpperCase()}
 								</div>
 								<div className="flex-1 min-w-0">
-									<p className="text-gray-900 font-semibold text-sm truncate">{m.yourname}</p>
-									<p className="text-gray-500 text-xs truncate">@{m.username}</p>
+									<p className="text-gray-900 dark:text-zinc-100 font-semibold text-sm truncate">{m.yourname}</p>
+									<p className="text-gray-500 dark:text-zinc-400 text-xs truncate">@{m.username}</p>
 								</div>
 							</button>
 						))
