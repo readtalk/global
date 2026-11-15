@@ -129,23 +129,23 @@ function UpdateDetailContent() {
 			<div key={comment.id} className={`flex flex-col gap-2 ${isReply ? 'mt-2 w-full' : ''}`}>
 				<div className="flex gap-3 items-start">
 					<Link href={`/profile/@${comment.author_username}`} className="shrink-0">
-						<div className={`${isReply ? 'w-6 h-6 text-[10px]' : 'w-8 h-8 text-xs'} rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold overflow-hidden`}>
+						<div className={`${isReply ? 'w-6 h-6 text-[10px]' : 'w-8 h-8 text-xs'} rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold overflow-hidden transition-colors`}>
 							{comment.author_avatar ? <img src={comment.author_avatar} className="w-full h-full object-cover" /> : comment.author_username?.[0]?.toUpperCase()}
 						</div>
 					</Link>
 					<div className="flex-1 min-w-0 flex justify-between items-start gap-4">
-						<div className={`${isReply ? 'bg-gray-50' : 'bg-gray-100'} rounded-2xl px-4 py-2 max-w-[85%]`}>
+						<div className={`${isReply ? 'bg-gray-50 dark:bg-zinc-900' : 'bg-gray-100 dark:bg-zinc-800'} rounded-2xl px-4 py-2 max-w-[85%] transition-colors`}>
 							<div className="flex items-center gap-2 flex-wrap">
-								<Link href={`/profile/@${comment.author_username}`} className={`text-gray-900 font-semibold ${isReply ? 'text-xs' : 'text-sm'} hover:underline`}>{comment.author_yourname}</Link>
+								<Link href={`/profile/@${comment.author_username}`} className={`text-gray-900 dark:text-zinc-100 font-semibold ${isReply ? 'text-xs' : 'text-sm'} hover:underline transition-colors`}>{comment.author_yourname}</Link>
 								{comment.author_username === post?.author_username && (
-									<span className="bg-blue-100 text-blue-600 text-[10px] px-1.5 py-0.5 rounded font-semibold">Creator</span>
+									<span className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] px-1.5 py-0.5 rounded font-semibold transition-colors">Creator</span>
 								)}
-								{comment.created_at && (<><span className="text-gray-400 text-[10px]">·</span><span className="text-gray-500 text-[10px]">{timeAgo(comment.created_at)}</span></>)}
+								{comment.created_at && (<><span className="text-gray-400 dark:text-zinc-500 text-[10px] transition-colors">·</span><span className="text-gray-500 dark:text-zinc-400 text-[10px] transition-colors">{timeAgo(comment.created_at)}</span></>)}
 							</div>
-							<p className={`text-gray-800 ${isReply ? 'text-[14px]' : 'text-[15px]'} break-words whitespace-pre-wrap`}>{renderContentWithMentions(comment.content)}</p>
+							<p className={`text-gray-800 dark:text-zinc-200 ${isReply ? 'text-[14px]' : 'text-[15px]'} break-words whitespace-pre-wrap transition-colors`}>{renderContentWithMentions(comment.content)}</p>
 						</div>
 						{!isOwnComment && (
-							<button onClick={() => handleReplyClick(comment)} className="flex items-center gap-1 text-gray-500 hover:text-gray-900 transition mt-1 shrink-0">
+							<button onClick={() => handleReplyClick(comment)} className="flex items-center gap-1 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 transition mt-1 shrink-0">
 								<ArrowBendUpLeft size={16} weight="bold" />
 							</button>
 						)}
@@ -153,7 +153,7 @@ function UpdateDetailContent() {
 				</div>
 				
 				{replies.length > 0 && (
-					<div className={`flex flex-col ${isReply ? '' : 'ml-10 border-l-2 border-gray-100 pl-3'}`}>
+					<div className={`flex flex-col ${isReply ? '' : 'ml-10 border-l-2 border-gray-100 dark:border-zinc-800 pl-3'} transition-colors`}>
 						{replies.map((reply) => renderComment(reply, true))}
 					</div>
 				)}
@@ -161,56 +161,56 @@ function UpdateDetailContent() {
 		);
 	};
 
-	if (isLoading) return <div className="w-full h-full flex justify-center items-center"><p className="text-gray-500">Loading...</p></div>;
+	if (isLoading) return <div className="w-full h-full flex justify-center items-center bg-white dark:bg-zinc-950 transition-colors"><p className="text-gray-500 dark:text-zinc-400">Loading...</p></div>;
 
 	if (focusedComment) {
 		const focusedReplies = getReplies(focusedComment.id);
 		
 		return (
-			<div className="w-full flex-1 min-h-0 flex flex-col overflow-hidden">
-				<div className="flex-none bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-4 z-10">
-					<button onClick={() => setFocusedComment(null)} className="text-gray-600 hover:text-gray-900">
+			<div className="w-full flex-1 min-h-0 flex flex-col overflow-hidden bg-white dark:bg-zinc-950 transition-colors">
+				<div className="flex-none bg-white dark:bg-zinc-950 border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-4 z-10 transition-colors">
+					<button onClick={() => setFocusedComment(null)} className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 transition-colors">
 						<ArrowLeft size={24} weight="bold" />
 					</button>
-					<h1 className="text-lg font-bold text-gray-900">Focused Thread</h1>
+					<h1 className="text-lg font-bold text-gray-900 dark:text-zinc-50 transition-colors">Focused Thread</h1>
 				</div>
 				
 				<div className="flex-1 overflow-y-auto p-4">
 					{post && (
-						<div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm mb-4">
+						<div className="bg-gray-50 dark:bg-zinc-900 p-4 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-sm mb-4 transition-colors">
 							<div className="flex items-center gap-3 mb-2">
-								<Link href={`/profile/@${post.author_username}`} className="shrink-0"><div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold overflow-hidden">{post.author_avatar ? <img src={post.author_avatar} className="w-full h-full object-cover" /> : post.author_username?.[0]?.toUpperCase()}</div></Link>
+								<Link href={`/profile/@${post.author_username}`} className="shrink-0"><div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold overflow-hidden transition-colors">{post.author_avatar ? <img src={post.author_avatar} className="w-full h-full object-cover" /> : post.author_username?.[0]?.toUpperCase()}</div></Link>
 								<div>
 									<div className="flex items-center gap-2">
-										<Link href={`/profile/@${post.author_username}`} className="text-gray-900 font-semibold hover:underline">{post.author_yourname}</Link>
-										{post.created_at && (<><span className="text-gray-400 text-xs">·</span><span className="text-gray-500 text-xs">{timeAgo(post.created_at)}</span></>)}
+										<Link href={`/profile/@${post.author_username}`} className="text-gray-900 dark:text-zinc-100 font-semibold hover:underline transition-colors">{post.author_yourname}</Link>
+										{post.created_at && (<><span className="text-gray-400 dark:text-zinc-500 text-xs transition-colors">·</span><span className="text-gray-500 dark:text-zinc-400 text-xs transition-colors">{timeAgo(post.created_at)}</span></>)}
 									</div>
-									<p className="text-gray-500 text-xs">@{post.author_username}</p>
+									<p className="text-gray-500 dark:text-zinc-400 text-xs transition-colors">@{post.author_username}</p>
 								</div>
 							</div>
-							<p className="text-gray-800 whitespace-pre-wrap text-[15px] break-words">{renderContentWithMentions(post.content)}</p>
+							<p className="text-gray-800 dark:text-zinc-200 whitespace-pre-wrap text-[15px] break-words transition-colors">{renderContentWithMentions(post.content)}</p>
 							{post.link_preview && <Preview data={post.link_preview} />}
 							{post.image_url && <img src={post.image_url} alt="Post Image" className="mt-3 rounded-lg max-h-80 w-full object-cover" />}
 						</div>
 					)}
 
-					<div className="flex flex-col ml-5 pl-5 border-l-2 border-gray-300 pb-4">
-						<div className="bg-white -ml-5 rounded-xl border border-gray-200 p-3 shadow-sm mb-4">
+					<div className="flex flex-col ml-5 pl-5 border-l-2 border-gray-300 dark:border-zinc-700 pb-4 transition-colors">
+						<div className="bg-white dark:bg-zinc-950 -ml-5 rounded-xl border border-gray-200 dark:border-zinc-800 p-3 shadow-sm mb-4 transition-colors">
 							<div className="flex gap-3 items-start">
 								<Link href={`/profile/@${focusedComment.author_username}`} className="shrink-0">
-									<div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold overflow-hidden">
+									<div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold overflow-hidden transition-colors">
 										{focusedComment.author_avatar ? <img src={focusedComment.author_avatar} className="w-full h-full object-cover" /> : focusedComment.author_username?.[0]?.toUpperCase()}
 									</div>
 								</Link>
 								<div className="flex-1 min-w-0">
 									<div className="flex items-center gap-2">
-										<Link href={`/profile/@${focusedComment.author_username}`} className="text-gray-900 font-semibold text-sm hover:underline">{focusedComment.author_yourname}</Link>
+										<Link href={`/profile/@${focusedComment.author_username}`} className="text-gray-900 dark:text-zinc-100 font-semibold text-sm hover:underline transition-colors">{focusedComment.author_yourname}</Link>
 										{focusedComment.author_username === post?.author_username && (
-											<span className="bg-blue-100 text-blue-600 text-[10px] px-1.5 py-0.5 rounded font-semibold">Creator</span>
+											<span className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] px-1.5 py-0.5 rounded font-semibold transition-colors">Creator</span>
 										)}
-										<span className="text-gray-500 text-[10px]">{timeAgo(focusedComment.created_at)}</span>
+										<span className="text-gray-500 dark:text-zinc-400 text-[10px] transition-colors">{timeAgo(focusedComment.created_at)}</span>
 									</div>
-									<p className="text-gray-800 text-[15px] mt-1 break-words">{renderContentWithMentions(focusedComment.content)}</p>
+									<p className="text-gray-800 dark:text-zinc-200 text-[15px] mt-1 break-words transition-colors">{renderContentWithMentions(focusedComment.content)}</p>
 								</div>
 							</div>
 						</div>
@@ -219,19 +219,19 @@ function UpdateDetailContent() {
 							{focusedReplies.map(reply => (
 								<div key={reply.id} className="flex gap-3 items-start">
 									<Link href={`/profile/@${reply.author_username}`} className="shrink-0">
-										<div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-[10px] overflow-hidden">
+										<div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold text-[10px] overflow-hidden transition-colors">
 											{reply.author_avatar ? <img src={reply.author_avatar} className="w-full h-full object-cover" /> : reply.author_username?.[0]?.toUpperCase()}
 										</div>
 									</Link>
-									<div className="bg-gray-50 rounded-2xl px-4 py-2 max-w-[85%]">
+									<div className="bg-gray-50 dark:bg-zinc-900 rounded-2xl px-4 py-2 max-w-[85%] transition-colors">
 										<div className="flex items-center gap-2">
-											<Link href={`/profile/@${reply.author_username}`} className="text-gray-900 font-semibold text-xs hover:underline">{reply.author_yourname}</Link>
+											<Link href={`/profile/@${reply.author_username}`} className="text-gray-900 dark:text-zinc-100 font-semibold text-xs hover:underline transition-colors">{reply.author_yourname}</Link>
 											{reply.author_username === post?.author_username && (
-												<span className="bg-blue-100 text-blue-600 text-[10px] px-1.5 py-0.5 rounded font-semibold">Creator</span>
+												<span className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] px-1.5 py-0.5 rounded font-semibold transition-colors">Creator</span>
 											)}
-											<span className="text-gray-500 text-[10px]">{timeAgo(reply.created_at)}</span>
+											<span className="text-gray-500 dark:text-zinc-400 text-[10px] transition-colors">{timeAgo(reply.created_at)}</span>
 										</div>
-										<p className="text-gray-800 text-[14px] mt-0.5 break-words">{renderContentWithMentions(reply.content)}</p>
+										<p className="text-gray-800 dark:text-zinc-200 text-[14px] mt-0.5 break-words transition-colors">{renderContentWithMentions(reply.content)}</p>
 									</div>
 								</div>
 							))}
@@ -239,11 +239,11 @@ function UpdateDetailContent() {
 					</div>
 				</div>
 
-				<div className="flex-none bg-white border-t border-gray-200 p-3 pb-safe pb-[max(12px,env(safe-area-inset-bottom))]">
+				<div className="flex-none bg-white dark:bg-zinc-950 border-t border-gray-200 dark:border-zinc-800 p-3 pb-safe pb-[max(12px,env(safe-area-inset-bottom))] transition-colors">
 					{replyTo && (
-						<div className="flex justify-between items-center bg-gray-50 px-3 py-1.5 rounded-t-lg border border-b-0 border-gray-200 text-xs text-gray-500 mb-[-1px]">
+						<div className="flex justify-between items-center bg-gray-50 dark:bg-zinc-900 px-3 py-1.5 rounded-t-lg border border-b-0 border-gray-200 dark:border-zinc-800 text-xs text-gray-500 dark:text-zinc-400 mb-[-1px] transition-colors">
 							<span>Replying to @{replyTo.author_username}</span>
-							<button onClick={() => { setReplyTo(null); setContent(""); }} className="font-bold text-gray-600 hover:text-black">✕</button>
+							<button onClick={() => { setReplyTo(null); setContent(""); }} className="font-bold text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors">✕</button>
 						</div>
 					)}
 					<div className="flex gap-2">
@@ -252,10 +252,10 @@ function UpdateDetailContent() {
 							value={content} 
 							onChange={(e) => setContent(e.target.value)} 
 							placeholder={replyTo ? `Reply to @${replyTo.author_username}...` : `Reply to @${focusedComment.author_username}...`} 
-							className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500" 
+							className="flex-1 bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-zinc-400 transition-colors" 
 							onKeyDown={(e) => e.key === "Enter" && handlePostComment()} 
 						/>
-						<button onClick={handlePostComment} disabled={isPosting || !content.trim()} className="bg-black text-white px-4 py-2 rounded-full text-sm font-semibold disabled:opacity-50">{isPosting ? "..." : "Reply"}</button>
+						<button onClick={handlePostComment} disabled={isPosting || !content.trim()} className="bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-full text-sm font-semibold disabled:opacity-50 transition-colors">{isPosting ? "..." : "Reply"}</button>
 					</div>
 				</div>
 			</div>
@@ -265,29 +265,29 @@ function UpdateDetailContent() {
 	const rootComments = comments.filter(c => !c.parent_id);
 
 	return (
-		<div className="w-full flex-1 min-h-0 flex flex-col overflow-hidden">
-			<div className="flex-none bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-4 z-10">
-				<Link href="/update" className="text-gray-600 hover:text-gray-900"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5"></path><polyline points="12 19 5 12 12 5"></polyline></svg></Link>
-				<h1 className="text-lg font-bold text-gray-900">Post's Activity</h1>
+		<div className="w-full flex-1 min-h-0 flex flex-col overflow-hidden bg-white dark:bg-zinc-950 transition-colors">
+			<div className="flex-none bg-white dark:bg-zinc-950 border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-4 z-10 transition-colors">
+				<Link href="/update" className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 transition-colors"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5"></path><polyline points="12 19 5 12 12 5"></polyline></svg></Link>
+				<h1 className="text-lg font-bold text-gray-900 dark:text-zinc-50 transition-colors">Post's Activity</h1>
 			</div>
 			<div className="flex-1 overflow-y-auto p-4 space-y-4">
 				{post && (
-					<div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
+					<div className="bg-gray-50 dark:bg-zinc-900 p-4 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-sm transition-colors">
 						<div className="flex items-center gap-3 mb-2">
-							<Link href={`/profile/@${post.author_username}`} className="shrink-0"><div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold overflow-hidden">{post.author_avatar ? <img src={post.author_avatar} className="w-full h-full object-cover" /> : post.author_username?.[0]?.toUpperCase()}</div></Link>
+							<Link href={`/profile/@${post.author_username}`} className="shrink-0"><div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold overflow-hidden transition-colors">{post.author_avatar ? <img src={post.author_avatar} className="w-full h-full object-cover" /> : post.author_username?.[0]?.toUpperCase()}</div></Link>
 							<div>
 								<div className="flex items-center gap-2">
-									<Link href={`/profile/@${post.author_username}`} className="text-gray-900 font-semibold hover:underline">{post.author_yourname}</Link>
-									{post.created_at && (<><span className="text-gray-400 text-xs">·</span><span className="text-gray-500 text-xs">{timeAgo(post.created_at)}</span></>)}
+									<Link href={`/profile/@${post.author_username}`} className="text-gray-900 dark:text-zinc-100 font-semibold hover:underline transition-colors">{post.author_yourname}</Link>
+									{post.created_at && (<><span className="text-gray-400 dark:text-zinc-500 text-xs transition-colors">·</span><span className="text-gray-500 dark:text-zinc-400 text-xs transition-colors">{timeAgo(post.created_at)}</span></>)}
 								</div>
-								<p className="text-gray-500 text-xs">@{post.author_username}</p>
+								<p className="text-gray-500 dark:text-zinc-400 text-xs transition-colors">@{post.author_username}</p>
 							</div>
 						</div>
-						<p className="text-gray-800 whitespace-pre-wrap text-[15px] break-words">{renderContentWithMentions(post.content)}</p>
+						<p className="text-gray-800 dark:text-zinc-200 whitespace-pre-wrap text-[15px] break-words transition-colors">{renderContentWithMentions(post.content)}</p>
 						{post.link_preview && <Preview data={post.link_preview} />}
 						{post.image_url && <img src={post.image_url} alt="Post Image" className="mt-3 rounded-lg max-h-80 w-full object-cover" />}
-						<div className="mt-4 flex items-center gap-6 text-gray-500 text-sm border-t border-gray-200 pt-3">
-							<Link href={`/update/${post.id}`} className="flex items-center gap-1 hover:text-gray-900 transition"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>{post.comment_count || 0}</Link>
+						<div className="mt-4 flex items-center gap-6 text-gray-500 dark:text-zinc-400 text-sm border-t border-gray-200 dark:border-zinc-800 pt-3 transition-colors">
+							<Link href={`/update/${post.id}`} className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-zinc-100 transition-colors"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>{post.comment_count || 0}</Link>
 							<LikeRepost 
 								id={post.id} 
 								like_count={post.like_count} 
@@ -299,27 +299,27 @@ function UpdateDetailContent() {
 						</div>
 					</div>
 				)}
-				<div className="border-b border-gray-200 pb-2 mb-4"><p className="text-xs text-gray-500 text-center">Comments</p></div>
+				<div className="border-b border-gray-200 dark:border-zinc-800 pb-2 mb-4 transition-colors"><p className="text-xs text-gray-500 dark:text-zinc-400 text-center transition-colors">Comments</p></div>
 				
 				{rootComments.length > 0 ? (
 					rootComments.map((comment) => (
 						<div key={comment.id} className="w-full">
 							{renderComment(comment)}
 							<div className="ml-10 mb-4">
-								<button onClick={() => setFocusedComment(comment)} className="text-xs font-semibold text-blue-500 hover:text-blue-700">
+								<button onClick={() => setFocusedComment(comment)} className="text-xs font-semibold text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
 									See more  →
 								</button>
 							</div>
 						</div>
 					))
-				) : (<p className="text-center text-gray-500 text-sm mt-4">No comments yet. Be the first to reply!</p>)}
+				) : (<p className="text-center text-gray-500 dark:text-zinc-400 text-sm mt-4 transition-colors">No comments yet. Be the first to reply!</p>)}
 			</div>
 			
-			<div className="flex-none bg-white border-t border-gray-200 p-3 pb-safe pb-[max(12px,env(safe-area-inset-bottom))]">
+			<div className="flex-none bg-white dark:bg-zinc-950 border-t border-gray-200 dark:border-zinc-800 p-3 pb-safe pb-[max(12px,env(safe-area-inset-bottom))] transition-colors">
 				{replyTo && (
-					<div className="flex justify-between items-center bg-gray-50 px-3 py-1.5 rounded-t-lg border border-b-0 border-gray-200 text-xs text-gray-500 mb-[-1px]">
+					<div className="flex justify-between items-center bg-gray-50 dark:bg-zinc-900 px-3 py-1.5 rounded-t-lg border border-b-0 border-gray-200 dark:border-zinc-800 text-xs text-gray-500 dark:text-zinc-400 mb-[-1px] transition-colors">
 						<span>Replying to @{replyTo.author_username}</span>
-						<button onClick={() => { setReplyTo(null); setContent(""); }} className="font-bold text-gray-600 hover:text-black">✕</button>
+						<button onClick={() => { setReplyTo(null); setContent(""); }} className="font-bold text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors">✕</button>
 					</div>
 				)}
 				<div className="flex gap-2">
@@ -328,10 +328,10 @@ function UpdateDetailContent() {
 						value={content} 
 						onChange={(e) => setContent(e.target.value)} 
 						placeholder={replyTo ? `Reply to @${replyTo.author_username}...` : "Write a comment..."} 
-						className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500" 
+						className="flex-1 bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-zinc-400 transition-colors" 
 						onKeyDown={(e) => e.key === "Enter" && handlePostComment()} 
 					/>
-					<button onClick={handlePostComment} disabled={isPosting || !content.trim()} className="bg-black text-white px-4 py-2 rounded-full text-sm font-semibold disabled:opacity-50">{isPosting ? "..." : "Reply"}</button>
+					<button onClick={handlePostComment} disabled={isPosting || !content.trim()} className="bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-full text-sm font-semibold disabled:opacity-50 transition-colors">{isPosting ? "..." : "Reply"}</button>
 				</div>
 			</div>
 		</div>
@@ -339,5 +339,5 @@ function UpdateDetailContent() {
 }
 
 export default function UpdateDetail() {
-	return <Suspense fallback={<div className="p-4 text-center">Loading...</div>}><UpdateDetailContent /></Suspense>;
+	return <Suspense fallback={<div className="p-4 text-center bg-white dark:bg-zinc-950 text-gray-900 dark:text-zinc-100 transition-colors">Loading...</div>}><UpdateDetailContent /></Suspense>;
 }
