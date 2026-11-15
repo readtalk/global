@@ -40,17 +40,21 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<head>
+				<meta name="theme-color" content="#ffffff" id="theme-color-meta" />
 				<Script id="theme-init" strategy="beforeInteractive">
 					{`
 						(function() {
 							try {
 								var theme = localStorage.getItem('theme');
 								var font = localStorage.getItem('fontSize');
+								var meta = document.getElementById('theme-color-meta');
 								
 								if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
 									document.documentElement.classList.add('dark');
+									if (meta) meta.setAttribute('content', '#09090b');
 								} else {
 									document.documentElement.classList.remove('dark');
+									if (meta) meta.setAttribute('content', '#ffffff');
 								}
 
 								if (font === 'small') document.documentElement.classList.add('text-small');
