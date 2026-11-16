@@ -167,6 +167,8 @@ function UpdateDetailContent() {
 
 	if (focusedComment) {
 		const focusedReplies = getReplies(focusedComment.id);
+		const isVideoFileFocused = post?.image_url?.match(/\.(mp4|webm)$/i) || post?.image_url?.includes('/video/');
+		const showPreviewFocused = post?.link_preview && !isVideoFileFocused;
 		
 		return (
 			<div className="w-full flex-1 min-h-0 flex flex-col overflow-hidden bg-white dark:bg-zinc-950 transition-colors">
@@ -179,34 +181,67 @@ function UpdateDetailContent() {
 				
 				<div className="flex-1 overflow-y-auto p-4">
 					{post && (
-						<div className="bg-gray-50 dark:bg-zinc-900 p-4 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-sm mb-4 transition-colors">
-							<div className="flex items-center gap-3 mb-2">
-								<Link href={`/profile/@${post.author_username}`} className="shrink-0"><div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold overflow-hidden transition-colors">{post.author_avatar ? <img src={post.author_avatar} className="w-full h-full object-cover" /> : post.author_username?.[0]?.toUpperCase()}</div></Link>
-								<div>
-									<div className="flex items-center gap-2">
-										<Link href={`/profile/@${post.author_username}`} className="text-gray-900 dark:text-zinc-100 font-semibold hover:underline transition-colors">{post.author_yourname}</Link>
-										{post.created_at && (<><span className="text-gray-400 dark:text-zinc-500 text-xs transition-colors">·</span><span className="text-gray-500 dark:text-zinc-400 text-xs transition-colors">{timeAgo(post.created_at)}</span></>)}
+						<article className="p-5 border-b border-gray-200 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-900/50 transition-colors mb-4">
+							<div className="flex items-center gap-3">
+								<Link href={`/profile/@${post.author_username}`} className="shrink-0">
+									<div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold overflow-hidden transition-colors">
+										{post.author_avatar ? <img src={post.author_avatar} alt={post.author_username} className="w-full h-full object-cover" /> : (post.author_username?.[0]?.toUpperCase() || "?")}
 									</div>
-									<p className="text-gray-500 dark:text-zinc-400 text-xs transition-colors">@{post.author_username}</p>
+								</Link>
+								<div className="flex-1">
+									<div className="flex items-center gap-2">
+										<Link href={`/profile/@${post.author_username}`} className="hover:underline">
+											<p className="text-gray-900 dark:text-zinc-100 font-semibold">{post.author_yourname || "Unknown"}</p>
+										</Link>
+										{post.created_at && (
+											<>
+												<span className="text-gray-400 dark:text-zinc-500 text-xs">·</span>
+												<span className="text-gray-500 dark:text-zinc-400 text-xs">
+													{timeAgo(post.created_at)}
+												</span>
+											</>
+										)}
+									</div>
+									<Link href={`/profile/@${post.author_username}`} className="hover:underline">
+										<p className="text-gray-500 dark:text-zinc-400 text-xs">@{post.author_username}</p>
+									</Link>
 								</div>
 							</div>
-							<p className="text-gray-800 dark:text-zinc-200 whitespace-pre-wrap text-[15px] break-words transition-colors">{renderContentWithMentions(post.content)}</p>
-							{post.link_preview && <Preview data={post.link_preview} />}
+
+							{post.content && <p className="mt-3 text-gray-800 dark:text-zinc-200 whitespace-pre-wrap">{post.content}</p>}
+
+							{showPreviewFocused && <Preview data={post.link_preview!} />}
+
 							{post.image_url && (
 								<div 
-									className="mt-3 rounded-xl overflow-hidden cursor-pointer"
-									onClick={() => setViewerMedia({ url: post.image_url!, type: post.image_url!.match(/\.(mp4|webm)$/i) || post.image_url!.includes('/video/') ? "video" : "image" })}
+									className="mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-800 transition-colors cursor-pointer"
+									onClick={() => setViewerMedia({ url: post.image_url!, type: isVideoFileFocused ? "video" : "image" })}
 								>
-									{post.image_url.match(/\.(mp4|webm)$/i) || post.image_url.includes('/video/') ? (
+									{isVideoFileFocused ? (
 										<div className="relative w-full aspect-[9/16] bg-black">
 											<video src={post.image_url} className="w-full h-full object-cover pointer-events-none" />
 										</div>
 									) : (
-										<img src={post.image_url} alt="Post Image" className="w-full h-auto max-h-80 object-cover" />
+										<img src={post.image_url} alt="Post media" className="w-full h-auto object-cover" />
 									)}
 								</div>
 							)}
-						</div>
+
+							<div className="mt-4 flex items-center gap-6 text-gray-500 dark:text-zinc-400 text-sm transition-colors">
+								<Link href={`/update/${post.id}`} className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-zinc-100 transition-colors">
+									<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+									{post.comment_count || 0}
+								</Link>
+								<LikeRepost 
+									id={post.id} 
+									like_count={post.like_count} 
+									repost_count={post.repost_count} 
+									is_liked={post.is_liked} 
+									is_reposted={post.is_reposted} 
+									onUpdate={() => fetchData(false)} 
+								/>
+							</div>
+						</article>
 					)}
 
 					<div className="flex flex-col ml-5 pl-5 border-l-2 border-gray-300 dark:border-zinc-700 pb-4 transition-colors">
@@ -289,22 +324,40 @@ function UpdateDetailContent() {
 			</div>
 			<div className="flex-1 overflow-y-auto p-4 space-y-4">
 				{post && (
-					<div className="bg-gray-50 dark:bg-zinc-900 p-4 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-sm transition-colors">
-						<div className="flex items-center gap-3 mb-2">
-							<Link href={`/profile/@${post.author_username}`} className="shrink-0"><div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold overflow-hidden transition-colors">{post.author_avatar ? <img src={post.author_avatar} className="w-full h-full object-cover" /> : post.author_username?.[0]?.toUpperCase()}</div></Link>
-							<div>
-								<div className="flex items-center gap-2">
-									<Link href={`/profile/@${post.author_username}`} className="text-gray-900 dark:text-zinc-100 font-semibold hover:underline transition-colors">{post.author_yourname}</Link>
-									{post.created_at && (<><span className="text-gray-400 dark:text-zinc-500 text-xs transition-colors">·</span><span className="text-gray-500 dark:text-zinc-400 text-xs transition-colors">{timeAgo(post.created_at)}</span></>)}
+					<article className="p-5 border-b border-gray-200 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-900/50 transition-colors mb-4">
+						<div className="flex items-center gap-3">
+							<Link href={`/profile/@${post.author_username}`} className="shrink-0">
+								<div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold overflow-hidden transition-colors">
+									{post.author_avatar ? <img src={post.author_avatar} alt={post.author_username} className="w-full h-full object-cover" /> : (post.author_username?.[0]?.toUpperCase() || "?")}
 								</div>
-								<p className="text-gray-500 dark:text-zinc-400 text-xs transition-colors">@{post.author_username}</p>
+							</Link>
+							<div className="flex-1">
+								<div className="flex items-center gap-2">
+									<Link href={`/profile/@${post.author_username}`} className="hover:underline">
+										<p className="text-gray-900 dark:text-zinc-100 font-semibold">{post.author_yourname || "Unknown"}</p>
+									</Link>
+									{post.created_at && (
+										<>
+											<span className="text-gray-400 dark:text-zinc-500 text-xs">·</span>
+											<span className="text-gray-500 dark:text-zinc-400 text-xs">
+												{timeAgo(post.created_at)}
+											</span>
+										</>
+									)}
+								</div>
+								<Link href={`/profile/@${post.author_username}`} className="hover:underline">
+									<p className="text-gray-500 dark:text-zinc-400 text-xs">@{post.author_username}</p>
+								</Link>
 							</div>
 						</div>
-						<p className="text-gray-800 dark:text-zinc-200 whitespace-pre-wrap text-[15px] break-words transition-colors">{renderContentWithMentions(post.content)}</p>
+
+						{post.content && <p className="mt-3 text-gray-800 dark:text-zinc-200 whitespace-pre-wrap">{post.content}</p>}
+
 						{showPreview && <Preview data={post.link_preview!} />}
+
 						{post.image_url && (
 							<div 
-								className="mt-3 rounded-xl overflow-hidden cursor-pointer"
+								className="mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-800 transition-colors cursor-pointer"
 								onClick={() => setViewerMedia({ url: post.image_url!, type: isVideoFile ? "video" : "image" })}
 							>
 								{isVideoFile ? (
@@ -312,12 +365,16 @@ function UpdateDetailContent() {
 										<video src={post.image_url} className="w-full h-full object-cover pointer-events-none" />
 									</div>
 								) : (
-									<img src={post.image_url} alt="Post Image" className="w-full h-auto max-h-80 object-cover" />
+									<img src={post.image_url} alt="Post media" className="w-full h-auto object-cover" />
 								)}
 							</div>
 						)}
-						<div className="mt-4 flex items-center gap-6 text-gray-500 dark:text-zinc-400 text-sm border-t border-gray-200 dark:border-zinc-800 pt-3 transition-colors">
-							<Link href={`/update/${post.id}`} className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-zinc-100 transition-colors"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>{post.comment_count || 0}</Link>
+
+						<div className="mt-4 flex items-center gap-6 text-gray-500 dark:text-zinc-400 text-sm transition-colors">
+							<Link href={`/update/${post.id}`} className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-zinc-100 transition-colors">
+								<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+								{post.comment_count || 0}
+							</Link>
 							<LikeRepost 
 								id={post.id} 
 								like_count={post.like_count} 
@@ -327,7 +384,7 @@ function UpdateDetailContent() {
 								onUpdate={() => fetchData(false)} 
 							/>
 						</div>
-					</div>
+					</article>
 				)}
 				<div className="border-b border-gray-200 dark:border-zinc-800 pb-2 mb-4 transition-colors"><p className="text-xs text-gray-500 dark:text-zinc-400 text-center transition-colors">Comments</p></div>
 				
