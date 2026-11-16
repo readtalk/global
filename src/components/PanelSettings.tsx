@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, Camera, UploadSimple } from "@phosphor-icons/react/dist/ssr";
 import PanelUpload from "./PanelUpload";
-import { timeAgo } from "@/lib/timer";
 
 type PanelSettingsProps = {
 	type: "account" | "privacy" | "appearance" | "language" | "notifications" | null;
@@ -127,12 +126,12 @@ export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
 		setIsSaving(true);
 		
 		const socialsObj = {
-			facebook: socialFacebook,
-			instagram: socialInstagram,
-			x: socialX,
-			tiktok: socialTiktok,
-			youtube: socialYoutube,
-			linkedin: socialLinkedin,
+			facebook: socialFacebook.trim(),
+			instagram: socialInstagram.trim(),
+			x: socialX.trim(),
+			tiktok: socialTiktok.trim(),
+			youtube: socialYoutube.trim(),
+			linkedin: socialLinkedin.trim(),
 		};
 		
 		const socialsString = JSON.stringify(socialsObj);
@@ -282,28 +281,28 @@ export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
 										<h3 className="text-sm font-semibold text-gray-900 dark:text-zinc-100">Social Links</h3>
 										<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 											<div>
-												<label className="text-xs font-medium text-gray-700 dark:text-zinc-300">Facebook</label>
-												<input type="url" value={socialFacebook} onChange={e => setSocialFacebook(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all text-sm" placeholder="https://facebook.com/..." />
+												<label className="text-xs font-medium text-gray-700 dark:text-zinc-300">Facebook Username</label>
+												<input type="text" value={socialFacebook} onChange={e => setSocialFacebook(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all text-sm" placeholder="username" />
 											</div>
 											<div>
-												<label className="text-xs font-medium text-gray-700 dark:text-zinc-300">Instagram</label>
-												<input type="url" value={socialInstagram} onChange={e => setSocialInstagram(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all text-sm" placeholder="https://instagram.com/..." />
+												<label className="text-xs font-medium text-gray-700 dark:text-zinc-300">Instagram Username</label>
+												<input type="text" value={socialInstagram} onChange={e => setSocialInstagram(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all text-sm" placeholder="username" />
 											</div>
 											<div>
-												<label className="text-xs font-medium text-gray-700 dark:text-zinc-300">X (Twitter)</label>
-												<input type="url" value={socialX} onChange={e => setSocialX(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all text-sm" placeholder="https://x.com/..." />
+												<label className="text-xs font-medium text-gray-700 dark:text-zinc-300">X (Twitter) Username</label>
+												<input type="text" value={socialX} onChange={e => setSocialX(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all text-sm" placeholder="username" />
 											</div>
 											<div>
-												<label className="text-xs font-medium text-gray-700 dark:text-zinc-300">TikTok</label>
-												<input type="url" value={socialTiktok} onChange={e => setSocialTiktok(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all text-sm" placeholder="https://tiktok.com/..." />
+												<label className="text-xs font-medium text-gray-700 dark:text-zinc-300">TikTok Username</label>
+												<input type="text" value={socialTiktok} onChange={e => setSocialTiktok(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all text-sm" placeholder="username" />
 											</div>
 											<div>
-												<label className="text-xs font-medium text-gray-700 dark:text-zinc-300">YouTube</label>
-												<input type="url" value={socialYoutube} onChange={e => setSocialYoutube(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all text-sm" placeholder="https://youtube.com/..." />
+												<label className="text-xs font-medium text-gray-700 dark:text-zinc-300">YouTube Username</label>
+												<input type="text" value={socialYoutube} onChange={e => setSocialYoutube(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all text-sm" placeholder="username" />
 											</div>
 											<div>
-												<label className="text-xs font-medium text-gray-700 dark:text-zinc-300">LinkedIn</label>
-												<input type="url" value={socialLinkedin} onChange={e => setSocialLinkedin(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all text-sm" placeholder="https://linkedin.com/in/..." />
+												<label className="text-xs font-medium text-gray-700 dark:text-zinc-300">LinkedIn Username</label>
+												<input type="text" value={socialLinkedin} onChange={e => setSocialLinkedin(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all text-sm" placeholder="username" />
 											</div>
 										</div>
 									</div>
