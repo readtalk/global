@@ -97,8 +97,8 @@ function ProfileContent() {
 	const isMutual = user.follow_status === "mutual";
 
 	return (
-		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0 bg-gray-50 dark:bg-zinc-950 transition-colors">
-			<div className="max-w-2xl mx-auto bg-white dark:bg-zinc-950 shadow-sm rounded-b-xl overflow-hidden my-4 md:my-8 transition-colors">
+		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0 bg-white dark:bg-zinc-950 transition-colors">
+			<div className="max-w-2xl mx-auto bg-white dark:bg-zinc-950 min-h-full shadow-sm transition-colors">
 				<div className="sticky top-0 z-10 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
 					<div className="flex items-center gap-2">
 						<Link href="/update" className="md:hidden text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 transition-colors">
