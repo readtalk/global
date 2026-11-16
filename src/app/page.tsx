@@ -192,14 +192,6 @@ function ChatsContent() {
 							{isDropdownOpen && (
 								<div className="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-800 z-50 overflow-hidden flex flex-col py-1 transition-colors">
 									<Link
-										href="/chats/ai"
-										onClick={() => setIsDropdownOpen(false)}
-										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-									>
-										<Sparkle size={16} />
-										AI Chat
-									</Link>
-									<Link
 										href="/settings"
 										onClick={() => setIsDropdownOpen(false)}
 										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
@@ -294,7 +286,7 @@ function ChatsContent() {
 
 			<Link
 				href="/chats/ai"
-				className="md:hidden fixed bottom-36 right-4 bg-white dark:bg-zinc-900 text-black dark:text-white border border-gray-200 dark:border-zinc-700 p-3.5 rounded-full shadow-lg transition hover:bg-gray-100 dark:hover:bg-zinc-800 z-40 flex items-center justify-center"
+				className="md:hidden fixed bottom-36 right-4 bg-gray-200 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 p-3.5 rounded-full shadow-lg transition hover:bg-gray-300 dark:hover:bg-zinc-700 z-40 flex items-center justify-center"
 			>
 				<Sparkle size={24} weight="bold" />
 			</Link>
