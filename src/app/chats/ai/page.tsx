@@ -77,6 +77,10 @@ function AIChatContent() {
 		setMessages([...history, { role: "assistant", content: "", created_at: now }]);
 		setContent("");
 		setIsSending(true);
+
+		const audio = new Audio('/sound/all-eyes-on-me.mp3');
+		audio.play().catch(() => {});
+
 		setTimeout(scrollToBottom, 50);
 
 		try {
