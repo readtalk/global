@@ -2,14 +2,14 @@
 
 import { useState, useRef, Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, PaperPlaneRight, Robot, Sparkle } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, PaperPlaneRight } from "@phosphor-icons/react/dist/ssr";
 
 type ChatMessage = {
 	role: "user" | "assistant";
 	content: string;
+	created_at: number;
 };
 
-// Port dari anna-laura/public/chat.js
 function consumeSseEvents(buffer: string): { events: string[]; buffer: string } {
 	let normalized = buffer.replace(/\r/g, "");
 	const events: string[] = [];
@@ -46,6 +46,13 @@ function extractContent(data: string): string {
 	return "";
 }
 
+const formatTime = (timestamp: number) => {
+	return new Date(timestamp * 1000).toLocaleTimeString("en-US", {
+		hour: "2-digit",
+		minute: "2-digit",
+	});
+};
+
 function AIChatContent() {
 	const router = useRouter();
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -53,21 +60,21 @@ function AIChatContent() {
 	const [isSending, setIsSending] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 
-	const scrollToBottom = () =>
+	const scrollToBottom = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+	};
 
 	const handleSend = async () => {
 		if (!content.trim() || isSending) return;
 
 		const text = content;
 		const token = localStorage.getItem("session") || "";
+		const now = Math.floor(Date.now() / 1000);
 
-		// Riwayat yang dikirim ke worker = semua pesan sebelumnya + pesan user baru
-		const history: ChatMessage[] = [...messages, { role: "user", content: text }];
+		const history = [...messages, { role: "user" as const, content: text, created_at: now }];
+		const aiIndex = history.length;
 
-		// Optimistic UI: tampilkan pesan user + bubble assistant kosong
-		const aiIndex = history.length; // index bubble assistant di state nanti
-		setMessages([...history, { role: "assistant", content: "" }]);
+		setMessages([...history, { role: "assistant", content: "", created_at: now }]);
 		setContent("");
 		setIsSending(true);
 		setTimeout(scrollToBottom, 50);
@@ -79,7 +86,9 @@ function AIChatContent() {
 					"Content-Type": "application/json",
 					...(token ? { Authorization: `Bearer ${token}` } : {}),
 				},
-				body: JSON.stringify({ messages: history }),
+				body: JSON.stringify({
+					messages: history.map(({ role, content }) => ({ role, content })),
+				}),
 			});
 
 			if (!res.ok || !res.body) throw new Error("Failed to get response");
@@ -94,7 +103,7 @@ function AIChatContent() {
 				const snapshot = responseText;
 				setMessages((prev) => {
 					const next = [...prev];
-					next[aiIndex] = { role: "assistant", content: snapshot };
+					next[aiIndex] = { ...next[aiIndex], content: snapshot };
 					return next;
 				});
 				scrollToBottom();
@@ -139,7 +148,7 @@ function AIChatContent() {
 			setMessages((prev) => {
 				const next = [...prev];
 				if (next[aiIndex] && !next[aiIndex].content) {
-					next[aiIndex] = { role: "assistant", content: "Maaf, gagal menghubungi AI." };
+					next[aiIndex] = { ...next[aiIndex], content: "Sorry, I couldn't reach the AI." };
 				}
 				return next;
 			});
@@ -151,47 +160,35 @@ function AIChatContent() {
 
 	return (
 		<div className="w-full flex-1 min-h-0 flex flex-col overflow-hidden bg-white dark:bg-zinc-950 transition-colors">
-			{/* Header */}
-			<div className="flex-none bg-white dark:bg-zinc-950 border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-3 z-10 transition-colors">
-				<button
-					onClick={() => router.push("/")}
-					className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 transition-colors"
-				>
+			<div className="flex-none bg-white dark:bg-zinc-950 border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-4 z-10 transition-colors">
+				<button onClick={() => router.push("/")} className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 transition-colors">
 					<ArrowLeft size={24} />
 				</button>
-				<div className="w-9 h-9 rounded-full bg-black dark:bg-white flex items-center justify-center text-white dark:text-black">
-					<Robot size={20} weight="bold" />
-				</div>
-				<div>
-					<h1 className="text-lg font-bold text-gray-900 dark:text-zinc-50 leading-tight">READTalk AI</h1>
-					<p className="text-[11px] text-green-500 font-medium">Online</p>
-				</div>
+				<h1 className="text-lg font-bold text-gray-900 dark:text-zinc-50">READTalk AI</h1>
 			</div>
 
-			{/* Messages */}
 			<div className="flex-1 overflow-y-auto p-4 space-y-4">
 				{messages.length === 0 ? (
-					<div className="flex flex-col justify-center items-center h-full gap-3 text-center">
-						<Sparkle size={48} className="text-gray-300 dark:text-zinc-700" />
-						<p className="text-gray-500 dark:text-zinc-400 text-sm">Mulai percakapan dengan AI.</p>
+					<div className="flex justify-center items-center h-full">
+						<p className="text-gray-500 dark:text-zinc-400 text-sm">No messages yet. Start the conversation!</p>
 					</div>
 				) : (
-					messages.map((msg, i) => {
+					messages.map((msg, index) => {
 						const isMe = msg.role === "user";
-						const isTyping = !isMe && !msg.content && isSending && i === messages.length - 1;
+						const isTyping = !isMe && !msg.content && isSending && index === messages.length - 1;
+
 						return (
-							<div key={i} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-								<div
-									className={`max-w-[75%] px-4 py-2 rounded-2xl flex flex-col gap-1 transition-colors ${
-										isMe
-											? "bg-gray-200 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 rounded-br-sm"
-											: "bg-gray-100 dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 rounded-bl-sm"
-									}`}
-								>
+							<div key={index} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+								<div className={`max-w-[75%] px-4 py-2 rounded-2xl flex flex-col gap-1 transition-colors ${isMe ? "bg-gray-200 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 rounded-br-sm" : "bg-gray-100 dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 rounded-bl-sm"}`}>
 									{isTyping ? (
-										<span className="text-xs text-gray-400 dark:text-zinc-500 animate-pulse">AI sedang mengetik...</span>
+										<span className="text-xs text-gray-400 dark:text-zinc-500 animate-pulse py-0.5">Typing...</span>
 									) : (
 										<p className="text-[15px] whitespace-pre-wrap break-words">{msg.content}</p>
+									)}
+									{!isTyping && (
+										<div className={`flex items-center justify-end gap-1 ${isMe ? "text-gray-500 dark:text-zinc-400" : "text-gray-400 dark:text-zinc-500"}`}>
+											<span className="text-[10px]">{formatTime(msg.created_at)}</span>
+										</div>
 									)}
 								</div>
 							</div>
@@ -201,13 +198,12 @@ function AIChatContent() {
 				<div ref={messagesEndRef} />
 			</div>
 
-			{/* Input */}
 			<div className="flex-none bg-white dark:bg-zinc-950 border-t border-gray-200 dark:border-zinc-800 p-3 flex gap-2 pb-safe pb-[max(12px,env(safe-area-inset-bottom))] transition-colors">
 				<input
 					type="text"
 					value={content}
 					onChange={(e) => setContent(e.target.value)}
-					placeholder="Tanya AI sesuatu..."
+					placeholder="Ask AI anything..."
 					className="flex-1 bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-zinc-400 transition-colors"
 					onKeyDown={(e) => e.key === "Enter" && handleSend()}
 				/>
@@ -224,9 +220,5 @@ function AIChatContent() {
 }
 
 export default function AIChatPage() {
-	return (
-		<Suspense fallback={<div className="p-4 text-center">Loading...</div>}>
-			<AIChatContent />
-		</Suspense>
-	);
+	return <Suspense fallback={<div className="p-4 text-center">Loading...</div>}><AIChatContent /></Suspense>;
 }
