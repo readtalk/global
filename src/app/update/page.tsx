@@ -134,7 +134,7 @@ function ForumContent() {
 							
 							{imageUrl && (
 								<div className="relative mt-2 rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-800 transition-colors">
-									{imageUrl.match(/\.(mp4|webm)$/i) ? (
+									{imageUrl.match(/\.(mp4|webm)$/i) || imageUrl.includes('/video/') ? (
 										<video src={imageUrl} controls className="w-full h-auto max-h-64 object-cover" />
 									) : (
 										<img src={imageUrl} className="w-full h-auto max-h-64 object-cover" />
