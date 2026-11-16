@@ -94,7 +94,7 @@ function ForumContent() {
 		setIsPosting(true);
 		const contentToSend = content;
 		const imageUrlToSend = imageUrl;
-		
+
 		setContent("");
 		setImageUrl(null);
 
@@ -131,16 +131,22 @@ function ForumContent() {
 						</div>
 						<div className="flex-1">
 							<textarea className="w-full bg-transparent text-gray-800 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none resize-none text-lg transition-colors" placeholder="What's happening?" rows={3} value={content} onChange={(e) => setContent(e.target.value)} disabled={isPosting} />
+							
 							{imageUrl && (
 								<div className="relative mt-2 rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-800 transition-colors">
-									<img src={imageUrl} className="w-full h-auto max-h-64 object-cover" />
+									{imageUrl.match(/\.(mp4|webm)$/i) ? (
+										<video src={imageUrl} controls className="w-full h-auto max-h-64 object-cover" />
+									) : (
+										<img src={imageUrl} className="w-full h-auto max-h-64 object-cover" />
+									)}
 									<button onClick={() => setImageUrl(null)} className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
 								</div>
 							)}
+							
 							<div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100 dark:border-zinc-800 transition-colors">
 								<div className="flex items-center gap-2 text-gray-500 dark:text-zinc-400">
-									<input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-									<input type="file" ref={cameraInputRef} onChange={handleFileChange} accept="image/*" capture="environment" className="hidden" />
+									<input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,video/*" className="hidden" />
+									<input type="file" ref={cameraInputRef} onChange={handleFileChange} accept="image/*,video/*" capture="environment" className="hidden" />
 									<button onClick={() => cameraInputRef.current?.click()} disabled={!!uploadingFile} className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-900 rounded-full transition disabled:opacity-50">
 										<Camera size={24} />
 									</button>
