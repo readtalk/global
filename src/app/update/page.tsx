@@ -65,11 +65,7 @@ function ForumContent() {
 		const file = e.target.files?.[0];
 		if (!file) return;
 		
-		if (file.type.startsWith("video/")) {
-			handleCropSave(file);
-		} else {
-			setFileToCrop(file);
-		}
+		setFileToCrop(file);
 		
 		if (fileInputRef.current) fileInputRef.current.value = "";
 		if (cameraInputRef.current) cameraInputRef.current.value = "";
@@ -141,7 +137,9 @@ function ForumContent() {
 							{imageUrl && (
 								<div className="relative mt-2 rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-800 transition-colors">
 									{imageUrl.match(/\.(mp4|webm)$/i) || imageUrl.includes('/video/') ? (
-										<video src={imageUrl} controls className="w-full h-auto max-h-64 object-cover" />
+										<div className="relative w-full aspect-[9/16] bg-black">
+											<video src={imageUrl} controls className="w-full h-full object-cover" />
+										</div>
 									) : (
 										<img src={imageUrl} className="w-full h-auto max-h-64 object-cover" />
 									)}
