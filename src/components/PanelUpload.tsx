@@ -16,14 +16,12 @@ export default function PanelUpload({ file, onClose, onSave }: PanelUploadProps)
 	const [zoom, setZoom] = useState(1);
 	const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
 	const [imageSrc, setImageSrc] = useState<string | null>(null);
-	const [isVideo, setIsVideo] = useState(false);
 	const [isProcessing, setIsProcessing] = useState(false);
 
 	useEffect(() => {
 		if (file) {
 			const url = URL.createObjectURL(file);
 			setImageSrc(url);
-			setIsVideo(file.type.startsWith("video/"));
 			return () => URL.revokeObjectURL(url);
 		}
 	}, [file]);
@@ -36,7 +34,7 @@ export default function PanelUpload({ file, onClose, onSave }: PanelUploadProps)
 		if (!imageSrc || !croppedAreaPixels || !file) return;
 		setIsProcessing(true);
 		try {
-			const croppedFile = await getCroppedMedia(imageSrc, croppedAreaPixels, isVideo ? "video" : "image");
+			const croppedFile = await getCroppedMedia(imageSrc, croppedAreaPixels, "image");
 			if (croppedFile) {
 				onSave(croppedFile);
 			}
@@ -56,7 +54,7 @@ export default function PanelUpload({ file, onClose, onSave }: PanelUploadProps)
 				<button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-full transition-colors">
 					<X size={24} />
 				</button>
-				<h2 className="text-lg font-bold">Crop {isVideo ? "Video" : "Photo"}</h2>
+				<h2 className="text-lg font-bold">Crop Photo</h2>
 				<button 
 					onClick={handleSave} 
 					disabled={isProcessing}
@@ -68,11 +66,10 @@ export default function PanelUpload({ file, onClose, onSave }: PanelUploadProps)
 
 			<div className="relative flex-1 w-full bg-zinc-950">
 				<Cropper
-					image={isVideo ? undefined : imageSrc}
-					video={isVideo ? imageSrc : undefined}
+					image={imageSrc}
 					crop={crop}
 					zoom={zoom}
-					aspect={isVideo ? 9 / 16 : 1 / 1}
+					aspect={1 / 1}
 					onCropChange={setCrop}
 					onCropComplete={onCropComplete}
 					onZoomChange={setZoom}
