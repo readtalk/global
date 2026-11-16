@@ -139,8 +139,8 @@ function ForumContent() {
 							)}
 							<div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100 dark:border-zinc-800 transition-colors">
 								<div className="flex items-center gap-2 text-gray-500 dark:text-zinc-400">
-									<input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,video/*" className="hidden" />
-									<input type="file" ref={cameraInputRef} onChange={handleFileChange} accept="image/*,video/*" capture="environment" className="hidden" />
+									<input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+									<input type="file" ref={cameraInputRef} onChange={handleFileChange} accept="video/*" capture="environment" className="hidden" />
 									<button onClick={() => cameraInputRef.current?.click()} disabled={!!uploadingFile} className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-900 rounded-full transition disabled:opacity-50">
 										<Camera size={24} />
 									</button>
