@@ -81,7 +81,9 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 						{update.image_url && (
 							<div className="mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-800 transition-colors">
 								{isVideoFile ? (
-									<video src={update.image_url} controls className="w-full h-auto" />
+									<div className="relative w-full aspect-[9/16] bg-black">
+										<video src={update.image_url} controls className="w-full h-full object-cover" />
+									</div>
 								) : (
 									<img src={update.image_url} alt="Post media" className="w-full h-auto object-cover" />
 								)}
