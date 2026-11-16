@@ -181,48 +181,63 @@ function ProfileContent() {
 						const showPreview = update.link_preview && !isVideoFile;
 
 						return (
-							<div key={`${update.id}-${update.reposter_id || 'original'}`} className="p-4 transition-colors">
+							<article key={`${update.id}-${update.reposter_id || 'original'}`} className="p-5 border-b border-gray-200 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-900/50 transition-colors">
 								{update.reposter_id && (
 									<div className="flex items-center gap-1 text-gray-500 dark:text-zinc-400 text-xs mb-2 transition-colors">
 										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
 										<span>Reposted by @{user.username}</span>
 									</div>
 								)}
-								<div className="flex items-center gap-3 mb-2">
-									<Link href={`/profile/@${update.author_username || update.user_id}`} className="shrink-0"><div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold text-xs overflow-hidden transition-colors">{update.author_avatar ? <img src={update.author_avatar} className="w-full h-full object-cover" /> : (update.author_username?.[0]?.toUpperCase() || "?")}</div></Link>
-									<div>
-										<div className="flex items-center gap-2">
-											<Link href={`/profile/@${update.author_username || update.user_id}`} className="text-gray-900 dark:text-zinc-100 font-semibold text-sm hover:underline transition-colors">{update.author_yourname || update.author_username || "Unknown User"}</Link>
-											{update.created_at && (<><span className="text-gray-400 dark:text-zinc-500 text-xs transition-colors">·</span><span className="text-gray-500 dark:text-zinc-400 text-xs transition-colors">{timeAgo(update.created_at)}</span></>)}
+								<div className="flex items-center gap-3">
+									<Link href={`/profile/@${update.author_username || update.user_id}`} className="shrink-0">
+										<div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold overflow-hidden transition-colors">
+											{update.author_avatar ? <img src={update.author_avatar} alt={update.author_username} className="w-full h-full object-cover" /> : (update.author_username?.[0]?.toUpperCase() || "?")}
 										</div>
-										<p className="text-gray-500 dark:text-zinc-400 text-xs transition-colors">@{update.author_username || update.user_id.substring(0, 8)}</p>
-									</div>
-								</div>
-								<Link href={`/update/${update.id}`} className="block">
-									<p className="text-gray-800 dark:text-zinc-200 text-sm transition-colors">{update.content}</p>
-									{update.image_url && (
-										<div 
-											className="mt-2 rounded-lg overflow-hidden cursor-pointer"
-											onClick={(e) => {
-												e.preventDefault();
-												setViewerMedia({ url: update.image_url!, type: isVideoFile ? "video" : "image" });
-											}}
-										>
-											{isVideoFile ? (
-												<div className="relative w-full aspect-[9/16] bg-black">
-													<video src={update.image_url} className="w-full h-full object-cover pointer-events-none" />
-												</div>
-											) : (
-												<img src={update.image_url} alt="Post" className="w-full h-auto max-h-60 object-cover" />
+									</Link>
+									<div className="flex-1">
+										<div className="flex items-center gap-2">
+											<Link href={`/profile/@${update.author_username || update.user_id}`} className="hover:underline">
+												<p className="text-gray-900 dark:text-zinc-100 font-semibold">{update.author_yourname || update.author_username || "Unknown User"}</p>
+											</Link>
+											{update.created_at && (
+												<>
+													<span className="text-gray-400 dark:text-zinc-500 text-xs">·</span>
+													<span className="text-gray-500 dark:text-zinc-400 text-xs">
+														{timeAgo(update.created_at)}
+													</span>
+												</>
 											)}
 										</div>
-									)}
-								</Link>
-								
+										<Link href={`/profile/@${update.author_username || update.user_id}`} className="hover:underline">
+											<p className="text-gray-500 dark:text-zinc-400 text-xs">@{update.author_username || update.user_id.substring(0, 8)}</p>
+										</Link>
+									</div>
+								</div>
+
+								{update.content && <p className="mt-3 text-gray-800 dark:text-zinc-200 whitespace-pre-wrap">{update.content}</p>}
+
 								{showPreview && <Preview data={update.link_preview!} />}
 
-								<div className="mt-3 flex items-center gap-6 text-gray-500 dark:text-zinc-400 text-sm transition-colors">
-									<Link href={`/update/${update.id}`} className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-zinc-100 transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>{update.comment_count || 0}</Link>
+								{update.image_url && (
+									<div 
+										className="mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-800 transition-colors cursor-pointer"
+										onClick={() => setViewerMedia({ url: update.image_url!, type: isVideoFile ? "video" : "image" })}
+									>
+										{isVideoFile ? (
+											<div className="relative w-full aspect-[9/16] bg-black">
+												<video src={update.image_url} className="w-full h-full object-cover pointer-events-none" />
+											</div>
+										) : (
+											<img src={update.image_url} alt="Post media" className="w-full h-auto object-cover" />
+										)}
+									</div>
+								)}
+
+								<div className="mt-4 flex items-center gap-6 text-gray-500 dark:text-zinc-400 text-sm transition-colors">
+									<Link href={`/update/${update.id}`} className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-zinc-100 transition-colors">
+										<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+										{update.comment_count || 0}
+									</Link>
 									<LikeRepost
 										id={update.id}
 										like_count={update.like_count}
@@ -232,7 +247,7 @@ function ProfileContent() {
 										onUpdate={fetchData}
 									/>
 								</div>
-							</div>
+							</article>
 						);
 					})}
 				</div>
