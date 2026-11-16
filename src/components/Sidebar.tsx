@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChatCircleDots, At, Bell, User, Gear, UsersThree, Phone } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircleDots, At, Bell, Gear, UsersThree, Phone, User } from "@phosphor-icons/react/dist/ssr";
 
 export default function Sidebar() {
 	const pathname = usePathname();
-	const [user, setUser] = useState<{ username: string; yourname: string } | null>(null);
+	const [user, setUser] = useState<{ username: string; yourname: string; avatar: string | null } | null>(null);
 
 	useEffect(() => {
 		const checkSession = () => {
@@ -17,11 +17,11 @@ export default function Sidebar() {
 					const payload = JSON.parse(atob(session.split(".")[1]));
 					const email = payload.properties?.email;
 					if (email) {
-						setUser({ username: email.split("@")[0], yourname: email.split("@")[0] });
+						setUser({ username: email.split("@")[0], yourname: email.split("@")[0], avatar: null });
 						fetch("https://auth.readtalk.workers.dev/settings", {
 							headers: { "Authorization": `Bearer ${session}` }
 						})
-						.then(res => res.json() as Promise<{ success: boolean; user?: { username: string; yourname: string } }>)
+						.then(res => res.json() as Promise<{ success: boolean; user?: { username: string; yourname: string; avatar: string | null } }>)
 						.then(data => {
 							if (data.success && data.user) setUser(data.user);
 						}).catch(() => {});
@@ -77,8 +77,16 @@ export default function Sidebar() {
 							</Link>
 						</>
 					)}
-					<Link href={user ? `/profile/@${user.username}` : "/api/auth/login"} className={`flex items-center justify-center w-10 h-10 rounded-lg transition ${pathname.startsWith("/profile") ? "bg-gray-200 dark:bg-zinc-800 text-black dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-900"}`}>
-						<User size={24} weight={pathname.startsWith("/profile") ? "fill" : "regular"} />
+					<Link href={user ? `/profile/@${user.username}` : "/api/auth/login"} className={`flex items-center justify-center w-10 h-10 rounded-lg transition ${pathname.startsWith("/profile") ? "bg-gray-200 dark:bg-zinc-800" : "hover:bg-gray-50 dark:hover:bg-zinc-900"}`}>
+						<div className={`w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold ${pathname.startsWith("/profile") ? "text-black dark:text-white" : "text-gray-500 dark:text-zinc-400"}`}>
+							{user?.avatar ? (
+								<img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
+							) : user ? (
+								user.username?.[0]?.toUpperCase()
+							) : (
+								<User size={24} />
+							)}
+						</div>
 					</Link>
 				</div>
 			</aside>
