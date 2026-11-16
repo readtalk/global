@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { timeAgo } from "@/lib/timer";
 import Preview from "./Preview";
+import MediaViewer from "./MediaViewer";
 
 export type UpdatelistItem = {
 	id: string;
@@ -22,6 +23,7 @@ export type UpdatelistItem = {
 
 export default function Updatelist({ data, limit = Infinity, onUpdate }: { data: UpdatelistItem[]; limit?: number; onUpdate: () => void }) {
 	const [loading, setLoading] = useState<string | null>(null);
+	const [viewerMedia, setViewerMedia] = useState<{ url: string; type: "image" | "video" } | null>(null);
 
 	const handleAction = async (id: string, action: "like" | "repost") => {
 		const token = localStorage.getItem("session");
@@ -79,10 +81,13 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 						{showPreview && <Preview data={update.link_preview!} />}
 
 						{update.image_url && (
-							<div className="mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-800 transition-colors">
+							<div 
+								className="mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-800 transition-colors cursor-pointer"
+								onClick={() => setViewerMedia({ url: update.image_url!, type: isVideoFile ? "video" : "image" })}
+							>
 								{isVideoFile ? (
 									<div className="relative w-full aspect-[9/16] bg-black">
-										<video src={update.image_url} controls className="w-full h-full object-cover" />
+										<video src={update.image_url} className="w-full h-full object-cover pointer-events-none" />
 									</div>
 								) : (
 									<img src={update.image_url} alt="Post media" className="w-full h-auto object-cover" />
@@ -107,6 +112,12 @@ export default function Updatelist({ data, limit = Infinity, onUpdate }: { data:
 					</article>
 				);
 			})}
+
+			<MediaViewer 
+				url={viewerMedia?.url || null} 
+				type={viewerMedia?.type || null} 
+				onClose={() => setViewerMedia(null)} 
+			/>
 		</>
 	);
 }
