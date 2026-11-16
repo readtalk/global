@@ -64,7 +64,13 @@ function ForumContent() {
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
 		if (!file) return;
-		setFileToCrop(file);
+		
+		if (file.type.startsWith("video/")) {
+			handleCropSave(file);
+		} else {
+			setFileToCrop(file);
+		}
+		
 		if (fileInputRef.current) fileInputRef.current.value = "";
 		if (cameraInputRef.current) cameraInputRef.current.value = "";
 	};
