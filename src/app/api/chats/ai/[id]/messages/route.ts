@@ -13,7 +13,7 @@ export async function GET(
 			return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 		}
 
-		const res = await fetch(`https://auth.readtalk.workers.dev/chats/ai/${id}/messages?${searchParams.toString()}`, {
+		const res = await fetch(`https://auth.readtalk.workers.dev/ai/chat/${id}/messages?${searchParams.toString()}`, {
 			headers: { "Authorization": authHeader },
 			cache: "no-store",
 		});
@@ -39,7 +39,7 @@ export async function POST(
 
 		const body = await request.json();
 
-		const res = await fetch(`https://auth.readtalk.workers.dev/chats/ai/${id}/messages`, {
+		const res = await fetch(`https://auth.readtalk.workers.dev/ai/chat/${id}/messages`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
