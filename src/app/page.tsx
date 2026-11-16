@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ChatCircleDots, Plus, UsersThree, DotsThreeVertical, Sun, Moon, Gear } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircleDots, Plus, UsersThree, DotsThreeVertical, Sun, Moon, Gear, Sparkle } from "@phosphor-icons/react/dist/ssr";
 import PanelOpen from "@/components/PanelOpen";
 import { useWebSocket } from "./WebSocketProvider";
 
@@ -96,12 +96,12 @@ function ChatsContent() {
 					fetch("/api/chats", { headers: { "Authorization": `Bearer ${token}` } }),
 					fetch("/api/users/mutual", { headers: { "Authorization": `Bearer ${token}` } })
 				]);
-				
+
 				const dataChats = (await resChats.json()) as { success: boolean; chats: Chat[] };
 				if (dataChats.success) {
 					setChats(dataChats.chats);
 				}
-				
+
 				const dataMutuals = (await resMutuals.json()) as { success: boolean; users: MutualUser[] };
 				if (dataMutuals.success) {
 					setMutuals(dataMutuals.users);
@@ -176,14 +176,14 @@ function ChatsContent() {
 				<div className="sticky top-0 z-10 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
 					<h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50">READTalk</h1>
 					<div className="flex items-center gap-2">
-						<button 
+						<button
 							onClick={() => setIsPanelOpen(true)}
 							className="hidden md:block bg-black dark:bg-white text-white dark:text-black p-1.5 rounded-md transition hover:bg-gray-800 dark:hover:bg-gray-200"
 						>
 							<Plus size={20} weight="bold" />
 						</button>
 						<div className="relative">
-							<button 
+							<button
 								onClick={() => setIsDropdownOpen(!isDropdownOpen)}
 								className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 p-1 transition-colors"
 							>
@@ -191,6 +191,14 @@ function ChatsContent() {
 							</button>
 							{isDropdownOpen && (
 								<div className="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-800 z-50 overflow-hidden flex flex-col py-1 transition-colors">
+									<Link
+										href="/chats/ai"
+										onClick={() => setIsDropdownOpen(false)}
+										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+									>
+										<Sparkle size={16} />
+										AI Chat
+									</Link>
 									<Link
 										href="/settings"
 										onClick={() => setIsDropdownOpen(false)}
@@ -284,16 +292,23 @@ function ChatsContent() {
 				</div>
 			</div>
 
-			<button 
+			<Link
+				href="/chats/ai"
+				className="md:hidden fixed bottom-36 right-4 bg-white dark:bg-zinc-900 text-black dark:text-white border border-gray-200 dark:border-zinc-700 p-3.5 rounded-full shadow-lg transition hover:bg-gray-100 dark:hover:bg-zinc-800 z-40 flex items-center justify-center"
+			>
+				<Sparkle size={24} weight="bold" />
+			</Link>
+
+			<button
 				onClick={() => setIsPanelOpen(true)}
 				className="md:hidden fixed bottom-20 right-4 bg-black dark:bg-white text-white dark:text-black p-3.5 rounded-full shadow-lg transition hover:bg-gray-800 dark:hover:bg-gray-200 z-40 flex items-center justify-center"
 			>
 				<Plus size={24} weight="bold" />
 			</button>
 
-			<PanelOpen 
-				isOpen={isPanelOpen} 
-				onClose={() => setIsPanelOpen(false)} 
+			<PanelOpen
+				isOpen={isPanelOpen}
+				onClose={() => setIsPanelOpen(false)}
 				title="New Chat"
 			>
 				<div className="p-4 space-y-2 border-b border-gray-100 dark:border-zinc-800 transition-colors">
@@ -318,8 +333,8 @@ function ChatsContent() {
 						<p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-4">No mutuals yet.</p>
 					) : (
 						mutuals.map((m) => (
-							<button 
-								key={m.id} 
+							<button
+								key={m.id}
 								onClick={() => handleStartChat(m)}
 								className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-zinc-900 rounded-lg cursor-pointer transition-colors text-left"
 							>
