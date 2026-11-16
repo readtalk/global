@@ -7,7 +7,7 @@ import { timeAgo } from "@/lib/timer";
 import { 
 	FacebookLogo, InstagramLogo, XLogo, TiktokLogo, 
 	YoutubeLogo, LinkedinLogo, Globe,
-	ChatCircle, Phone
+	ChatCircle, Phone, ArrowLeft, DotsThreeVertical
 } from "@phosphor-icons/react/dist/ssr";
 import ShareButton from "@/components/ShareButton";
 import CopyUsername from "@/components/CopyUsername";
@@ -41,6 +41,7 @@ function ProfileContent() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 	const [viewerMedia, setViewerMedia] = useState<{ url: string; type: "image" | "video" } | null>(null);
+	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
 	const fetchData = async () => {
 		try {
@@ -98,6 +99,39 @@ function ProfileContent() {
 	return (
 		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0 bg-gray-50 dark:bg-zinc-950 transition-colors">
 			<div className="max-w-2xl mx-auto bg-white dark:bg-zinc-950 shadow-sm rounded-b-xl overflow-hidden my-4 md:my-8 transition-colors">
+				<div className="sticky top-0 z-10 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
+					<div className="flex items-center gap-2">
+						<Link href="/update" className="md:hidden text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 transition-colors">
+							<ArrowLeft size={24} weight="bold" />
+						</Link>
+						<h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50">Profile</h1>
+					</div>
+					<div className="flex items-center gap-2">
+						{user.id === currentUserId && (
+							<ShareButton username={user.username} />
+						)}
+						<div className="relative">
+							<button 
+								onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+								className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 p-1 transition-colors"
+							>
+								<DotsThreeVertical size={24} weight="bold" />
+							</button>
+							{isDropdownOpen && (
+								<div className="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-800 z-50 overflow-hidden flex flex-col py-1 transition-colors">
+									<Link
+										href="/settings"
+										onClick={() => setIsDropdownOpen(false)}
+										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+									>
+										Settings
+									</Link>
+								</div>
+							)}
+						</div>
+					</div>
+				</div>
+
 				<div className="h-40 w-full bg-gray-300 dark:bg-zinc-800 relative transition-colors">{user.header && <img src={user.header} alt="Header" className="w-full h-full object-cover" />}</div>
 				<div className="px-6 relative pb-6">
 					<div className="absolute -top-12 left-6 z-10 w-24 h-24 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 text-4xl font-bold border-4 border-white dark:border-zinc-950 overflow-hidden shadow-sm transition-colors">
@@ -110,13 +144,6 @@ function ProfileContent() {
 								<h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-50 transition-colors">{user.yourname || user.username}</h1>
 								<div className="flex items-center gap-1 mt-1"><p className="text-gray-500 dark:text-zinc-400 text-sm transition-colors">@{user.username}</p><CopyUsername username={user.username} /></div>
 							</div>
-							
-							{user.id === currentUserId && (
-								<div className="flex gap-2">
-									<Link href="/settings" className="bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors">Settings</Link>
-									<ShareButton username={user.username} />
-								</div>
-							)}
 						</div>
 
 						<div className="mt-3 flex items-center gap-4 text-sm text-gray-600 dark:text-zinc-400 transition-colors">
