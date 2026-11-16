@@ -20,7 +20,8 @@ type UserProfile = {
 	about: string | null;
 	socials: string | null;
 	location: string | null;
-	created_at: number | null;
+	created_at: string | null;
+	username_updated_at: number | null;
 };
 
 export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
@@ -135,6 +136,11 @@ export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
 		};
 		
 		const socialsString = JSON.stringify(socialsObj);
+		
+		let newUsernameUpdatedAt = profile?.username_updated_at || null;
+		if (formUsername !== profile?.username) {
+			newUsernameUpdatedAt = Math.floor(Date.now() / 1000);
+		}
 
 		try {
 			const res = await fetch("https://auth.readtalk.workers.dev/settings", {
@@ -153,6 +159,7 @@ export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
 					about: formAbout || null,
 					socials: socialsString,
 					location: formLocation || null,
+					username_updated_at: newUsernameUpdatedAt,
 				}),
 			});
 
@@ -182,7 +189,17 @@ export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
 
 	if (!type) return null;
 
-	const canEditUsername = profile?.created_at ? (Date.now() / 1000 - profile.created_at) > (60 * 24 * 60 * 60) : true;
+	const getDaysRemaining = () => {
+		if (!profile?.username_updated_at && !profile?.created_at) return 0;
+		const baseTime = profile.username_updated_at 
+			? profile.username_updated_at * 1000 
+			: new Date(profile.created_at!).getTime();
+		const diffDays = (Date.now() - baseTime) / (1000 * 60 * 60 * 24);
+		return Math.max(0, 60 - diffDays);
+	};
+
+	const daysRemaining = getDaysRemaining();
+	const canEditUsername = daysRemaining <= 0;
 
 	return (
 		<>
@@ -243,7 +260,7 @@ export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
 												<span>Username</span>
 												{!canEditUsername && (
 													<span className="text-xs text-red-500 font-normal">
-														Can be changed in {Math.ceil((60 * 24 * 60 * 60 - (Date.now() / 1000 - (profile?.created_at || 0))) / (24 * 60 * 60))} days
+														Can be changed in {Math.ceil(daysRemaining)} days
 													</span>
 												)}
 											</label>
