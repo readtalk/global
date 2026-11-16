@@ -278,6 +278,8 @@ function UpdateDetailContent() {
 	}
 
 	const rootComments = comments.filter(c => !c.parent_id);
+	const isVideoFile = post?.image_url?.match(/\.(mp4|webm)$/i) || post?.image_url?.includes('/video/');
+	const showPreview = post?.link_preview && !isVideoFile;
 
 	return (
 		<div className="w-full flex-1 min-h-0 flex flex-col overflow-hidden bg-white dark:bg-zinc-950 transition-colors">
@@ -299,13 +301,13 @@ function UpdateDetailContent() {
 							</div>
 						</div>
 						<p className="text-gray-800 dark:text-zinc-200 whitespace-pre-wrap text-[15px] break-words transition-colors">{renderContentWithMentions(post.content)}</p>
-						{post.link_preview && <Preview data={post.link_preview} />}
+						{showPreview && <Preview data={post.link_preview!} />}
 						{post.image_url && (
 							<div 
 								className="mt-3 rounded-xl overflow-hidden cursor-pointer"
-								onClick={() => setViewerMedia({ url: post.image_url!, type: post.image_url!.match(/\.(mp4|webm)$/i) || post.image_url!.includes('/video/') ? "video" : "image" })}
+								onClick={() => setViewerMedia({ url: post.image_url!, type: isVideoFile ? "video" : "image" })}
 							>
-								{post.image_url.match(/\.(mp4|webm)$/i) || post.image_url.includes('/video/') ? (
+								{isVideoFile ? (
 									<div className="relative w-full aspect-[9/16] bg-black">
 										<video src={post.image_url} className="w-full h-full object-cover pointer-events-none" />
 									</div>
