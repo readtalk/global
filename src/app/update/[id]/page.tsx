@@ -7,6 +7,7 @@ import { timeAgo } from "@/lib/timer";
 import { ArrowBendUpLeft, ArrowLeft } from "@phosphor-icons/react";
 import LikeRepost from "@/components/LikeRepost";
 import Preview from "@/components/Preview";
+import MediaViewer from "@/components/MediaViewer";
 
 type UpdatelistItem = { id: string; user_id: string; content: string; image_url: string | null; created_at: number; like_count: number; comment_count: number; repost_count: number; is_liked?: boolean; is_reposted?: boolean; author_username?: string; author_yourname?: string; author_avatar?: string | null; link_preview?: any; };
 type Comment = { id: string; updatelist_id: string; user_id: string; content: string; created_at: number; parent_id?: string | null; author_username?: string; author_yourname?: string; author_avatar?: string | null; };
@@ -22,6 +23,7 @@ function UpdateDetailContent() {
 	const [currentUser, setCurrentUser] = useState<{ username: string; yourname: string; avatar: string | null } | null>(null);
 	const [replyTo, setReplyTo] = useState<Comment | null>(null);
 	const [focusedComment, setFocusedComment] = useState<Comment | null>(null);
+	const [viewerMedia, setViewerMedia] = useState<{ url: string; type: "image" | "video" } | null>(null);
 
 	const fetchData = async (showLoading = true) => {
 		if (showLoading) setIsLoading(true);
@@ -190,7 +192,20 @@ function UpdateDetailContent() {
 							</div>
 							<p className="text-gray-800 dark:text-zinc-200 whitespace-pre-wrap text-[15px] break-words transition-colors">{renderContentWithMentions(post.content)}</p>
 							{post.link_preview && <Preview data={post.link_preview} />}
-							{post.image_url && <img src={post.image_url} alt="Post Image" className="mt-3 rounded-lg max-h-80 w-full object-cover" />}
+							{post.image_url && (
+								<div 
+									className="mt-3 rounded-xl overflow-hidden cursor-pointer"
+									onClick={() => setViewerMedia({ url: post.image_url!, type: post.image_url!.match(/\.(mp4|webm)$/i) || post.image_url!.includes('/video/') ? "video" : "image" })}
+								>
+									{post.image_url.match(/\.(mp4|webm)$/i) || post.image_url.includes('/video/') ? (
+										<div className="relative w-full aspect-[9/16] bg-black">
+											<video src={post.image_url} className="w-full h-full object-cover pointer-events-none" />
+										</div>
+									) : (
+										<img src={post.image_url} alt="Post Image" className="w-full h-auto max-h-80 object-cover" />
+									)}
+								</div>
+							)}
 						</div>
 					)}
 
@@ -285,7 +300,20 @@ function UpdateDetailContent() {
 						</div>
 						<p className="text-gray-800 dark:text-zinc-200 whitespace-pre-wrap text-[15px] break-words transition-colors">{renderContentWithMentions(post.content)}</p>
 						{post.link_preview && <Preview data={post.link_preview} />}
-						{post.image_url && <img src={post.image_url} alt="Post Image" className="mt-3 rounded-lg max-h-80 w-full object-cover" />}
+						{post.image_url && (
+							<div 
+								className="mt-3 rounded-xl overflow-hidden cursor-pointer"
+								onClick={() => setViewerMedia({ url: post.image_url!, type: post.image_url!.match(/\.(mp4|webm)$/i) || post.image_url!.includes('/video/') ? "video" : "image" })}
+							>
+								{post.image_url.match(/\.(mp4|webm)$/i) || post.image_url.includes('/video/') ? (
+									<div className="relative w-full aspect-[9/16] bg-black">
+										<video src={post.image_url} className="w-full h-full object-cover pointer-events-none" />
+									</div>
+								) : (
+									<img src={post.image_url} alt="Post Image" className="w-full h-auto max-h-80 object-cover" />
+								)}
+							</div>
+						)}
 						<div className="mt-4 flex items-center gap-6 text-gray-500 dark:text-zinc-400 text-sm border-t border-gray-200 dark:border-zinc-800 pt-3 transition-colors">
 							<Link href={`/update/${post.id}`} className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-zinc-100 transition-colors"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>{post.comment_count || 0}</Link>
 							<LikeRepost 
@@ -334,6 +362,12 @@ function UpdateDetailContent() {
 					<button onClick={handlePostComment} disabled={isPosting || !content.trim()} className="bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-full text-sm font-semibold disabled:opacity-50 transition-colors">{isPosting ? "..." : "Reply"}</button>
 				</div>
 			</div>
+
+			<MediaViewer 
+				url={viewerMedia?.url || null} 
+				type={viewerMedia?.type || null} 
+				onClose={() => setViewerMedia(null)} 
+			/>
 		</div>
 	);
 }
