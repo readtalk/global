@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, Camera, UploadSimple } from "@phosphor-icons/react/dist/ssr";
 import PanelUpload from "./PanelUpload";
+import { timeAgo } from "@/lib/timer";
 
 type PanelSettingsProps = {
 	type: "account" | "privacy" | "appearance" | "language" | "notifications" | null;
@@ -11,6 +12,7 @@ type PanelSettingsProps = {
 
 type UserProfile = {
 	username: string | null;
+	email: string | null;
 	yourname: string | null;
 	date_of_birth: string | null;
 	avatar: string | null;
@@ -19,6 +21,7 @@ type UserProfile = {
 	about: string | null;
 	socials: string | null;
 	location: string | null;
+	created_at: number | null;
 };
 
 export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
@@ -180,6 +183,8 @@ export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
 
 	if (!type) return null;
 
+	const canEditUsername = profile?.created_at ? (Date.now() / 1000 - profile.created_at) > (60 * 24 * 60 * 60) : true;
+
 	return (
 		<>
 			<div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden transition-opacity" onClick={onClose} />
@@ -231,8 +236,25 @@ export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
 
 									<div className="flex flex-col gap-4 mt-2">
 										<div>
-											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Username</label>
-											<input type="text" value={formUsername} onChange={e => setFormUsername(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all" />
+											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Email</label>
+											<input type="email" value={profile?.email || ""} disabled className="w-full mt-1 bg-gray-100 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-500 dark:text-zinc-500 cursor-not-allowed transition-all" />
+										</div>
+										<div>
+											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300 flex justify-between">
+												<span>Username</span>
+												{!canEditUsername && (
+													<span className="text-xs text-red-500 font-normal">
+														Can be changed in {Math.ceil((60 * 24 * 60 * 60 - (Date.now() / 1000 - (profile?.created_at || 0))) / (24 * 60 * 60))} days
+													</span>
+												)}
+											</label>
+											<input 
+												type="text" 
+												value={formUsername} 
+												onChange={e => setFormUsername(e.target.value)} 
+												disabled={!canEditUsername}
+												className={`w-full mt-1 border rounded-lg px-3 py-2 transition-all ${canEditUsername ? 'bg-gray-50 dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600' : 'bg-gray-100 dark:bg-zinc-900/50 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-500 cursor-not-allowed'}`} 
+											/>
 										</div>
 										<div>
 											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Your Name</label>
@@ -286,7 +308,7 @@ export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
 										</div>
 									</div>
 
-									<button onClick={handleSave} disabled={isSaving || uploadingFile} className="bg-black dark:bg-white text-white dark:text-black px-5 py-2 rounded-full font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors w-full mt-4">
+									<button onClick={handleSave} disabled={isSaving || uploadingFile || !canEditUsername} className="bg-black dark:bg-white text-white dark:text-black px-5 py-2 rounded-full font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors w-full mt-4 disabled:opacity-50">
 										{isSaving ? "Saving..." : "Save Changes"}
 									</button>
 								</>
