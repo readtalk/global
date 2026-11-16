@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback, Suspense, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { upload } from "@vercel/blob/client";
 import Search from "@/components/Search";
 import Updatelist, { UpdatelistItem } from "@/components/Updatelist";
 import PanelUpload from "@/components/PanelUpload";
-import { Camera } from "@phosphor-icons/react/dist/ssr";
+import { Camera, DotsThreeVertical, User } from "@phosphor-icons/react/dist/ssr";
 
 type CurrentUser = { username: string; yourname: string; avatar: string | null; };
 
@@ -24,6 +25,7 @@ function ForumContent() {
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 	const [uploadingFile, setUploadingFile] = useState<string | null>(null);
 	const [fileToCrop, setFileToCrop] = useState<File | null>(null);
+	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
 	useEffect(() => {
 		const token = searchParams.get("token");
@@ -120,8 +122,32 @@ function ForumContent() {
 	return (
 		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0 bg-white dark:bg-zinc-950 transition-colors">
 			<div className="max-w-2xl mx-auto bg-white dark:bg-zinc-950 min-h-full shadow-sm">
-				<div className="sticky top-0 z-10 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 transition-colors">
+				<div className="sticky top-0 z-10 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
 					<h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50">Update</h1>
+					<div className="flex items-center gap-2">
+						<Link href={currentUser ? `/profile/@${currentUser.username}` : "/api/auth/login"} className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 p-1 transition-colors">
+							<User size={24} weight="bold" />
+						</Link>
+						<div className="relative">
+							<button 
+								onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+								className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 p-1 transition-colors"
+							>
+								<DotsThreeVertical size={24} weight="bold" />
+							</button>
+							{isDropdownOpen && (
+								<div className="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-800 z-50 overflow-hidden flex flex-col py-1 transition-colors">
+									<Link
+										href="/settings"
+										onClick={() => setIsDropdownOpen(false)}
+										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+									>
+										Settings
+									</Link>
+								</div>
+							)}
+						</div>
+					</div>
 				</div>
 				<div className="p-4 border-b border-gray-200 dark:border-zinc-800 transition-colors">
 					<Search />
