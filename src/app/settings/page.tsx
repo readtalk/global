@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
 	UserCircle, 
@@ -11,10 +10,12 @@ import {
 	Bell, 
 	SignOut 
 } from "@phosphor-icons/react/dist/ssr";
+import PanelSettings from "@/components/PanelSettings";
 
 export default function SettingsPage() {
 	const router = useRouter();
 	const [user, setUser] = useState<{ username: string; yourname: string; avatar: string | null } | null>(null);
+	const [activePanel, setActivePanel] = useState<"account" | "privacy" | "appearance" | "language" | "notifications" | null>(null);
 
 	useEffect(() => {
 		const session = localStorage.getItem("session");
@@ -45,12 +46,12 @@ export default function SettingsPage() {
 	};
 
 	const menuItems = [
-		{ label: "Account", desc: "Privacy, security, change email", icon: UserCircle, href: "/settings/account" },
-		{ label: "Privacy", desc: "Block contacts, disappearing messages", icon: LockKey, href: "/settings/privacy" },
-		{ label: "Appearance", desc: "Theme, chat wallpaper", icon: Moon, href: "/settings/appearance" },
-		{ label: "Language", desc: "English", icon: Translate, href: "/settings/language" },
-		{ label: "Notifications", desc: "Message, group & call tones", icon: Bell, href: "/settings/notifications" },
-	];
+		{ id: "account", label: "Account", desc: "Privacy, security, change email", icon: UserCircle },
+		{ id: "privacy", label: "Privacy", desc: "Block contacts, disappearing messages", icon: LockKey },
+		{ id: "appearance", label: "Appearance", desc: "Theme, chat wallpaper", icon: Moon },
+		{ id: "language", label: "Language", desc: "English", icon: Translate },
+		{ id: "notifications", label: "Notifications", desc: "Message, group & call tones", icon: Bell },
+	] as const;
 
 	return (
 		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0 bg-gray-50 dark:bg-zinc-950 transition-colors">
@@ -61,7 +62,7 @@ export default function SettingsPage() {
 
 				{user && (
 					<div className="p-4 border-b border-gray-200 dark:border-zinc-800 flex items-center gap-4 transition-colors">
-						<div className="w-16 h-16 rounded-full bg-blue-500 dark:bg-blue-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden shrink-0 transition-colors">
+						<div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 text-2xl font-bold overflow-hidden shrink-0 transition-colors">
 							{user.avatar ? <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" /> : user.username?.[0]?.toUpperCase()}
 						</div>
 						<div>
@@ -73,7 +74,11 @@ export default function SettingsPage() {
 
 				<div className="flex flex-col">
 					{menuItems.map((item) => (
-						<Link key={item.label} href={item.href} className="flex items-center gap-4 p-4 border-b border-gray-100 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors">
+						<button 
+							key={item.label} 
+							onClick={() => setActivePanel(item.id)} 
+							className="flex items-center gap-4 p-4 border-b border-gray-100 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors text-left w-full"
+						>
 							<div className="text-gray-500 dark:text-zinc-400 transition-colors">
 								<item.icon size={24} />
 							</div>
@@ -81,7 +86,7 @@ export default function SettingsPage() {
 								<p className="text-gray-900 dark:text-zinc-100 font-medium transition-colors">{item.label}</p>
 								<p className="text-gray-500 dark:text-zinc-400 text-sm transition-colors">{item.desc}</p>
 							</div>
-						</Link>
+						</button>
 					))}
 
 					<button onClick={handleLogout} className="flex items-center gap-4 p-4 border-b border-gray-100 dark:border-zinc-800 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-left w-full">
@@ -94,6 +99,11 @@ export default function SettingsPage() {
 					</button>
 				</div>
 			</div>
+
+			<PanelSettings 
+				type={activePanel} 
+				onClose={() => setActivePanel(null)} 
+			/>
 		</div>
 	);
 }
