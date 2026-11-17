@@ -203,7 +203,7 @@ function ProfileContent() {
 					<button onClick={() => setActiveTab("repost")} className={`flex-1 py-3 text-sm font-semibold transition-colors ${activeTab === "repost" ? "text-gray-900 dark:text-zinc-100 border-b-2 border-gray-900 dark:border-zinc-100" : "text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-900"}`}>Repost</button>
 				</div>
 				<div className="divide-y divide-gray-100 dark:divide-zinc-800 transition-colors">
-					{displayUpdates.length === 0 ? <p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-10 transition-colors">Belum ada konten.</p> : displayUpdates.map(update => {
+					{displayUpdates.length === 0 ? <p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-10 transition-colors">No content yet.</p> : displayUpdates.map(update => {
 						const isVideoFile = update.image_url?.match(/\.(mp4|webm)$/i) || update.image_url?.includes('/video/');
 						const showPreview = update.link_preview && !isVideoFile;
 
