@@ -176,7 +176,7 @@ function UpdateDetailContent() {
 					<button onClick={() => setFocusedComment(null)} className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 transition-colors">
 						<ArrowLeft size={24} weight="bold" />
 					</button>
-					<h1 className="text-lg font-bold text-gray-900 dark:text-zinc-50 transition-colors">Focused Thread</h1>
+					<h1 className="text-lg font-bold text-gray-900 dark:text-zinc-50 transition-colors">Focused Comment</h1>
 				</div>
 				
 				<div className="flex-1 overflow-y-auto p-4">
