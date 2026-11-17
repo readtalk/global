@@ -33,6 +33,13 @@
 	--text-base: var(--font-size-base);
 }
 
+@media (hover: hover) {
+	a:hover,
+	button:hover {
+		outline: none;
+	}
+}
+
 html {
 	font-size: var(--font-size-base);
 	background-color: var(--background) !important;
