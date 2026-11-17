@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Camera, UploadSimple } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, Camera, UploadSimple, Check } from "@phosphor-icons/react/dist/ssr";
 import PanelUpload from "./PanelUpload";
+import { useLanguage, LANGUAGES, LanguageCode } from "@/context/LanguageContext";
 
 type PanelSettingsProps = {
 	type: "account" | "privacy" | "appearance" | "language" | "notifications" | null;
@@ -25,6 +26,8 @@ type UserProfile = {
 };
 
 export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
+	const { language, setLanguage } = useLanguage();
+
 	const [profile, setProfile] = useState<UserProfile | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
@@ -332,7 +335,31 @@ export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
 							
 							{type === "privacy" && <p className="text-center text-gray-500 dark:text-zinc-400 mt-10">Privacy settings coming soon.</p>}
 							{type === "appearance" && <p className="text-center text-gray-500 dark:text-zinc-400 mt-10">Appearance settings coming soon.</p>}
-							{type === "language" && <p className="text-center text-gray-500 dark:text-zinc-400 mt-10">Language settings coming soon.</p>}
+							
+							{type === "language" && (
+								<div className="flex flex-col gap-2 mt-2">
+									{LANGUAGES.map((lang) => (
+										<button
+											key={lang.code}
+											onClick={() => setLanguage(lang.code)}
+											className={`flex items-center justify-between w-full p-4 rounded-xl border transition-all ${
+												language === lang.code
+													? "border-black dark:border-white bg-gray-50 dark:bg-zinc-900"
+													: "border-gray-200 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-900"
+											}`}
+										>
+											<div className="flex flex-col text-left">
+												<span className="text-sm font-medium text-gray-900 dark:text-zinc-100">{lang.label}</span>
+												<span className="text-xs text-gray-500 dark:text-zinc-400">{lang.nativeName}</span>
+											</div>
+											{language === lang.code && (
+												<Check size={20} weight="bold" className="text-black dark:text-white" />
+											)}
+										</button>
+									))}
+								</div>
+							)}
+
 							{type === "notifications" && <p className="text-center text-gray-500 dark:text-zinc-400 mt-10">Notification settings coming soon.</p>}
 						</div>
 					)}
