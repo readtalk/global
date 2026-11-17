@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ChatCircleDots, Plus, UsersThree, DotsThreeVertical, Sun, Moon, Gear, Brain, Bell } from "@phosphor-icons/react/dist/ssr";
 import PanelOpen from "@/components/PanelOpen";
+import AIChatsOverlay from "@/components/AIChatOverlay";
 import { useWebSocket } from "./WebSocketProvider";
 
 type Chat = {
@@ -31,6 +32,7 @@ function ChatsContent() {
 	const [chats, setChats] = useState<Chat[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isPanelOpen, setIsPanelOpen] = useState(false);
+	const [isAiOpen, setIsAiOpen] = useState(false);
 	const [mutuals, setMutuals] = useState<MutualUser[]>([]);
 	const [isFetchingMutuals, setIsFetchingMutuals] = useState(false);
 	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -290,12 +292,12 @@ function ChatsContent() {
 				</div>
 			</div>
 
-			<Link
-				href="/chats/ai"
+			<button
+				onClick={() => setIsAiOpen(true)}
 				className="md:hidden fixed bottom-36 right-4 p-3.5 rounded-full z-40 flex items-center justify-center transition-all duration-200 bg-gradient-to-b from-blue-300 to-blue-500 dark:from-blue-500 dark:to-blue-700 text-white border border-blue-400/50 dark:border-blue-600/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.6),0_4px_6px_rgba(0,0,0,0.2)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),0_4px_6px_rgba(0,0,0,0.6)] active:shadow-inner active:translate-y-0.5 hover:brightness-110"
 			>
 				<Brain size={24} weight="bold" />
-			</Link>
+			</button>
 
 			<button
 				onClick={() => setIsPanelOpen(true)}
@@ -348,6 +350,11 @@ function ChatsContent() {
 					)}
 				</div>
 			</PanelOpen>
+
+			<AIChatsOverlay
+				isOpen={isAiOpen}
+				onClose={() => setIsAiOpen(false)}
+			/>
 		</div>
 	);
 }
