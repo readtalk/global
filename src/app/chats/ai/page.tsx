@@ -188,13 +188,13 @@ function AIChatContent() {
 				<button onClick={() => router.push("/")} className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 transition-colors">
 					<ArrowLeft size={24} />
 				</button>
-				<h1 className="text-lg font-bold text-gray-900 dark:text-zinc-50">Anna Laura AI</h1>
+				<h1 className="text-lg font-bold text-gray-900 dark:text-zinc-50">Mode AI</h1>
 			</div>
 
 			<div className="flex-1 overflow-y-auto p-4 space-y-4">
 				{messages.length === 0 ? (
 					<div className="flex justify-center items-center h-full">
-						<p className="text-gray-500 dark:text-zinc-400 text-sm">No messages yet. Start the conversation!</p>
+						<p className="text-gray-500 dark:text-zinc-400 text-sm">Start with Anna Laura AI</p>
 					</div>
 				) : (
 					messages.map((msg, index) => {
