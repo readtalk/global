@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import Overlayout from "@/components/ai/Overlayout";
+import Overlayout from "@/components/ai/Overlay";
 import AiChatPage from "@/app/chats/ai/page";
 import ChatRoomPage from "@/app/chats/[id]/page";
 
