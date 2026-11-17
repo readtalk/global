@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import Script from "next/script";
 import Sidebar from "@/components/Sidebar";
 import WebSocketProvider from "./WebSocketProvider";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -82,17 +83,19 @@ export default function RootLayout({
 					></iframe>
 				</noscript>
 
-				<WebSocketProvider>
-					<div className="flex h-[100dvh] w-full overflow-hidden">
-						<Sidebar />
-						<main className="flex-1 min-w-0 min-h-0 overflow-hidden flex bg-white dark:bg-zinc-950 transition-colors">
-							<div className="w-full md:w-[35vw] md:min-w-[35vw] md:max-w-[35vw] md:border-r border-gray-200 dark:border-zinc-800 h-full flex flex-col">
-								{children}
-							</div>
-							<div id="desktop-popup-panel" className="hidden md:flex flex-1 h-full bg-white dark:bg-zinc-950 border-l border-gray-200 dark:border-zinc-800 transition-colors" />
-						</main>
-					</div>
-				</WebSocketProvider>
+				<LanguageProvider>
+					<WebSocketProvider>
+						<div className="flex h-[100dvh] w-full overflow-hidden">
+							<Sidebar />
+							<main className="flex-1 min-w-0 min-h-0 overflow-hidden flex bg-white dark:bg-zinc-950 transition-colors">
+								<div className="w-full md:w-[35vw] md:min-w-[35vw] md:max-w-[35vw] md:border-r border-gray-200 dark:border-zinc-800 h-full flex flex-col">
+									{children}
+								</div>
+								<div id="desktop-popup-panel" className="hidden md:flex flex-1 h-full bg-white dark:bg-zinc-950 border-l border-gray-200 dark:border-zinc-800 transition-colors" />
+							</main>
+						</div>
+					</WebSocketProvider>
+				</LanguageProvider>
 
 				<Suspense fallback={<div className="fixed inset-0 z-[9999] bg-white dark:bg-zinc-950 transition-colors" />}>
 					<PwaPopup />
