@@ -48,6 +48,10 @@ export default function Sidebar() {
 		return null;
 	}
 
+	const handleAiClick = () => {
+		window.dispatchEvent(new Event("open-ai-chat"));
+	};
+
 	return (
 		<>
 			<aside className="hidden md:flex flex-col w-16 h-full border-r border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 z-20 shrink-0 items-center py-4 transition-colors">
@@ -65,9 +69,9 @@ export default function Sidebar() {
 						<Phone size={24} weight={pathname.startsWith("/call") ? "fill" : "regular"} />
 					</Link>
 
-					<Link href="/chats/ai" className="flex items-center justify-center w-12 h-12 rounded-full mt-2 transition-all duration-200 bg-gradient-to-b from-blue-300 to-blue-500 dark:from-blue-500 dark:to-blue-700 text-white border border-blue-400/50 dark:border-blue-600/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.6),0_4px_6px_rgba(0,0,0,0.2)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),0_4px_6px_rgba(0,0,0,0.6)] active:shadow-inner active:translate-y-0.5 hover:brightness-110">
+					<button onClick={handleAiClick} className="flex items-center justify-center w-12 h-12 rounded-full mt-2 transition-all duration-200 bg-gradient-to-b from-blue-300 to-blue-500 dark:from-blue-500 dark:to-blue-700 text-white border border-blue-400/50 dark:border-blue-600/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.6),0_4px_6px_rgba(0,0,0,0.2)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),0_4px_6px_rgba(0,0,0,0.6)] active:shadow-inner active:translate-y-0.5 hover:brightness-110">
 						<Brain size={24} weight="bold" />
-					</Link>
+					</button>
 				</nav>
 
 				<div className="flex flex-col gap-4 w-full items-center">
