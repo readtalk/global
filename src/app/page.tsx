@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ChatCircleDots, Plus, UsersThree, DotsThreeVertical, Sun, Moon, Gear, Sparkle, Bell } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircleDots, Plus, UsersThree, DotsThreeVertical, Sun, Moon, Gear, Brain, Bell } from "@phosphor-icons/react/dist/ssr";
 import PanelOpen from "@/components/PanelOpen";
 import { useWebSocket } from "./WebSocketProvider";
 
@@ -292,9 +292,9 @@ function ChatsContent() {
 
 			<Link
 				href="/chats/ai"
-				className="md:hidden fixed bottom-36 right-4 bg-gray-200 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 p-3.5 rounded-full shadow-lg transition hover:bg-gray-300 dark:hover:bg-zinc-700 z-40 flex items-center justify-center"
+				className="md:hidden fixed bottom-36 right-4 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-zinc-700 p-3.5 rounded-full shadow-md transition hover:bg-gray-50 dark:hover:bg-zinc-700 z-40 flex items-center justify-center"
 			>
-				<Sparkle size={24} weight="bold" />
+				<Brain size={24} weight="bold" />
 			</Link>
 
 			<button
