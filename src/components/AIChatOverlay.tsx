@@ -216,7 +216,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 				<div className="flex-1 overflow-y-auto p-4 space-y-4">
 					{messages.length === 0 ? (
 						<div className="flex justify-center items-center h-full">
-							<p className="text-gray-500 dark:text-zinc-400 text-sm">Start with Anna Laura AI</p>
+							<p className="text-gray-500 dark:text-zinc-400 text-sm">Chat with Anna Laura AI</p>
 						</div>
 					) : (
 						messages.map((msg, index) => {
