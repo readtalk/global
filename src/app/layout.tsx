@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import PwaPopup from "./pwa-popup";
@@ -28,10 +28,6 @@ export const metadata: Metadata = {
 	},
 };
 
-export const viewport: Viewport = {
-	themeColor: "#ffffff",
-};
-
 export default function RootLayout({
 	children,
 }: Readonly<{
@@ -51,9 +47,11 @@ export default function RootLayout({
 								
 								if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
 									document.documentElement.classList.add('dark');
+									document.documentElement.style.backgroundColor = '#09090b';
 									if (meta) meta.setAttribute('content', '#09090b');
 								} else {
 									document.documentElement.classList.remove('dark');
+									document.documentElement.style.backgroundColor = '#ffffff';
 									if (meta) meta.setAttribute('content', '#ffffff');
 								}
 
@@ -96,7 +94,7 @@ export default function RootLayout({
 					</div>
 				</WebSocketProvider>
 
-				<Suspense fallback={null}>
+				<Suspense fallback={<div className="fixed inset-0 z-[9999] bg-white dark:bg-zinc-950 transition-colors" />}>
 					<PwaPopup />
 				</Suspense>
 				<script
