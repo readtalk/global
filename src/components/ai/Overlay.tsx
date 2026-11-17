@@ -1,31 +1,21 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 
 export default function Overlayout({ children }: { children: React.ReactNode }) {
 	const pathname = usePathname();
-	const [isAnimating, setIsAnimating] = useState(false);
+	const isActive = pathname.startsWith("/chats/ai");
 
-	useEffect(() => {
-		if (pathname.startsWith("/chats/ai")) {
-			setIsAnimating(true);
-		} else {
-			setIsAnimating(false);
-		}
-	}, [pathname]);
-
-	if (!pathname.startsWith("/chats/ai")) {
-		return null;
-	}
+	if (!isActive) return null;
 
 	return (
-		<div
-			className={`fixed inset-0 z-40 bg-white dark:bg-zinc-950 transition-transform duration-300 ease-out md:relative md:inset-auto md:w-full md:h-full md:z-auto ${
-				isAnimating ? "translate-x-0" : "translate-x-full"
-			}`}
-		>
-			{children}
-		</div>
+		<>
+			<div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden" />
+			<div className="fixed top-0 right-0 h-full w-full md:relative md:w-full md:h-full bg-white dark:bg-zinc-950 z-50 transform transition-transform duration-300 ease-in-out flex flex-col transition-colors md:shadow-none shadow-2xl border-l border-gray-200 dark:border-zinc-800">
+				<div className="flex-1 overflow-y-auto min-h-0">
+					{children}
+				</div>
+			</div>
+		</>
 	);
 }
