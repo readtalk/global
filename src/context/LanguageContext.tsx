@@ -42,7 +42,7 @@ export const LANGUAGES: LanguageOption[] = [
 	{ code: "zh", label: "Mandarin", nativeName: "中文" },
 	{ code: "hi", label: "Hindi", nativeName: "हिन्दी" },
 	{ code: "ja", label: "Japanese", nativeName: "日本語" },
-	{ code: "kr", label: "Korean", nativeName: "한국어" },
+	{ code: "ko", label: "Korean", nativeName: "한국어" },
 ];
 
 const dictionaries: Record<LanguageCode, Record<string, string>> = {
