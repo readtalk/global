@@ -72,7 +72,7 @@ export default function RootLayout({
 					`}
 				</Script>
 			</head>
-			<body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-zinc-50 transition-colors`}>
+			<body className={`${geistSans.variable} ${geistMono.variable} antialiased text-gray-900 dark:text-zinc-50`}>
 				<noscript>
 					<iframe
 						src="https://www.googletagmanager.com/ns.html?id=GTM-NZBG294V"
