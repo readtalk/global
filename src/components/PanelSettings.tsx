@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, Camera, UploadSimple, Check } from "@phosphor-icons/react/dist/ssr";
 import PanelUpload from "./PanelUpload";
-import { useLanguage, LANGUAGES, LanguageCode } from "@/context/LanguageContext";
+import { useLanguage, LANGUAGES } from "@/context/LanguageContext";
 
 type PanelSettingsProps = {
 	type: "account" | "privacy" | "appearance" | "language" | "notifications" | null;
@@ -26,7 +26,7 @@ type UserProfile = {
 };
 
 export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
-	const { language, setLanguage } = useLanguage();
+	const { language, setLanguage, t } = useLanguage();
 
 	const [profile, setProfile] = useState<UserProfile | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
@@ -181,12 +181,12 @@ export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
 
 	const getTitle = () => {
 		switch (type) {
-			case "account": return "Account";
-			case "privacy": return "Privacy";
-			case "appearance": return "Appearance";
-			case "language": return "Language";
-			case "notifications": return "Notifications";
-			default: return "Settings";
+			case "account": return t("account");
+			case "privacy": return t("privacy");
+			case "appearance": return t("appearance");
+			case "language": return t("language");
+			case "notifications": return t("notifications");
+			default: return t("settings");
 		}
 	};
 
@@ -255,12 +255,12 @@ export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
 
 									<div className="flex flex-col gap-4 mt-2">
 										<div>
-											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Email</label>
+											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300">{t("email")}</label>
 											<input type="email" value={profile?.email || ""} disabled className="w-full mt-1 bg-gray-100 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-500 dark:text-zinc-500 cursor-not-allowed transition-all" />
 										</div>
 										<div>
 											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300 flex justify-between">
-												<span>Username</span>
+												<span>{t("username")}</span>
 												{!canEditUsername && (
 													<span className="text-xs text-red-500 font-normal">
 														Can be changed in {Math.ceil(daysRemaining)} days
@@ -276,29 +276,29 @@ export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
 											/>
 										</div>
 										<div>
-											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Your Name</label>
+											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300">{t("yourName")}</label>
 											<input type="text" value={formYourname} onChange={e => setFormYourname(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all" />
 										</div>
 										<div>
-											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Date of Birth</label>
+											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300">{t("dateOfBirth")}</label>
 											<input type="date" value={formDob} onChange={e => setFormDob(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all" />
 										</div>
 										<div>
-											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Headline</label>
+											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300">{t("headline")}</label>
 											<input type="text" value={formHeadline} onChange={e => setFormHeadline(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all" />
 										</div>
 										<div>
-											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300">About</label>
+											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300">{t("about")}</label>
 											<textarea value={formAbout} onChange={e => setFormAbout(e.target.value)} rows={3} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all" />
 										</div>
 										<div>
-											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Location</label>
+											<label className="text-sm font-medium text-gray-700 dark:text-zinc-300">{t("location")}</label>
 											<input type="text" value={formLocation} onChange={e => setFormLocation(e.target.value)} className="w-full mt-1 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-zinc-600 transition-all" />
 										</div>
 									</div>
 
 									<div className="flex flex-col gap-4 mt-2">
-										<h3 className="text-sm font-semibold text-gray-900 dark:text-zinc-100">Social Links</h3>
+										<h3 className="text-sm font-semibold text-gray-900 dark:text-zinc-100">{t("socialLinks")}</h3>
 										<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 											<div>
 												<label className="text-xs font-medium text-gray-700 dark:text-zinc-300">Facebook Username</label>
@@ -328,13 +328,13 @@ export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
 									</div>
 
 									<button onClick={handleSave} disabled={isSaving || uploadingFile || !canEditUsername} className="bg-black dark:bg-white text-white dark:text-black px-5 py-2 rounded-full font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors w-full mt-4 disabled:opacity-50">
-										{isSaving ? "Saving..." : "Save Changes"}
+										{isSaving ? t("saving") : t("saveChanges")}
 									</button>
 								</>
 							)}
 							
-							{type === "privacy" && <p className="text-center text-gray-500 dark:text-zinc-400 mt-10">Privacy settings coming soon.</p>}
-							{type === "appearance" && <p className="text-center text-gray-500 dark:text-zinc-400 mt-10">Appearance settings coming soon.</p>}
+							{type === "privacy" && <p className="text-center text-gray-500 dark:text-zinc-400 mt-10">{t("comingSoon")}</p>}
+							{type === "appearance" && <p className="text-center text-gray-500 dark:text-zinc-400 mt-10">{t("comingSoon")}</p>}
 							
 							{type === "language" && (
 								<div className="flex flex-col gap-2 mt-2">
@@ -360,7 +360,7 @@ export default function PanelSettings({ type, onClose }: PanelSettingsProps) {
 								</div>
 							)}
 
-							{type === "notifications" && <p className="text-center text-gray-500 dark:text-zinc-400 mt-10">Notification settings coming soon.</p>}
+							{type === "notifications" && <p className="text-center text-gray-500 dark:text-zinc-400 mt-10">{t("comingSoon")}</p>}
 						</div>
 					)}
 				</div>
