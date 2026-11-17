@@ -66,7 +66,7 @@ export default function NotificationsPage() {
 				</div>
 				<div className="divide-y divide-gray-100 dark:divide-zinc-800 transition-colors">
 					{notifications.length === 0 ? (
-						<p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-10 transition-colors">Notification notyet</p>
+						<p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-10 transition-colors">Not yet</p>
 					) : (
 						notifications.map((notif) => (
 							<div key={notif.id} className={`p-4 flex gap-3 transition-colors ${notif.is_read ? 'bg-white dark:bg-zinc-950' : 'bg-blue-50/30 dark:bg-blue-900/10'}`}>
