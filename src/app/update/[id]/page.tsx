@@ -320,7 +320,7 @@ function UpdateDetailContent() {
 		<div className="w-full flex-1 min-h-0 flex flex-col overflow-hidden bg-white dark:bg-zinc-950 transition-colors">
 			<div className="flex-none bg-white dark:bg-zinc-950 border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-4 z-10 transition-colors">
 				<Link href="/update" className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 transition-colors"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5"></path><polyline points="12 19 5 12 12 5"></polyline></svg></Link>
-				<h1 className="text-lg font-bold text-gray-900 dark:text-zinc-50 transition-colors">Post's Activity</h1>
+				<h1 className="text-lg font-bold text-gray-900 dark:text-zinc-50 transition-colors">Post's Comment</h1>
 			</div>
 			<div className="flex-1 overflow-y-auto p-4 space-y-4">
 				{post && (
