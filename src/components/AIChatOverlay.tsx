@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, PaperPlaneRight } from "@phosphor-icons/react/dist/ssr";
 
 type ChatMessage = {
@@ -81,7 +81,16 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
 	const [content, setContent] = useState("");
 	const [isSending, setIsSending] = useState(false);
+	const [isAnimating, setIsAnimating] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (isOpen) {
+			requestAnimationFrame(() => setIsAnimating(true));
+		} else {
+			setIsAnimating(false);
+		}
+	}, [isOpen]);
 
 	const scrollToBottom = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -193,11 +202,11 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 				className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity md:hidden"
 				onClick={onClose}
 			/>
-			<div className="fixed top-0 right-0 h-full w-full md:w-[60vw] bg-white dark:bg-zinc-950 z-50 transform transition-transform duration-300 ease-in-out flex flex-col transition-colors md:shadow-none shadow-2xl border-l border-gray-200 dark:border-zinc-800">
+			<div className={`fixed top-0 right-0 h-full w-full md:w-[60vw] bg-white dark:bg-zinc-950 z-50 flex flex-col border-l border-gray-200 dark:border-zinc-800 md:shadow-none shadow-2xl transition-transform duration-300 ease-in-out md:transition-none md:transform-none ${isAnimating ? "translate-x-0" : "translate-x-full"}`}>
 				<div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-zinc-800 transition-colors">
 					<button
 						onClick={onClose}
-						className="p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-zinc-900 rounded-full transition-colors"
+						className="md:hidden p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-zinc-900 rounded-full transition-colors"
 					>
 						<ArrowLeft size={20} weight="bold" className="text-gray-600 dark:text-zinc-400" />
 					</button>
