@@ -40,6 +40,12 @@ function ChatsContent() {
 	const [theme, setTheme] = useState<"light" | "dark">("light");
 
 	useEffect(() => {
+		const handleOpenAi = () => setIsAiOpen(true);
+		window.addEventListener("open-ai-chat", handleOpenAi);
+		return () => window.removeEventListener("open-ai-chat", handleOpenAi);
+	}, []);
+
+	useEffect(() => {
 		const savedTheme = localStorage.getItem("theme");
 		if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
 			setTheme("dark");
