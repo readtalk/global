@@ -6,7 +6,6 @@ import { Suspense } from "react";
 import Script from "next/script";
 import Sidebar from "@/components/Sidebar";
 import WebSocketProvider from "./WebSocketProvider";
-import SaiHack from "@/components/LayoutHack";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -74,7 +73,6 @@ export default function RootLayout({
 				</Script>
 			</head>
 			<body className={`${geistSans.variable} ${geistMono.variable} antialiased text-gray-900 dark:text-zinc-50`}>
-				<SaiHack />
 				<noscript>
 					<iframe
 						src="https://www.googletagmanager.com/ns.html?id=GTM-NZBG294V"
