@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ChatCircleDots, Plus, UsersThree, DotsThreeVertical, Sun, Moon, Gear, Sparkle } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircleDots, Plus, UsersThree, DotsThreeVertical, Sun, Moon, Gear, Sparkle, Bell } from "@phosphor-icons/react/dist/ssr";
 import PanelOpen from "@/components/PanelOpen";
 import { useWebSocket } from "./WebSocketProvider";
 
@@ -182,6 +182,12 @@ function ChatsContent() {
 						>
 							<Plus size={20} weight="bold" />
 						</button>
+						<Link
+							href="/notifications"
+							className="md:hidden text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 p-1 transition-colors"
+						>
+							<Bell size={24} weight="bold" />
+						</Link>
 						<div className="relative">
 							<button
 								onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -347,5 +353,5 @@ function ChatsContent() {
 }
 
 export default function ChatsPage() {
-	return <Suspense fallback={<div className="p-4 text-center">Loading...</div>}><ChatsContent /></Suspense>;
+	return <Suspense fallback={<div className="fixed inset-0 z-[9999] bg-white dark:bg-zinc-950 transition-colors" />}><ChatsContent /></Suspense>;
 }
