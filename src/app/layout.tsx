@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -27,6 +31,23 @@ export const metadata: Metadata = {
 		statusBarStyle: "default",
 	},
 };
+
+function SAIHack() {
+	const pathname = usePathname();
+
+	useEffect(() => {
+		const root = document.documentElement;
+		const isDark = root.classList.contains("dark");
+		const color = isDark ? "#09090b" : "#ffffff";
+
+		root.style.backgroundColor = color;
+		if (document.body) {
+			document.body.style.backgroundColor = color;
+		}
+	}, [pathname]);
+
+	return null;
+}
 
 export default function RootLayout({
 	children,
@@ -73,6 +94,7 @@ export default function RootLayout({
 				</Script>
 			</head>
 			<body className={`${geistSans.variable} ${geistMono.variable} antialiased text-gray-900 dark:text-zinc-50`}>
+				<SAIHack />
 				<noscript>
 					<iframe
 						src="https://www.googletagmanager.com/ns.html?id=GTM-NZBG294V"
