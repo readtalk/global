@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChatCircleDots, At, Bell, Gear, UsersThree, Phone, User, Sparkle } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircleDots, At, Bell, Gear, UsersThree, Phone, User, Brain } from "@phosphor-icons/react/dist/ssr";
 
 export default function Sidebar() {
 	const pathname = usePathname();
@@ -65,8 +65,8 @@ export default function Sidebar() {
 						<Phone size={24} weight={pathname.startsWith("/call") ? "fill" : "regular"} />
 					</Link>
 
-					<Link href="/chats/ai" className={`flex items-center justify-center w-12 h-12 rounded-full shadow-sm mt-2 transition ${pathname.startsWith("/chats/ai") ? "bg-black dark:bg-white text-white dark:text-black" : "bg-gray-200 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 hover:bg-gray-300 dark:hover:bg-zinc-700"}`}>
-						<Sparkle size={24} weight="fill" />
+					<Link href="/chats/ai" className={`flex items-center justify-center w-12 h-12 rounded-full mt-2 transition border shadow-md ${pathname.startsWith("/chats/ai") ? "bg-black dark:bg-white text-white dark:text-black border-transparent" : "bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-700"}`}>
+						<Brain size={24} weight={pathname.startsWith("/chats/ai") ? "fill" : "regular"} />
 					</Link>
 				</nav>
 
