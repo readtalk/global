@@ -11,9 +11,11 @@ import {
 	SignOut 
 } from "@phosphor-icons/react/dist/ssr";
 import PanelSettings from "@/components/PanelSettings";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function SettingsPage() {
 	const router = useRouter();
+	const { t, language } = useLanguage();
 	const [user, setUser] = useState<{ username: string; yourname: string; avatar: string | null } | null>(null);
 	const [activePanel, setActivePanel] = useState<"account" | "privacy" | "appearance" | "language" | "notifications" | null>(null);
 
@@ -46,18 +48,18 @@ export default function SettingsPage() {
 	};
 
 	const menuItems = [
-		{ id: "account", label: "Account", desc: "Privacy, security, change email", icon: UserCircle },
-		{ id: "privacy", label: "Privacy", desc: "Block contacts, disappearing messages", icon: LockKey },
-		{ id: "appearance", label: "Appearance", desc: "Theme, chat wallpaper", icon: Moon },
-		{ id: "language", label: "Language", desc: "English", icon: Translate },
-		{ id: "notifications", label: "Notifications", desc: "Message, group & call tones", icon: Bell },
+		{ id: "account", label: t("account"), desc: t("accountDesc"), icon: UserCircle },
+		{ id: "privacy", label: t("privacy"), desc: t("privacyDesc"), icon: LockKey },
+		{ id: "appearance", label: t("appearance"), desc: t("appearanceDesc"), icon: Moon },
+		{ id: "language", label: t("language"), desc: language.toUpperCase(), icon: Translate },
+		{ id: "notifications", label: t("notifications"), desc: t("notificationsDesc"), icon: Bell },
 	] as const;
 
 	return (
 		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0 bg-gray-50 dark:bg-zinc-950 transition-colors">
 			<div className="max-w-2xl mx-auto bg-white dark:bg-zinc-950 min-h-full shadow-sm transition-colors">
 				<div className="sticky top-0 z-10 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 transition-colors">
-					<h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50 transition-colors">Settings</h1>
+					<h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50 transition-colors">{t("settings")}</h1>
 				</div>
 
 				{user && (
@@ -75,7 +77,7 @@ export default function SettingsPage() {
 				<div className="flex flex-col">
 					{menuItems.map((item) => (
 						<button 
-							key={item.label} 
+							key={item.id} 
 							onClick={() => setActivePanel(item.id)} 
 							className="flex items-center gap-4 p-4 border-b border-gray-100 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors text-left w-full"
 						>
@@ -94,7 +96,7 @@ export default function SettingsPage() {
 							<SignOut size={24} />
 						</div>
 						<div className="flex-1">
-							<p className="text-red-500 dark:text-red-400 font-medium transition-colors">Logout</p>
+							<p className="text-red-500 dark:text-red-400 font-medium transition-colors">{t("logout")}</p>
 						</div>
 					</button>
 				</div>
