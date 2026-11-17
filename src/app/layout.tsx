@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import Script from "next/script";
 import Sidebar from "@/components/Sidebar";
 import WebSocketProvider from "./WebSocketProvider";
+import DesktopPanel from "@/components/DesktopPanel";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -89,7 +90,10 @@ export default function RootLayout({
 							<div className="w-full md:w-[35vw] md:min-w-[35vw] md:max-w-[35vw] md:border-r border-gray-200 dark:border-zinc-800 h-full flex flex-col">
 								{children}
 							</div>
-							<div id="desktop-popup-panel" className="hidden md:flex flex-1 h-full bg-white dark:bg-zinc-950 border-l border-gray-200 dark:border-zinc-800 transition-colors" />
+							
+							<div id="desktop-popup-panel" className="hidden md:flex flex-1 h-full bg-white dark:bg-zinc-950 border-l border-gray-200 dark:border-zinc-800 transition-colors overflow-hidden">
+								<DesktopPanel />
+							</div>
 						</main>
 					</div>
 				</WebSocketProvider>
