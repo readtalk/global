@@ -7,6 +7,7 @@ import { ChatCircleDots, Plus, UsersThree, DotsThreeVertical, Sun, Moon, Gear, B
 import PanelOpen from "@/components/PanelOpen";
 import AIChatsOverlay from "@/components/AIChatOverlay";
 import { useWebSocket } from "./WebSocketProvider";
+import { useLanguage } from "@/src/context/LanguageContext";
 
 type Chat = {
 	id: string;
@@ -29,6 +30,7 @@ function ChatsContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const { onlineUsers } = useWebSocket();
+	const { t } = useLanguage();
 	const [chats, setChats] = useState<Chat[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -126,7 +128,7 @@ function ChatsContent() {
 
 	const handleStartChat = async (targetUser: MutualUser) => {
 		const token = localStorage.getItem("session");
-		if (!token) return alert("You must be logged in.");
+		if (!token) return alert(t("mustBeLoggedIn"));
 
 		try {
 			const res = await fetch("/api/chats", {
@@ -147,11 +149,11 @@ function ChatsContent() {
 				setIsPanelOpen(false);
 				router.push(`/chats/${data.chat_id}`);
 			} else {
-				alert(data.error || "Failed to start chat");
+				alert(data.error || t("failedToStartChat"));
 			}
 		} catch (error) {
 			console.error(error);
-			alert("Error starting chat");
+			alert(t("errorStartingChat"));
 		}
 	};
 
@@ -211,7 +213,7 @@ function ChatsContent() {
 										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
 									>
 										<Gear size={16} />
-										Settings
+										{t("settings")}
 									</Link>
 									<div className="h-px bg-gray-100 dark:bg-zinc-800 my-1 transition-colors" />
 									<button
@@ -219,14 +221,14 @@ function ChatsContent() {
 										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
 									>
 										<Sun size={16} />
-										Light
+										{t("light")}
 									</button>
 									<button
 										onClick={() => toggleTheme("dark")}
 										className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
 									>
 										<Moon size={16} />
-										Dark
+										{t("dark")}
 									</button>
 								</div>
 							)}
@@ -236,11 +238,11 @@ function ChatsContent() {
 
 				<div className="bg-white dark:bg-zinc-950 transition-colors">
 					{isLoading ? (
-						<div className="p-8 text-center text-gray-500 dark:text-zinc-400">Loading chats...</div>
+						<div className="p-8 text-center text-gray-500 dark:text-zinc-400">{t("loadingChats")}</div>
 					) : chats.length === 0 ? (
 						<div className="p-8 text-center text-gray-500 dark:text-zinc-400 flex flex-col items-center gap-2">
 							<ChatCircleDots size={48} className="text-gray-300 dark:text-zinc-700" />
-							<p>No chats yet.</p>
+							<p>{t("noChatsYet")}</p>
 						</div>
 					) : (
 						<>
@@ -248,7 +250,7 @@ function ChatsContent() {
 								<div>
 									<div className="px-4 py-2 bg-gray-50 dark:bg-zinc-900 flex items-center gap-2 transition-colors">
 										<div className={`w-2 h-2 rounded-full ${isAnyoneOnline ? "bg-green-500" : "bg-gray-400 dark:bg-zinc-600"}`} />
-										<span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">{onlineUsers.length} Online</span>
+										<span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">{onlineUsers.length} {t("online")}</span>
 									</div>
 									{privateChats.map((chat) => {
 										const display = getChatDisplay(chat);
@@ -263,7 +265,7 @@ function ChatsContent() {
 												</div>
 												<div className="flex-1 min-w-0">
 													<p className="text-gray-900 dark:text-zinc-100 font-semibold truncate">{display.name}</p>
-													<p className="text-gray-500 dark:text-zinc-400 text-sm truncate">{chat.description || "Private chat"}</p>
+													<p className="text-gray-500 dark:text-zinc-400 text-sm truncate">{chat.description || t("privateChat")}</p>
 												</div>
 											</Link>
 										);
@@ -274,7 +276,7 @@ function ChatsContent() {
 							{groupChats.length > 0 && (
 								<div>
 									<div className="px-4 py-2 bg-gray-50 dark:bg-zinc-900 text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider transition-colors">
-										Groups
+										{t("groupsLabel")}
 									</div>
 									{groupChats.map((chat) => (
 										<Link
@@ -287,7 +289,7 @@ function ChatsContent() {
 											</div>
 											<div className="flex-1 min-w-0">
 												<p className="text-gray-900 dark:text-zinc-100 font-semibold truncate">{chat.name}</p>
-												<p className="text-gray-500 dark:text-zinc-400 text-sm truncate">{chat.description || `${chat.member_count} members`}</p>
+												<p className="text-gray-500 dark:text-zinc-400 text-sm truncate">{chat.description || `${chat.member_count} ${t("members")}`}</p>
 											</div>
 										</Link>
 									))}
@@ -315,7 +317,7 @@ function ChatsContent() {
 			<PanelOpen
 				isOpen={isPanelOpen}
 				onClose={() => setIsPanelOpen(false)}
-				title="New Chat"
+				title={t("newChat")}
 			>
 				<div className="p-4 space-y-2 border-b border-gray-100 dark:border-zinc-800 transition-colors">
 					<button className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors">
@@ -323,20 +325,20 @@ function ChatsContent() {
 							<UsersThree size={20} weight="bold" />
 						</div>
 						<div className="flex-1 text-left">
-							<p className="text-gray-900 dark:text-zinc-100 font-semibold">New Group</p>
-							<p className="text-xs text-gray-500 dark:text-zinc-400">Create a new group chat</p>
+							<p className="text-gray-900 dark:text-zinc-100 font-semibold">{t("newGroup")}</p>
+							<p className="text-xs text-gray-500 dark:text-zinc-400">{t("createNewGroupChat")}</p>
 						</div>
 					</button>
 				</div>
 
 				<div className="p-2">
 					<div className="px-3 pt-2 pb-1 text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider transition-colors">
-						Followback on READTalk
+						{t("followbackOnReadtalk")}
 					</div>
 					{isFetchingMutuals ? (
-						<p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-4">Loading data...</p>
+						<p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-4">{t("loadingData")}</p>
 					) : mutuals.length === 0 ? (
-						<p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-4">No mutuals yet.</p>
+						<p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-4">{t("noMutualsYet")}</p>
 					) : (
 						mutuals.map((m) => (
 							<button
