@@ -302,14 +302,14 @@ function ChatsContent() {
 
 			<button
 				onClick={() => setIsAiOpen(true)}
-				className="md:hidden fixed bottom-36 right-5 p-3.5 rounded-full z-40 flex items-center justify-center transition-all duration-200 bg-gradient-to-b from-blue-300 to-blue-500 dark:from-blue-500 dark:to-blue-700 text-white border border-blue-400/50 dark:border-blue-600/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.6),0_4px_6px_rgba(0,0,0,0.2)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),0_4px_6px_rgba(0,0,0,0.6)] active:shadow-inner active:translate-y-0.5 hover:brightness-110"
+				className="md:hidden fixed bottom-40 right-6 p-3.5 rounded-full z-40 flex items-center justify-center transition-all duration-200 bg-gradient-to-b from-blue-300 to-blue-500 dark:from-blue-500 dark:to-blue-700 text-white border border-blue-400/50 dark:border-blue-600/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.6),0_4px_6px_rgba(0,0,0,0.2)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),0_4px_6px_rgba(0,0,0,0.6)] active:shadow-inner active:translate-y-0.5 hover:brightness-110"
 			>
 				<Brain size={24} weight="bold" />
 			</button>
 
 			<button
 				onClick={() => setIsPanelOpen(true)}
-				className="md:hidden fixed bottom-20 right-5 bg-black dark:bg-white text-white dark:text-black p-3.5 rounded-full shadow-lg transition hover:bg-gray-800 dark:hover:bg-gray-200 z-40 flex items-center justify-center"
+				className="md:hidden fixed bottom-24 right-6 bg-black dark:bg-white text-white dark:text-black p-3.5 rounded-full shadow-lg transition hover:bg-gray-800 dark:hover:bg-gray-200 z-40 flex items-center justify-center"
 			>
 				<Plus size={24} weight="bold" />
 			</button>
