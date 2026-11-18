@@ -109,17 +109,7 @@ function ChatsContent() {
 
 				const dataChats = (await resChats.json()) as { success: boolean; chats: Chat[] };
 				if (dataChats.success) {
-					// DUMMY DATA UNTUK TES SCROLL (Hapus array dummy ini kalau sudah selesai)
-					const dummyChats: Chat[] = Array.from({ length: 15 }).map((_, i) => ({
-						id: `dummy-${i}`,
-						name: i % 2 === 0 ? `Dummy User ${i}` : `Group Chat ${i}`,
-						description: i % 2 === 0 ? "Private chat" : `${i} members`,
-						is_private: i % 2 === 0 ? 1 : 0,
-						created_at: Date.now(),
-						member_count: i % 2 === 0 ? 2 : i,
-						member_ids: ["dummy1", "dummy2"]
-					}));
-					setChats([...dummyChats, ...dataChats.chats]);
+					setChats(dataChats.chats);
 				}
 
 				const dataMutuals = (await resMutuals.json()) as { success: boolean; users: MutualUser[] };
@@ -191,7 +181,7 @@ function ChatsContent() {
 	const isAnyoneOnline = onlineUsers.length > 0;
 
 	return (
-		<div className="flex-1 overflow-y-auto min-h-0 pb-24 md:pb-0 bg-white dark:bg-zinc-950 transition-colors">
+		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0 bg-white dark:bg-zinc-950 transition-colors">
 			<div className="max-w-2xl mx-auto bg-white dark:bg-zinc-950 min-h-full shadow-sm">
 				<div className="sticky top-0 z-10 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
 					<h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50">READTalk</h1>
@@ -312,14 +302,14 @@ function ChatsContent() {
 
 			<button
 				onClick={() => setIsAiOpen(true)}
-				className="md:hidden fixed bottom-36 right-4 p-3.5 rounded-full z-40 flex items-center justify-center transition-all duration-200 bg-gradient-to-b from-blue-300 to-blue-500 dark:from-blue-500 dark:to-blue-700 text-white border border-blue-400/50 dark:border-blue-600/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.6),0_4px_6px_rgba(0,0,0,0.2)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),0_4px_6px_rgba(0,0,0,0.6)] active:shadow-inner active:translate-y-0.5 hover:brightness-110"
+				className="md:hidden fixed bottom-36 right-5 p-3.5 rounded-full z-40 flex items-center justify-center transition-all duration-200 bg-gradient-to-b from-blue-300 to-blue-500 dark:from-blue-500 dark:to-blue-700 text-white border border-blue-400/50 dark:border-blue-600/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.6),0_4px_6px_rgba(0,0,0,0.2)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),0_4px_6px_rgba(0,0,0,0.6)] active:shadow-inner active:translate-y-0.5 hover:brightness-110"
 			>
 				<Brain size={24} weight="bold" />
 			</button>
 
 			<button
 				onClick={() => setIsPanelOpen(true)}
-				className="md:hidden fixed bottom-20 right-4 bg-black dark:bg-white text-white dark:text-black p-3.5 rounded-full shadow-lg transition hover:bg-gray-800 dark:hover:bg-gray-200 z-40 flex items-center justify-center"
+				className="md:hidden fixed bottom-20 right-5 bg-black dark:bg-white text-white dark:text-black p-3.5 rounded-full shadow-lg transition hover:bg-gray-800 dark:hover:bg-gray-200 z-40 flex items-center justify-center"
 			>
 				<Plus size={24} weight="bold" />
 			</button>
