@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import PwaPopup from "./pwa-popup";
@@ -25,13 +25,8 @@ export const metadata: Metadata = {
 	appleWebApp: {
 		capable: true,
 		title: "READTalk",
-		statusBarStyle: "black-translucent",
+		statusBarStyle: "default",
 	},
-};
-
-export const viewport: Viewport = {
-	viewportFit: "cover",
-	themeColor: "#09090b",
 };
 
 export default function RootLayout({
@@ -42,7 +37,7 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<head>
-				<meta name="theme-color" content="#09090b" id="theme-color-meta" />
+				<meta name="theme-color" content="#ffffff" id="theme-color-meta" />
 				<Script id="theme-init" strategy="beforeInteractive">
 					{`
 						(function() {
@@ -54,12 +49,10 @@ export default function RootLayout({
 								if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
 									document.documentElement.classList.add('dark');
 									document.documentElement.style.backgroundColor = '#09090b';
-									document.body.style.backgroundColor = '#09090b';
 									if (meta) meta.setAttribute('content', '#09090b');
 								} else {
 									document.documentElement.classList.remove('dark');
 									document.documentElement.style.backgroundColor = '#ffffff';
-									document.body.style.backgroundColor = '#ffffff';
 									if (meta) meta.setAttribute('content', '#ffffff');
 								}
 
@@ -80,7 +73,7 @@ export default function RootLayout({
 					`}
 				</Script>
 			</head>
-			<body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-zinc-950 text-gray-900 dark:text-zinc-50`}>
+			<body className={`${geistSans.variable} ${geistMono.variable} antialiased text-gray-900 dark:text-zinc-50`}>
 				<noscript>
 					<iframe
 						src="https://www.googletagmanager.com/ns.html?id=GTM-NZBG294V"
@@ -92,10 +85,10 @@ export default function RootLayout({
 
 				<LanguageProvider>
 					<WebSocketProvider>
-						<div className="flex h-[100dvh] w-full overflow-hidden bg-white dark:bg-zinc-950">
+						<div className="flex h-[100dvh] w-full overflow-hidden">
 							<Sidebar />
 							<main className="flex-1 min-w-0 min-h-0 overflow-hidden flex bg-white dark:bg-zinc-950 transition-colors">
-								<div className="w-full md:w-[35vw] md:min-w-[35vw] md:max-w-[35vw] md:border-r border-gray-200 dark:border-zinc-800 h-full flex flex-col bg-white dark:bg-zinc-950">
+								<div className="w-full md:w-[35vw] md:min-w-[35vw] md:max-w-[35vw] md:border-r border-gray-200 dark:border-zinc-800 h-full flex flex-col">
 									{children}
 								</div>
 								<div id="desktop-popup-panel" className="hidden md:flex flex-1 h-full bg-white dark:bg-zinc-950 border-l border-gray-200 dark:border-zinc-800 transition-colors" />
