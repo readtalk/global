@@ -59,7 +59,7 @@ function NotificationsContent() {
 	}, []);
 
 	return (
-		<div className="flex-1 overflow-y-auto min-h-0 pb-18 md:pb-0 bg-white dark:bg-zinc-950 transition-colors">
+		<div className="flex-1 overflow-y-auto min-h-0 pb-24 md:pb-0 bg-white dark:bg-zinc-950 transition-colors">
 			<div className="max-w-2xl mx-auto bg-white dark:bg-zinc-950 min-h-full shadow-sm transition-colors">
 				<div className="sticky top-0 z-10 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 transition-colors">
 					<h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50 transition-colors">{t("notifications")}</h1>
