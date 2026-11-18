@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { ArrowLeft, DotsThreeVertical, Sun, Moon, Gear } from "@phosphor-icons/react/dist/ssr";
 import { timeAgo } from "@/lib/timer";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -10,6 +11,26 @@ function NotificationsContent() {
   const { t } = useLanguage();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      setTheme("dark"); document.documentElement.classList.add("dark");
+    } else {
+      setTheme("light"); document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
+  const toggleTheme = (newTheme: "light" | "dark") => {
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+    if (newTheme === "dark") { document.documentElement.classList.add("dark"); } else { document.documentElement.classList.remove("dark"); }
+    const meta = document.getElementById('theme-color-meta');
+    if (meta) { meta.setAttribute('content', newTheme === 'dark' ? '#09090b' : '#ffffff'); }
+    setIsDropdownOpen(false);
+  };
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -45,8 +66,32 @@ function NotificationsContent() {
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-950 transition-colors">
       {/* HEADER - SAMA PERSIS KAYAK CHATLIST */}
-      <div className="flex-none bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50 transition-colors">{t("notifications")}</h1>
+      <div className="flex-none h-14 min-h-14 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 flex items-center justify-between transition-colors">
+        <div className="flex items-center gap-1">
+          <Link href="/" className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 p-1 -ml-1 transition-colors">
+            <ArrowLeft size={24} weight="bold" />
+          </Link>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50 transition-colors">{t("notifications")}</h1>
+        </div>
+        <div className="relative">
+          <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 p-1 transition-colors">
+            <DotsThreeVertical size={24} weight="bold" />
+          </button>
+          {isDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-800 z-50 overflow-hidden flex flex-col py-1 transition-colors">
+              <Link href="/settings" onClick={() => setIsDropdownOpen(false)} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors">
+                <Gear size={16} /> {t("settings")}
+              </Link>
+              <div className="h-px bg-gray-100 dark:bg-zinc-800 my-1 transition-colors" />
+              <button onClick={() => toggleTheme("light")} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors">
+                <Sun size={16} /> {t("light")}
+              </button>
+              <button onClick={() => toggleTheme("dark")} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors">
+                <Moon size={16} /> {t("dark")}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* CONTENT SCROLL - SAMA PERSIS KAYAK CHATLIST */}
