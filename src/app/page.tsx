@@ -7,7 +7,7 @@ import { ChatCircleDots, Plus, UsersThree, DotsThreeVertical, Sun, Moon, Gear, B
 import PanelOpen from "@/components/PanelOpen";
 import AIChatsOverlay from "@/components/AIChatOverlay";
 import { useWebSocket } from "./WebSocketProvider";
-import { useLanguage } from "@/src/context/LanguageContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 type Chat = {
 	id: string;
