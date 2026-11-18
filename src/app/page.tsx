@@ -109,7 +109,17 @@ function ChatsContent() {
 
 				const dataChats = (await resChats.json()) as { success: boolean; chats: Chat[] };
 				if (dataChats.success) {
-					setChats(dataChats.chats);
+					// DUMMY DATA UNTUK TES SCROLL (Hapus array dummy ini kalau sudah selesai)
+					const dummyChats: Chat[] = Array.from({ length: 15 }).map((_, i) => ({
+						id: `dummy-${i}`,
+						name: i % 2 === 0 ? `Dummy User ${i}` : `Group Chat ${i}`,
+						description: i % 2 === 0 ? "Private chat" : `${i} members`,
+						is_private: i % 2 === 0 ? 1 : 0,
+						created_at: Date.now(),
+						member_count: i % 2 === 0 ? 2 : i,
+						member_ids: ["dummy1", "dummy2"]
+					}));
+					setChats([...dummyChats, ...dataChats.chats]);
 				}
 
 				const dataMutuals = (await resMutuals.json()) as { success: boolean; users: MutualUser[] };
@@ -181,7 +191,7 @@ function ChatsContent() {
 	const isAnyoneOnline = onlineUsers.length > 0;
 
 	return (
-		<div className="flex-1 overflow-y-auto min-h-0 pb-16 md:pb-0 bg-white dark:bg-zinc-950 transition-colors">
+		<div className="flex-1 overflow-y-auto min-h-0 pb-24 md:pb-0 bg-white dark:bg-zinc-950 transition-colors">
 			<div className="max-w-2xl mx-auto bg-white dark:bg-zinc-950 min-h-full shadow-sm">
 				<div className="sticky top-0 z-10 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
 					<h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50">READTalk</h1>
