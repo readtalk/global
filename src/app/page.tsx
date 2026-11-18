@@ -125,7 +125,7 @@ function ChatsContent() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-950 transition-colors">
-      <div className="flex-none bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
+      <div className="flex-none h-14 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
         <h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50">READTalk</h1>
         <div className="flex items-center gap-2">
           <button onClick={() => setIsPanelOpen(true)} className="hidden md:block bg-black dark:bg-white text-white dark:text-black p-1.5 rounded-md transition hover:bg-gray-800 dark:hover:bg-gray-200" >
