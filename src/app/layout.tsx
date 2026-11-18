@@ -29,7 +29,6 @@ export const metadata: Metadata = {
 	},
 };
 
-// INI YANG BIKIN PWA NGISI SAMPE BAWAH LAYAR
 export const viewport: Viewport = {
 	viewportFit: "cover",
 	themeColor: "#09090b",
