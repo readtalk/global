@@ -3,46 +3,46 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 export type LanguageCode =
-	| "my"
-	| "id"
-	| "lo"
-	| "ms"
-	| "tl"
-	| "tet"
-	| "th"
-	| "vi"
-	| "km"
-	| "pt"
-	| "en-us"
-	| "en-gb"
-	| "zh"
-	| "hi"
-	| "ja"
-	| "ko";
+  | "en-us"
+  | "en-gb"
+  | "id"
+  | "ms"
+  | "my"
+  | "lo"
+  | "tl"
+  | "tet"
+  | "th"
+  | "vi"
+  | "km"
+  | "pt"
+  | "zh"
+  | "hi"
+  | "ja"
+  | "ko";
 
 export type LanguageOption = {
-	code: LanguageCode;
-	label: string;
-	nativeName: string;
+  code: LanguageCode;
+  label: string;
+  nativeName: string;
 };
 
 export const LANGUAGES: LanguageOption[] = [
-	{ code: "my", label: "Burmese", nativeName: "မြန်မာဘာသာ" },
-	{ code: "id", label: "Indonesian", nativeName: "Bahasa Indonesia" },
-	{ code: "lo", label: "Lao", nativeName: "ພາສາລາວ" },
-	{ code: "ms", label: "Malay", nativeName: "Bahasa Melayu" },
-	{ code: "tl", label: "Tagalog / Filipino", nativeName: "Tagalog" },
-	{ code: "tet", label: "Tetum", nativeName: "Lia-Tetun" },
-	{ code: "th", label: "Thai", nativeName: "ภาษาไทย" },
-	{ code: "vi", label: "Vietnamese", nativeName: "Tiếng Việt" },
-	{ code: "km", label: "Khmer", nativeName: "ខ្មែរ" },
-	{ code: "pt", label: "Portuguese", nativeName: "Português" },
-	{ code: "en-us", label: "English (US)", nativeName: "English (US)" },
-	{ code: "en-gb", label: "English (UK)", nativeName: "English (UK)" },
-	{ code: "zh", label: "Mandarin", nativeName: "中文" },
-	{ code: "hi", label: "Hindi", nativeName: "हिन्दी" },
-	{ code: "ja", label: "Japanese", nativeName: "日本語" },
-	{ code: "ko", label: "Korean", nativeName: "한국어" },
+  { code: "en-us", label: "English (US)", nativeName: "English (US)" },
+  { code: "en-gb", label: "English (UK)", nativeName: "English (UK)" },
+  { code: "id", label: "Indonesian", nativeName: "Bahasa Indonesia" },
+  { code: "ms", label: "Malay", nativeName: "Bahasa Melayu" },
+  { code: "my", label: "Burmese", nativeName: "မြန်မာဘာသာ" },
+  { code: "lo", label: "Lao", nativeName: "ພາສາລາວ" },
+  { code: "tl", label: "Tagalog / Filipino", nativeName: "Tagalog" },
+  { code: "tet", label: "Tetum", nativeName: "Lia-Tetun" },
+  { code: "th", label: "Thai", nativeName: "ภาษาไทย" },
+  { code: "vi", label: "Vietnamese", nativeName: "Tiếng Việt" },
+  { code: "km", label: "Khmer", nativeName: "ខ្មែរ" },
+  { code: "pt", label: "Portuguese", nativeName: "Português" },
+  { code: "zh", label: "Mandarin", nativeName: "中文" },
+  { code: "hi", label: "Hindi", nativeName: "हिन्दी" },
+  { code: "ja", label: "Japanese", nativeName: "日本語" },
+  { code: "ko", label: "Korean", nativeName: "한국어" },
 ];
 
 const dictionaries: Record<LanguageCode, Record<string, string>> = {
