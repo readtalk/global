@@ -4,15 +4,12 @@ import Link from "next/link";
 import { ArrowLeft, DotsThreeVertical, Gear } from "@phosphor-icons/react/dist/ssr";
 import { timeAgo } from "@/lib/timer";
 import { useLanguage } from "@/context/LanguageContext";
-
 type Notification = { id: string; user_id: string; actor_id: string; type: string; target_id: string | null; is_read: number; created_at: number; actor_username?: string; actor_yourname?: string; actor_avatar?: string | null; };
-
 function NotificationsContent() {
   const { t } = useLanguage();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
   useEffect(() => {
     const fetchNotifications = async () => {
       const token = localStorage.getItem("session");
@@ -21,20 +18,7 @@ function NotificationsContent() {
         const res = await fetch("/api/notifications", { headers: { "Authorization": `Bearer ${token}` }, cache: "no-store", });
         const data = (await res.json()) as { success: boolean; notifications: Notification[] };
         if (data.success && data.notifications) {
-          // DUMMY DATA UNTUK TES SCROLL (Hapus array dummy ini kalau sudah selesai)
-          const dummyNotifs: Notification[] = Array.from({ length: 30 }).map((_, i) => ({
-            id: `dummy-notif-${i}`,
-            user_id: "me",
-            actor_id: `dummy-user-${i}`,
-            type: ["follow", "like", "comment", "repost", "reply"][i % 5],
-            target_id: i % 5 === 0 ? null : `dummy-post-${i}`,
-            is_read: i % 3 === 0 ? 0 : 1,
-            created_at: Date.now() - i * 60000 * (i + 1),
-            actor_username: `dummy_user_${i}`,
-            actor_yourname: `Dummy User ${i}`,
-            actor_avatar: i % 3 === 0 ? `https://i.pravatar.cc/100?img=${(i % 70) + 1}` : null,
-          }));
-          setNotifications([...dummyNotifs, ...data.notifications]);
+          setNotifications(data.notifications);
           if (data.notifications.some((n) => !n.is_read)) {
             await fetch("/api/notifications/read", { method: "PUT", headers: { "Authorization": `Bearer ${token}` }, });
           }
@@ -43,10 +27,8 @@ function NotificationsContent() {
     };
     fetchNotifications();
   }, []);
-
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-950 transition-colors">
-      {/* HEADER - SAMA PATTERN KAYAK CHATLIST, TAPI JUDULNYA TETEP t() */}
       <div className="flex-none bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
         <div className="flex items-center gap-1">
           <Link href="/" className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 p-1 -ml-1 transition-colors">
@@ -69,7 +51,6 @@ function NotificationsContent() {
           </div>
         </div>
       </div>
-
       <div className="flex-1 overflow-y-auto min-h-0 pb-20 md:pb-0 bg-white dark:bg-zinc-950 transition-colors">
         <div className="max-w-2xl mx-auto bg-white dark:bg-zinc-950 transition-colors">
           <div className="divide-y divide-gray-100 dark:divide-zinc-800 transition-colors">
@@ -116,7 +97,6 @@ function NotificationsContent() {
     </div>
   );
 }
-
 export default function NotificationsPage() {
   return <Suspense fallback={<div className="fixed inset-0 z-[9999] bg-white dark:bg-zinc-950 transition-colors" />}><NotificationsContent /></Suspense>;
 }
