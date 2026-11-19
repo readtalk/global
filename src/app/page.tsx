@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -7,10 +8,8 @@ import PanelOpen from "@/components/PanelOpen";
 import AIChatsOverlay from "@/components/AIChatOverlay";
 import { useWebSocket } from "./WebSocketProvider";
 import { useLanguage } from "@/context/LanguageContext";
-
 type Chat = { id: string; name: string; description: string | null; is_private: number; created_at: number; member_count: number; member_ids: string[]; };
 type MutualUser = { id: string; username: string; yourname: string; avatar: string | null; };
-
 function ChatsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -25,13 +24,11 @@ function ChatsContent() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
-
   useEffect(() => {
     const handleOpenAi = () => setIsAiOpen(true);
     window.addEventListener("open-ai-chat", handleOpenAi);
     return () => window.removeEventListener("open-ai-chat", handleOpenAi);
   }, []);
-
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
@@ -40,7 +37,6 @@ function ChatsContent() {
       setTheme("light"); document.documentElement.classList.remove("dark");
     }
   }, []);
-
   const toggleTheme = (newTheme: "light" | "dark") => {
     setTheme(newTheme);
     localStorage.setItem("theme", newTheme);
@@ -49,7 +45,6 @@ function ChatsContent() {
     if (meta) { meta.setAttribute('content', newTheme === 'dark' ? '#09090b' : '#ffffff'); }
     setIsDropdownOpen(false);
   };
-
   useEffect(() => {
     const token = searchParams.get("token");
     if (token) {
@@ -58,7 +53,6 @@ function ChatsContent() {
       router.replace("/");
     }
   }, [searchParams, router]);
-
   useEffect(() => {
     const session = localStorage.getItem("session");
     if (session) {
@@ -69,7 +63,6 @@ function ChatsContent() {
       } catch {}
     }
   }, []);
-
   useEffect(() => {
     const fetchChats = async () => {
       const token = localStorage.getItem("session");
@@ -81,17 +74,7 @@ function ChatsContent() {
         ]);
         const dataChats = (await resChats.json()) as { success: boolean; chats: Chat[] };
         if (dataChats.success) {
-          // DUMMY DATA UNTUK TES SCROLL (Hapus array dummy ini kalau sudah selesai)
-          const dummyChats: Chat[] = Array.from({ length: 30 }).map((_, i) => ({
-            id: `dummy-${i}`,
-            name: i % 2 === 0 ? `Dummy User ${i}` : `Group Chat ${i}`,
-            description: i % 2 === 0 ? "Private chat dummy buat tes scroll" : `${i + 5} members`,
-            is_private: i % 2 === 0 ? 1 : 0,
-            created_at: Date.now(),
-            member_count: i % 2 === 0 ? 2 : i + 5,
-            member_ids: ["dummy1", "dummy2"]
-          }));
-          setChats([...dummyChats, ...dataChats.chats]);
+          setChats(dataChats.chats);
         }
         const dataMutuals = (await resMutuals.json()) as { success: boolean; users: MutualUser[] };
         if (dataMutuals.success) { setMutuals(dataMutuals.users); }
@@ -99,7 +82,6 @@ function ChatsContent() {
     };
     fetchChats();
   }, [searchParams]);
-
   const handleStartChat = async (targetUser: MutualUser) => {
     const token = localStorage.getItem("session");
     if (!token) return alert(t("mustBeLoggedIn"));
@@ -109,7 +91,6 @@ function ChatsContent() {
       if (data.success && data.chat_id) { setIsPanelOpen(false); router.push(`/chats/${data.chat_id}`); } else { alert(data.error || t("failedToStartChat")); }
     } catch (error) { console.error(error); alert(t("errorStartingChat")); }
   };
-
   const getChatDisplay = (chat: Chat) => {
     if (chat.is_private && currentUserId) {
       const otherId = chat.member_ids.find(id => id !== currentUserId);
@@ -118,11 +99,9 @@ function ChatsContent() {
     }
     return { name: chat.name, initial: chat.name.substring(0, 2).toUpperCase(), avatar: null };
   };
-
   const privateChats = chats.filter((c) => c.is_private);
   const groupChats = chats.filter((c) => !c.is_private);
   const isAnyoneOnline = onlineUsers.length > 0;
-
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-950 transition-colors">
       <div className="flex-none bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
