@@ -3,10 +3,12 @@
 import { useState, Suspense } from "react";
 import { DotsThreeVertical, Gear, Phone } from "@phosphor-icons/react/dist/ssr";
 import { useLanguage } from "@/context/LanguageContext";
+import PanelCall from "@/components/PanelCall";
 
 function CallContent() {
   const { t } = useLanguage();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-950 transition-colors relative">
@@ -33,10 +35,16 @@ function CallContent() {
         </div>
       </div>
 
-      
-      <button aria-label={t("navCall")} className="md:hidden fixed bottom-24 right-6 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-black dark:bg-white text-white dark:text-black shadow-lg active:scale-95 transition">
+      <button onClick={() => setIsPanelOpen(true)} aria-label={t("navCall")} className="md:hidden fixed bottom-24 right-6 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-black dark:bg-white text-white dark:text-black shadow-lg active:scale-95 transition">
         <Phone size={26} weight="fill" />
       </button>
+
+      <PanelCall
+        isOpen={isPanelOpen}
+        onClose={() => setIsPanelOpen(false)}
+        mutuals={[]}
+        isLoading={false}
+      />
     </div>
   );
 }
