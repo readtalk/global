@@ -32,17 +32,25 @@ function ChatsContent() {
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-      setTheme("dark"); document.documentElement.classList.add("dark");
+      setTheme("dark");
+      document.documentElement.classList.add("dark");
     } else {
-      setTheme("light"); document.documentElement.classList.remove("dark");
+      setTheme("light");
+      document.documentElement.classList.remove("dark");
     }
   }, []);
   const toggleTheme = (newTheme: "light" | "dark") => {
     setTheme(newTheme);
     localStorage.setItem("theme", newTheme);
-    if (newTheme === "dark") { document.documentElement.classList.add("dark"); } else { document.documentElement.classList.remove("dark"); }
+    if (newTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
     const meta = document.getElementById('theme-color-meta');
-    if (meta) { meta.setAttribute('content', newTheme === 'dark' ? '#09090b' : '#ffffff'); }
+    if (meta) {
+      meta.setAttribute('content', newTheme === 'dark' ? '#09090b' : '#ffffff');
+    }
     setIsDropdownOpen(false);
   };
   useEffect(() => {
@@ -66,7 +74,10 @@ function ChatsContent() {
   useEffect(() => {
     const fetchChats = async () => {
       const token = localStorage.getItem("session");
-      if (!token) { setIsLoading(false); return; }
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
       try {
         const [resChats, resMutuals] = await Promise.all([
           fetch("/api/chats", { headers: { "Authorization": `Bearer ${token}` } }),
@@ -77,8 +88,14 @@ function ChatsContent() {
           setChats(dataChats.chats);
         }
         const dataMutuals = (await resMutuals.json()) as { success: boolean; users: MutualUser[] };
-        if (dataMutuals.success) { setMutuals(dataMutuals.users); }
-      } catch (error) { console.error(error); } finally { setIsLoading(false); }
+        if (dataMutuals.success) {
+          setMutuals(dataMutuals.users);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     fetchChats();
   }, [searchParams]);
@@ -86,16 +103,37 @@ function ChatsContent() {
     const token = localStorage.getItem("session");
     if (!token) return alert(t("mustBeLoggedIn"));
     try {
-      const res = await fetch("/api/chats", { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, }, body: JSON.stringify({ name: targetUser.yourname, is_private: 1, member_ids: [targetUser.id], }), });
+      const res = await fetch("/api/chats", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: targetUser.yourname,
+          is_private: 1,
+          member_ids: [targetUser.id],
+        }),
+      });
       const data = await res.json() as { success: boolean; chat_id?: string, error?: string };
-      if (data.success && data.chat_id) { setIsPanelOpen(false); router.push(`/chats/${data.chat_id}`); } else { alert(data.error || t("failedToStartChat")); }
-    } catch (error) { console.error(error); alert(t("errorStartingChat")); }
+      if (data.success && data.chat_id) {
+        setIsPanelOpen(false);
+        router.push(`/chats/${data.chat_id}`);
+      } else {
+        alert(data.error || t("failedToStartChat"));
+      }
+    } catch (error) {
+      console.error(error);
+      alert(t("errorStartingChat"));
+    }
   };
   const getChatDisplay = (chat: Chat) => {
     if (chat.is_private && currentUserId) {
       const otherId = chat.member_ids.find(id => id !== currentUserId);
       const otherUser = mutuals.find(u => u.id === otherId);
-      if (otherUser) { return { name: otherUser.yourname, initial: otherUser.yourname?.[0]?.toUpperCase() || "?", avatar: otherUser.avatar }; }
+      if (otherUser) {
+        return { name: otherUser.yourname, initial: otherUser.yourname?.[0]?.toUpperCase() || "?", avatar: otherUser.avatar };
+      }
     }
     return { name: chat.name, initial: chat.name.substring(0, 2).toUpperCase(), avatar: null };
   };
@@ -107,26 +145,26 @@ function ChatsContent() {
       <div className="flex-none bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
         <h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50">READTalk</h1>
         <div className="flex items-center gap-2">
-          <button onClick={() => setIsPanelOpen(true)} className="hidden md:block bg-black dark:bg-white text-white dark:text-black p-1.5 rounded-md transition hover:bg-gray-800 dark:hover:bg-gray-200" >
+          <button onClick={() => setIsPanelOpen(true)} className="hidden md:block bg-black dark:bg-white text-white dark:text-black p-1.5 rounded-md transition hover:bg-gray-800 dark:hover:bg-gray-200">
             <Plus size={20} weight="bold" />
           </button>
-          <Link href="/notifications" className="md:hidden text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 p-1 transition-colors" >
+          <Link href="/notifications" className="md:hidden text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 p-1 transition-colors">
             <Bell size={24} weight="bold" />
           </Link>
           <div className="relative">
-            <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 p-1 transition-colors" >
+            <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 p-1 transition-colors">
               <DotsThreeVertical size={24} weight="bold" />
             </button>
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-800 z-50 overflow-hidden flex flex-col py-1 transition-colors">
-                <Link href="/settings" onClick={() => setIsDropdownOpen(false)} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors" >
+                <Link href="/settings" onClick={() => setIsDropdownOpen(false)} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors">
                   <Gear size={16} /> {t("settings")}
                 </Link>
                 <div className="h-px bg-gray-100 dark:bg-zinc-800 my-1 transition-colors" />
-                <button onClick={() => toggleTheme("light")} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors" >
+                <button onClick={() => toggleTheme("light")} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors">
                   <Sun size={16} /> {t("light")}
                 </button>
-                <button onClick={() => toggleTheme("dark")} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors" >
+                <button onClick={() => toggleTheme("dark")} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors">
                   <Moon size={16} /> {t("dark")}
                 </button>
               </div>
@@ -154,7 +192,7 @@ function ChatsContent() {
                   {privateChats.map((chat) => {
                     const display = getChatDisplay(chat);
                     return (
-                      <Link key={chat.id} href={`/chats/${chat.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors border-b border-gray-100 dark:border-zinc-800/50 last:border-0" >
+                      <Link key={chat.id} href={`/chats/${chat.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors border-b border-gray-100 dark:border-zinc-800/50 last:border-0">
                         <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold shrink-0 overflow-hidden transition-colors">
                           {display.avatar ? <img src={display.avatar} alt={display.name} className="w-full h-full object-cover" /> : display.initial}
                         </div>
@@ -173,7 +211,7 @@ function ChatsContent() {
                     {t("groupsLabel")}
                   </div>
                   {groupChats.map((chat) => (
-                    <Link key={chat.id} href={`/chats/${chat.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors border-b border-gray-100 dark:border-zinc-800/50 last:border-0" >
+                    <Link key={chat.id} href={`/chats/${chat.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors border-b border-gray-100 dark:border-zinc-800/50 last:border-0">
                       <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold shrink-0 overflow-hidden transition-colors">
                         {chat.name.substring(0, 2).toUpperCase()}
                       </div>
@@ -189,13 +227,13 @@ function ChatsContent() {
           )}
         </div>
       </div>
-      <button onClick={() => setIsAiOpen(true)} className="md:hidden fixed bottom-40 right-6 p-3.5 rounded-full z-40 flex items-center justify-center transition-all duration-200 bg-gradient-to-b from-blue-300 to-blue-500 dark:from-blue-500 dark:to-blue-700 text-white border border-blue-400/50 dark:border-blue-600/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.6),0_4px_6px_rgba(0,0,0,0.2)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),0_4px_6px_rgba(0,0,0,0.6)] active:shadow-inner active:translate-y-0.5 hover:brightness-110" >
-        <Brain size={24} weight="bold" />
+      <button onClick={() => setIsAiOpen(true)} className="md:hidden fixed bottom-42 right-7 z-40 flex items-center justify-center w-12 h-12 rounded-full transition-all duration-150 bg-gradient-to-b from-blue-300 to-blue-500 dark:from-blue-500 dark:to-blue-700 text-white border border-blue-400/50 dark:border-blue-600/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.6),0_4px_6px_rgba(0,0,0,0.2)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),0_4px_6px_rgba(0,0,0,0.6)] active:scale-90 active:shadow-inner active:translate-y-0.5 hover:brightness-110">
+        <Brain size={20} weight="bold" />
       </button>
-      <button onClick={() => setIsPanelOpen(true)} className="md:hidden fixed bottom-24 right-6 bg-black dark:bg-white text-white dark:text-black p-3.5 rounded-full shadow-lg transition hover:bg-gray-800 dark:hover:bg-gray-200 z-40 flex items-center justify-center" >
-        <Plus size={24} weight="bold" />
+      <button onClick={() => setIsPanelOpen(true)} className="md:hidden fixed bottom-24 right-6 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-black dark:bg-white text-white dark:text-black shadow-lg transition-all duration-150 active:scale-90 active:shadow-md active:translate-y-0.5">
+        <Plus size={26} weight="bold" />
       </button>
-      <PanelOpen isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} title={t("newChat")} >
+      <PanelOpen isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} title={t("newChat")}>
         <div className="p-4 space-y-2 border-b border-gray-100 dark:border-zinc-800 transition-colors">
           <button className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors">
             <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-700 dark:text-zinc-300 transition-colors">
@@ -217,7 +255,7 @@ function ChatsContent() {
             <p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-4">{t("noMutualsYet")}</p>
           ) : (
             mutuals.map((m) => (
-              <button key={m.id} onClick={() => handleStartChat(m)} className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-zinc-900 rounded-lg cursor-pointer transition-colors text-left" >
+              <button key={m.id} onClick={() => handleStartChat(m)} className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-zinc-900 rounded-lg cursor-pointer transition-colors text-left">
                 <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold shrink-0 overflow-hidden transition-colors">
                   {m.avatar ? <img src={m.avatar} alt={m.username} className="w-full h-full object-cover" /> : m.username?.[0]?.toUpperCase()}
                 </div>
