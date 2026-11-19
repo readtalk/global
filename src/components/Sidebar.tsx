@@ -63,7 +63,7 @@ export default function Sidebar() {
 					<Link href="/update" title={t("navUpdate")} aria-label={t("navUpdate")} className={`flex items-center justify-center w-10 h-10 rounded-lg transition ${pathname.startsWith("/update") ? "bg-gray-200 dark:bg-zinc-800 text-black dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-900"}`}>
 						<At size={24} weight={pathname.startsWith("/update") ? "bold" : "regular"} />
 					</Link>
-					<Link href="/communities" title={t("navCommunity")} aria-label={t("navCommunity")} className={`flex items-center justify-center w-10 h-10 rounded-lg transition ${pathname.startsWith("/communities") ? "bg-gray-200 dark:bg-zinc-800 text-black dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-900"}`}>
+					<Link href="/community" title={t("navCommunity")} aria-label={t("navCommunity")} className={`flex items-center justify-center w-10 h-10 rounded-lg transition ${pathname.startsWith("/communities") ? "bg-gray-200 dark:bg-zinc-800 text-black dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-900"}`}>
 						<UsersThree size={24} weight={pathname.startsWith("/communities") ? "fill" : "regular"} />
 					</Link>
 					<Link href="/call" title={t("navCall")} aria-label={t("navCall")} className={`flex items-center justify-center w-10 h-10 rounded-lg transition ${pathname.startsWith("/call") ? "bg-gray-200 dark:bg-zinc-800 text-black dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-900"}`}>
@@ -109,7 +109,7 @@ export default function Sidebar() {
 					<At size={24} weight={pathname.startsWith("/update") ? "bold" : "regular"} />
 					<span>{t("navUpdate")}</span>
 				</Link>
-				<Link href="/communities" className={`flex flex-col items-center p-2 text-xs transition-colors ${pathname.startsWith("/communities") ? "text-black dark:text-white" : "text-gray-500 dark:text-zinc-400"}`}>
+				<Link href="/community" className={`flex flex-col items-center p-2 text-xs transition-colors ${pathname.startsWith("/communities") ? "text-black dark:text-white" : "text-gray-500 dark:text-zinc-400"}`}>
 					<UsersThree size={24} weight={pathname.startsWith("/communities") ? "fill" : "regular"} />
 					<span>{t("navCommunity")}</span>
 				</Link>
