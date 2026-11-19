@@ -19,7 +19,7 @@ export default function CallOverlay({ isOpen, onClose, name, avatar, type }: Pro
             <CaretDown size={20} />
           </button>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+        <div className="relative flex-1 flex flex-col items-center justify-center gap-4">
           {type === "audio" ? (
             <>
               <img src={avatar || "/default-avatar.png"} className="w-32 h-32 rounded-full object-cover bg-zinc-800" alt="" />
@@ -27,7 +27,7 @@ export default function CallOverlay({ isOpen, onClose, name, avatar, type }: Pro
             </>
           ) : (
             <div className="w-full flex-1 mx-4 mb-2 bg-zinc-900 rounded-2xl flex items-center justify-center text-zinc-500 text-sm">
-              Video lawan di sini
+              Video coming
             </div>
           )}
           {type === "video" && (
