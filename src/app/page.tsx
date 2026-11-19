@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ChatCircleDots, Plus, UsersThree, DotsThreeVertical, Sun, Moon, Gear, Brain, Bell, ChatCircle } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircleDots, Plus, UsersThree, DotsThreeVertical, Sun, Moon, Gear, Brain, Bell } from "@phosphor-icons/react/dist/ssr";
 import PanelOpen from "@/components/PanelOpen";
 import AIChatsOverlay from "@/components/AIChatOverlay";
 import { useWebSocket } from "./WebSocketProvider";
@@ -255,7 +255,7 @@ function ChatsContent() {
             <p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-4">{t("noMutualsYet")}</p>
           ) : (
             mutuals.map((m) => (
-              <div key={m.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-zinc-900 rounded-lg transition-colors">
+              <button key={m.id} onClick={() => handleStartChat(m)} className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-zinc-900 rounded-lg cursor-pointer transition-colors text-left">
                 <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold shrink-0 overflow-hidden transition-colors">
                   {m.avatar ? <img src={m.avatar} alt={m.username} className="w-full h-full object-cover" /> : m.username?.[0]?.toUpperCase()}
                 </div>
@@ -263,10 +263,7 @@ function ChatsContent() {
                   <p className="text-gray-900 dark:text-zinc-100 font-semibold text-sm truncate">{m.yourname}</p>
                   <p className="text-gray-500 dark:text-zinc-400 text-xs truncate">@{m.username}</p>
                 </div>
-                <button onClick={() => handleStartChat(m)} aria-label={t("newChat")} className="p-2.5 bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 rounded-full hover:bg-gray-200 dark:hover:bg-zinc-700 active:scale-90 transition-colors">
-                  <ChatCircle size={20} weight="bold" />
-                </button>
-              </div>
+              </button>
             ))
           )}
         </div>
