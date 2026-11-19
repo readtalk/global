@@ -109,7 +109,7 @@ export default function Sidebar() {
 					<At size={24} weight={pathname.startsWith("/update") ? "bold" : "regular"} />
 					<span>{t("navUpdate")}</span>
 				</Link>
-				<Link href="/community" className={`flex flex-col items-center p-2 text-xs transition-colors ${pathname.startsWith("/communities") ? "text-black dark:text-white" : "text-gray-500 dark:text-zinc-400"}`}>
+				<Link href="/communities" className={`flex flex-col items-center p-2 text-xs transition-colors ${pathname.startsWith("/communities") ? "text-black dark:text-white" : "text-gray-500 dark:text-zinc-400"}`}>
 					<UsersThree size={24} weight={pathname.startsWith("/communities") ? "fill" : "regular"} />
 					<span>{t("navCommunity")}</span>
 				</Link>
