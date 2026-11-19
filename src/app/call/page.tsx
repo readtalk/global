@@ -8,14 +8,10 @@ function CallContent() {
   const { t } = useLanguage();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const handleFabCall = () => {
-    window.dispatchEvent(new Event("open-call-dialer"));
-  };
-
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-950 transition-colors relative">
       
-      <div className="flex-none h-14 min-h-14 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 flex items-center justify-between transition-colors">
+      <div className="flex-none bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
         <h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50 transition-colors">{t("navCall")}</h1>
         <div className="relative">
           <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 p-1 transition-colors">
@@ -31,23 +27,14 @@ function CallContent() {
         </div>
       </div>
 
-      
       <div className="flex-1 overflow-y-auto min-h-0 pb-20 md:pb-0 bg-white dark:bg-zinc-950 transition-colors">
         <div className="max-w-2xl mx-auto bg-white dark:bg-zinc-950 transition-colors">
-          <div className="divide-y divide-gray-100 dark:divide-zinc-800 transition-colors">
-            <p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-10 transition-colors">
-              {t("noCallsYet")}
-            </p>
-          </div>
+          <p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-10">{t("noCallsYet")}</p>
         </div>
       </div>
 
       
-      <button
-        onClick={handleFabCall}
-        aria-label={t("navCall")}
-        className="md:hidden fixed bottom-20 right-4 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-blue-500 dark:bg-blue-600 text-white shadow-lg active:scale-95 transition"
-      >
+      <button aria-label={t("navCall")} className="md:hidden fixed bottom-24 right-6 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-black dark:bg-white text-white dark:text-black shadow-lg active:scale-95 transition">
         <Phone size={26} weight="fill" />
       </button>
     </div>
