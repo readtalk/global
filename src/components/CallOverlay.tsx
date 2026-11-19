@@ -1,25 +1,12 @@
 "use client";
 
 import { Phone, Microphone, VideoCamera, SpeakerHigh, CaretDown } from "@phosphor-icons/react/dist/ssr";
-
-type Props = {
-  isOpen: boolean;
-  onClose: () => void;
-  name?: string;
-  avatar?: string | null;
-  type?: "audio" | "video";
-};
-
-export default function CallOverlay({ isOpen, onClose, name = "Xyzaroom", avatar, type = "audio" }: Props) {
+type Props = { isOpen: boolean; onClose: () => void; name: string; avatar: string | null; type: "audio" | "video"; };
+export default function CallOverlay({ isOpen, onClose, name, avatar, type }: Props) {
   return (
     <>
-      <div
-        onClick={onClose}
-        className={`fixed inset-0 bg-black/50 z-[60] md:hidden transition-opacity ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
-      />
-      <div
-        className={`fixed z-[70] bg-zinc-950 text-white flex flex-col overflow-hidden transition-transform duration-300 inset-0 ${isOpen ? "translate-y-0" : "translate-y-full"} md:inset-auto md:bottom-6 md:right-6 md:w-[360px] md:h-[560px] md:rounded-2xl md:shadow-2xl md:border md:border-zinc-800 ${isOpen ? "md:translate-y-0" : "md:translate-y-10 md:pointer-events-none"}`}
-      >
+      <div onClick={onClose} className={`fixed inset-0 bg-black/50 z-[60] md:hidden transition-opacity ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} />
+      <div className={`fixed z-[70] bg-zinc-950 text-white flex flex-col overflow-hidden transition-transform duration-300 inset-0 ${isOpen ? "translate-y-0" : "translate-y-full"} md:inset-auto md:bottom-6 md:right-6 md:w-[360px] md:h-[560px] md:rounded-2xl md:shadow-2xl md:border md:border-zinc-800 ${isOpen ? "md:translate-y-0" : "md:translate-y-10 md:pointer-events-none"}`}>
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             <img src={avatar || "/default-avatar.png"} className="w-9 h-9 rounded-full object-cover bg-zinc-800" alt="" />
@@ -40,7 +27,7 @@ export default function CallOverlay({ isOpen, onClose, name = "Xyzaroom", avatar
             </>
           ) : (
             <div className="w-full flex-1 mx-4 mb-2 bg-zinc-900 rounded-2xl flex items-center justify-center text-zinc-500 text-sm">
-              
+              Video lawan di sini
             </div>
           )}
           {type === "video" && (
