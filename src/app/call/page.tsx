@@ -33,9 +33,7 @@ function CallContent() {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = (await res.json()) as { success: boolean; users: MutualUser[] };
-        if (data.success) {
-          setMutuals(data.users);
-        }
+        if (data.success) setMutuals(data.users);
       } catch (error) {
         console.error(error);
       } finally {
@@ -46,15 +44,11 @@ function CallContent() {
   }, []);
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-950 transition-colors relative">
+    <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-950 transition-colors">
       <div className="flex-none bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
         <h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50 transition-colors">{t("navCall")}</h1>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsPanelOpen(true)}
-            aria-label={t("newCall")}
-            className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-black dark:bg-white text-white dark:text-black shadow-md active:scale-95 transition"
-          >
+          <button onClick={() => setIsPanelOpen(true)} className="hidden md:block bg-black dark:bg-white text-white dark:text-black p-1.5 rounded-md transition hover:bg-gray-800 dark:hover:bg-gray-200">
             <Phone size={20} weight="fill" />
           </button>
           <div className="relative">
@@ -81,7 +75,7 @@ function CallContent() {
         </div>
       </div>
 
-      <button onClick={() => setIsPanelOpen(true)} aria-label={t("newCall")} className="md:hidden fixed bottom-24 right-6 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-black dark:bg-white text-white dark:text-black shadow-lg active:scale-95 transition">
+      <button onClick={() => setIsPanelOpen(true)} aria-label={t("newCall")} className="md:hidden fixed bottom-24 right-6 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-black dark:bg-white text-white dark:text-black shadow-lg transition-all duration-150 active:scale-90 active:shadow-md active:translate-y-0.5">
         <Phone size={26} weight="fill" />
       </button>
 
