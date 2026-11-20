@@ -1,8 +1,81 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Phone, Microphone, VideoCamera, SpeakerHigh, CaretDown } from "@phosphor-icons/react/dist/ssr";
-type Props = { isOpen: boolean; onClose: () => void; name: string; avatar: string | null; type: "audio" | "video"; };
-export default function CallOverlay({ isOpen, onClose, name, avatar, type }: Props) {
+
+type Props = {
+  isOpen: boolean;
+  onClose: () => void;
+  name: string;
+  username: string;
+  avatar: string | null;
+  type: "audio" | "video";
+};
+
+export default function CallOverlay({ isOpen, onClose, name, username, avatar, type }: Props) {
+  const [status, setStatus] = useState("Calling...");
+  const [isMuted, setIsMuted] = useState(false);
+  const [isSpeaker, setIsSpeaker] = useState(false);
+  const [isCameraOff, setIsCameraOff] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setStatus("Calling...");
+    setIsMuted(false);
+    setIsSpeaker(false);
+    setIsCameraOff(false);
+
+    const startCall = async () => {
+      const token = localStorage.getItem("session");
+      if (!token) return;
+
+      try {
+        await fetch("/api/calls", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ targetUsername: username, type }),
+        });
+
+        await fetch("/api/call/credentials", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setStatus("Ringing...");
+      } catch (error) {
+        console.error(error);
+        setStatus("Failed");
+      }
+    };
+
+    startCall();
+  }, [isOpen, username, type]);
+
+  const handleEnd = async () => {
+    const token = localStorage.getItem("session");
+    if (token) {
+      try {
+        await fetch("/api/call/log", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ targetUsername: username, type, status: "ended" }),
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    onClose();
+  };
+
   return (
     <>
       <div onClick={onClose} className={`fixed inset-0 bg-black/50 z-[60] md:hidden transition-opacity ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} />
@@ -12,7 +85,7 @@ export default function CallOverlay({ isOpen, onClose, name, avatar, type }: Pro
             <img src={avatar || "/default-avatar.png"} className="w-9 h-9 rounded-full object-cover bg-zinc-800" alt="" />
             <div>
               <p className="font-semibold leading-none">{name}</p>
-              <p className="text-xs text-zinc-400 mt-1">{type === "audio" ? "Voice call" : "Video call"} • Calling...</p>
+              <p className="text-xs text-zinc-400 mt-1">{type === "audio" ? "Voice call" : "Video call"} • {status}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-zinc-800">
@@ -23,7 +96,7 @@ export default function CallOverlay({ isOpen, onClose, name, avatar, type }: Pro
           {type === "audio" ? (
             <>
               <img src={avatar || "/default-avatar.png"} className="w-32 h-32 rounded-full object-cover bg-zinc-800" alt="" />
-              <p className="text-zinc-400 text-sm">Calling...</p>
+              <p className="text-zinc-400 text-sm">{status}</p>
             </>
           ) : (
             <div className="w-full flex-1 mx-4 mb-2 bg-zinc-900 rounded-2xl flex items-center justify-center text-zinc-500 text-sm">
@@ -37,18 +110,18 @@ export default function CallOverlay({ isOpen, onClose, name, avatar, type }: Pro
           )}
         </div>
         <div className="pb-8 pt-4 px-6 flex items-center justify-center gap-4">
-          <button className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center">
+          <button onClick={() => setIsMuted(!isMuted)} className={`w-12 h-12 rounded-full flex items-center justify-center ${isMuted ? "bg-white text-black" : "bg-zinc-800"}`}>
             <Microphone size={20} />
           </button>
           {type === "video" && (
-            <button className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center">
+            <button onClick={() => setIsCameraOff(!isCameraOff)} className={`w-12 h-12 rounded-full flex items-center justify-center ${isCameraOff ? "bg-white text-black" : "bg-zinc-800"}`}>
               <VideoCamera size={20} />
             </button>
           )}
-          <button className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center">
+          <button onClick={() => setIsSpeaker(!isSpeaker)} className={`w-12 h-12 rounded-full flex items-center justify-center ${isSpeaker ? "bg-white text-black" : "bg-zinc-800"}`}>
             <SpeakerHigh size={20} />
           </button>
-          <button onClick={onClose} className="w-14 h-14 rounded-full bg-red-500 flex items-center justify-center">
+          <button onClick={handleEnd} className="w-14 h-14 rounded-full bg-red-500 flex items-center justify-center">
             <Phone size={24} weight="fill" className="rotate-[135deg]" />
           </button>
         </div>
