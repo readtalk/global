@@ -1,19 +1,8 @@
-//
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import { Phone, Microphone, VideoCamera, SpeakerHigh, CaretDown } from "@phosphor-icons/react/dist/ssr";
-
-type Props = {
-  isOpen: boolean;
-  onClose: () => void;
-  name: string;
-  username: string;
-  receiverId: string;
-  avatar: string | null;
-  type: "audio" | "video";
-};
-
+type Props = { isOpen: boolean; onClose: () => void; name: string; username: string; receiverId: string; avatar: string | null; type: "audio" | "video"; };
 export default function CallOverlay({ isOpen, onClose, name, username, receiverId, avatar, type }: Props) {
   const [status, setStatus] = useState("Calling...");
   const [isMuted, setIsMuted] = useState(false);
@@ -23,7 +12,7 @@ export default function CallOverlay({ isOpen, onClose, name, username, receiverI
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const startTimeRef = useRef<number>(0);
-
+  const callIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (!isOpen) return;
     setStatus("Calling...");
@@ -32,30 +21,32 @@ export default function CallOverlay({ isOpen, onClose, name, username, receiverI
     setIsCameraOff(false);
     setHasPermission(false);
     startTimeRef.current = Date.now();
-
+    callIdRef.current = null;
     const startCall = async () => {
       const token = localStorage.getItem("session");
       if (!token) return;
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: type === "video",
-        });
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === "video" });
         streamRef.current = stream;
         setHasPermission(true);
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
           await localVideoRef.current.play().catch(() => {});
         }
-        await fetch("/api/calls", {
+        let myId = "";
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          myId = payload.properties?.id || payload.sub || "";
+        } catch {}
+        const res = await fetch("https://auth.readtalk.workers.dev/calls", {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ targetUsername: username, type }),
+          headers: { "Content-Type": "application/json", "X-User-Id": myId },
+          body: JSON.stringify({ target_user_id: receiverId, type }),
         });
-        await fetch("/api/call/credentials", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const data = await res.json().catch(() => null);
+        if (data && data.success && data.callId) {
+          callIdRef.current = data.callId;
+        }
         setStatus("Ringing...");
       } catch (error) {
         console.error(error);
@@ -70,44 +61,41 @@ export default function CallOverlay({ isOpen, onClose, name, username, receiverI
       }
       if (localVideoRef.current) localVideoRef.current.srcObject = null;
     };
-  }, [isOpen, username, type]);
-
+  }, [isOpen, username, type, receiverId]);
   useEffect(() => {
     if (hasPermission && localVideoRef.current && streamRef.current) {
       localVideoRef.current.srcObject = streamRef.current;
       localVideoRef.current.play().catch(() => {});
     }
   }, [hasPermission, type]);
-
   const toggleMute = () => {
     const next = !isMuted;
     setIsMuted(next);
-    streamRef.current?.getAudioTracks().forEach((track) => { track.enabled = !next; });
+    streamRef.current?.getAudioTracks().forEach((track) => {
+      track.enabled = !next;
+    });
   };
-
   const toggleCamera = () => {
     const next = !isCameraOff;
     setIsCameraOff(next);
-    streamRef.current?.getVideoTracks().forEach((track) => { track.enabled = !next; });
+    streamRef.current?.getVideoTracks().forEach((track) => {
+      track.enabled = !next;
+    });
   };
-
   const toggleSpeaker = () => setIsSpeaker(!isSpeaker);
-
   const handleEnd = async () => {
     const token = localStorage.getItem("session");
-    const duration = Math.floor((Date.now() - startTimeRef.current) / 1000);
-    if (token) {
+    if (token && callIdRef.current) {
       try {
-        await fetch("/api/call/log", {
+        let myId = "";
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          myId = payload.properties?.id || payload.sub || "";
+        } catch {}
+        await fetch(`https://auth.readtalk.workers.dev/calls/${callIdRef.current}/end`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
-            receiver_id: receiverId,
-            chat_id: null,
-            type: type,
-            status: "ended",
-            duration: duration,
-          }),
+          headers: { "Content-Type": "application/json", "X-User-Id": myId },
+          body: JSON.stringify({}),
         });
       } catch (error) {
         console.error(error);
@@ -115,7 +103,6 @@ export default function CallOverlay({ isOpen, onClose, name, username, receiverI
     }
     onClose();
   };
-
   return (
     <>
       <div onClick={onClose} className={`fixed inset-0 bg-black/50 z-[60] md:hidden transition-opacity ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} />
