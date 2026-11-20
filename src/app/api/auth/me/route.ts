@@ -18,7 +18,7 @@ export async function GET() {
 			return NextResponse.json({ success: false, error: "Invalid token" }, { status: 401 });
 		}
 
-		const res = await fetch(`https://auth.workers.dev/settings`, {
+		const res = await fetch(`https://auth.readtalk.workers.dev/settings`, {
 			headers: { "Authorization": `Bearer ${session}` },
 		});
 		
