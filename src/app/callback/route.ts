@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 	const verifier = cookieStore.get("code_verifier")?.value || "";
 
 	try {
-		const response = await fetch("https://depelover.soeparnocorp.workers.dev/token", {
+		const response = await fetch("https://auth.readtalk.workers.dev/token", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/x-www-form-urlencoded",
