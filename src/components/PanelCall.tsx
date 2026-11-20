@@ -1,4 +1,3 @@
-//
 "use client";
 
 import { useState } from "react";
@@ -77,13 +76,13 @@ export default function PanelCall({ isOpen, onClose, mutuals, isLoading }: Panel
           )}
         </div>
       </div>
-
       {selectedUser && (
         <CallOverlay
           isOpen={isOverlayOpen}
           onClose={handleCloseOverlay}
           name={selectedUser.yourname}
           username={selectedUser.username}
+          receiverId={selectedUser.id}
           avatar={selectedUser.avatar}
           type={callType}
         />
