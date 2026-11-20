@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 	try {
-		const res = await fetch("https://auth.readtalk.workers.dev/users", {
+		const res = await fetch("https://developer.soeparnocorp.workers.dev/users", {
 			cache: "no-store",
 		});
 		const data = (await res.json()) as { success: boolean; users: any[] };
