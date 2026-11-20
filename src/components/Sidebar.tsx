@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChatCircleDots, At, Bell, Gear, UsersThree, Phone, User, Brain } from "@phosphor-icons/react/dist/ssr";
-import { useLanguage } from "@/context/LanguageContext"; // sesuaikan path-mu
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Sidebar() {
 	const pathname = usePathname();
@@ -20,7 +20,7 @@ export default function Sidebar() {
 					const email = payload.properties?.email;
 					if (email) {
 						setUser({ username: email.split("@")[0], yourname: email.split("@")[0], avatar: null });
-						fetch("https://auth.readtalk.workers.dev/settings", {
+						fetch("https://developer.soeparnocorp.workers.dev/settings", {
 							headers: { "Authorization": `Bearer ${session}` }
 						})
 						.then(res => res.json() as Promise<{ success: boolean; user?: { username: string; yourname: string; avatar: string | null } }>)
