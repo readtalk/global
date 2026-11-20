@@ -5,6 +5,7 @@ import { Phone, VideoCamera } from "@phosphor-icons/react/dist/ssr";
 import CallOverlay from "@/components/CallOverlay";
 
 type IncomingCall = {
+  fromId: string;
   fromUsername: string;
   fromName: string;
   fromAvatar: string | null;
@@ -30,6 +31,7 @@ export default function IncomingCallOverlay() {
         const data = JSON.parse(event.data);
         if (data.type === "incoming_call") {
           setIncoming({
+            fromId: data.fromId || data.caller_id || data.fromUserId || data.fromUsername,
             fromUsername: data.fromUsername,
             fromName: data.fromName,
             fromAvatar: data.fromAvatar,
@@ -80,6 +82,7 @@ export default function IncomingCallOverlay() {
         }}
         name={incoming.fromName}
         username={incoming.fromUsername}
+        receiverId={incoming.fromId}
         avatar={incoming.fromAvatar}
         type={incoming.type}
       />
