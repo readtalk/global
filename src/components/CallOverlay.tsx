@@ -45,6 +45,7 @@ export default function CallOverlay({ isOpen, onClose, name, username, avatar, t
 
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
+          await localVideoRef.current.play().catch(() => {});
         }
 
         await fetch("/api/calls", {
@@ -83,6 +84,13 @@ export default function CallOverlay({ isOpen, onClose, name, username, avatar, t
     };
   }, [isOpen, username, type]);
 
+  useEffect(() => {
+    if (hasPermission && localVideoRef.current && streamRef.current) {
+      localVideoRef.current.srcObject = streamRef.current;
+      localVideoRef.current.play().catch(() => {});
+    }
+  }, [hasPermission, type]);
+
   const toggleMute = () => {
     const next = !isMuted;
     setIsMuted(next);
@@ -101,9 +109,6 @@ export default function CallOverlay({ isOpen, onClose, name, username, avatar, t
 
   const toggleSpeaker = () => {
     setIsSpeaker(!isSpeaker);
-    if (localVideoRef.current) {
-      localVideoRef.current.muted = isSpeaker;
-    }
   };
 
   const handleEnd = async () => {
@@ -150,7 +155,7 @@ export default function CallOverlay({ isOpen, onClose, name, username, avatar, t
           ) : (
             <div className="w-full flex-1 mx-4 mb-2 bg-zinc-900 rounded-2xl flex items-center justify-center text-zinc-500 text-sm overflow-hidden">
               {hasPermission ? (
-                <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                <div className="w-full h-full flex items-center justify-center text-zinc-400 text-sm">Waiting for {name}...</div>
               ) : (
                 "Video coming"
               )}
@@ -159,7 +164,7 @@ export default function CallOverlay({ isOpen, onClose, name, username, avatar, t
           {type === "video" && (
             <div className="absolute bottom-28 right-4 w-24 h-32 bg-zinc-800 rounded-xl border border-zinc-700 flex items-center justify-center text-xs text-zinc-400 overflow-hidden">
               {hasPermission ? (
-                <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover mirror" />
               ) : (
                 "You"
               )}
