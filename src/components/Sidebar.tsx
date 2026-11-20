@@ -20,7 +20,7 @@ export default function Sidebar() {
 					const email = payload.properties?.email;
 					if (email) {
 						setUser({ username: email.split("@")[0], yourname: email.split("@")[0], avatar: null });
-						fetch("https://developer.soeparnocorp.workers.dev/settings", {
+						fetch("https://auth.readtalk.workers.dev/settings", {
 							headers: { "Authorization": `Bearer ${session}` }
 						})
 						.then(res => res.json() as Promise<{ success: boolean; user?: { username: string; yourname: string; avatar: string | null } }>)
