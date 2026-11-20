@@ -40,7 +40,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
         }
         const res = await fetch("https://auth.readtalk.workers.dev/calls", {
           method: "POST",
-          headers: { "Content-Type": "application/json", "X-User-Id": myId },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-User-Id": myId },
           body: JSON.stringify({ target_user_id: receiverId, type }),
         });
         const data = await res.json().catch(() => null) as { success?: boolean; callId?: string } | null;
@@ -96,7 +96,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
         }
         await fetch(`https://auth.readtalk.workers.dev/calls/${callIdRef.current}/end`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "X-User-Id": myId },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-User-Id": myId },
           body: JSON.stringify({}),
         });
       } catch (error) {
