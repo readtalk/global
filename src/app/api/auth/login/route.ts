@@ -19,7 +19,7 @@ export async function GET() {
 		maxAge: 60 * 10,
 	});
 
-	const authUrl = new URL("https://developer.soeparnocorp.workers.dev/authorize");
+	const authUrl = new URL("https://auth.readtalk.workers.dev/authorize");
 	authUrl.searchParams.set("response_type", "code");
 	authUrl.searchParams.set("client_id", "your-client-id");
 	authUrl.searchParams.set("redirect_uri", "https://global.readtalk.workers.dev/callback");
