@@ -81,7 +81,7 @@ export default function PwaPopup() {
 			const session = localStorage.getItem("session");
 			if (session) {
 				setIsProfileLoading(true);
-				fetch("https://auth.readtalk.workers.dev/settings", {
+				fetch("https://developer.soeparnocorp.workers.dev/settings", {
 					headers: { "Authorization": `Bearer ${session}` }
 				})
 				.then(res => res.json() as Promise<{ success: boolean; user?: UserProfile }>)
@@ -122,7 +122,7 @@ export default function PwaPopup() {
 
 		setIsSaving(true);
 		try {
-			const res = await fetch("https://auth.readtalk.workers.dev/settings", {
+			const res = await fetch("https://developer.soeparnocorp.workers.dev/settings", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
