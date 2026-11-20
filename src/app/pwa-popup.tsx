@@ -290,7 +290,7 @@ export default function PwaPopup() {
 				</h2>
 				<p className="text-xs text-gray-500 mb-8 max-w-xs mx-auto">
 					By continuing, you agree to our{" "}
-					<a href="https://readtalk.pages.dev/" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-800">
+					<a href="https://readtalk.web.id/" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-800">
 						Terms & Conditions
 					</a>
 				</p>
