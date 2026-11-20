@@ -46,7 +46,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
 
 			const fetchOnlineUsers = async () => {
 				try {
-					const res = await fetch("https://auth.readtalk.workers.dev/users/online");
+					const res = await fetch("https://depelover.soeparnocorp.workers.dev/users/online");
 					const data = (await res.json()) as { success: boolean; onlineUsers: string[] };
 					if (data.success && isMounted) {
 						setOnlineUsers(prev => {
@@ -59,7 +59,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
 				}
 			};
 
-			const wsUrl = `wss://auth.readtalk.workers.dev/ws?token=${session}`;
+			const wsUrl = `wss://developer.soeparnocorp.workers.dev/ws?token=${session}`;
 			const ws = new WebSocket(wsUrl);
 			wsRef.current = ws;
 
