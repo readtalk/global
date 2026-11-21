@@ -4,17 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Phone, Microphone, VideoCamera, SpeakerHigh, CaretDown } from "@phosphor-icons/react/dist/ssr";
 import { useWebSocket } from "@/app/WebSocketProvider";
 
-type Props = {
-  isOpen: boolean;
-  onClose: () => void;
-  name: string;
-  username: string;
-  receiverId: string;
-  avatar: string | null;
-  type: "audio" | "video";
-  callId?: string;
-  mode?: "outgoing" | "incoming";
-};
+type Props = { isOpen: boolean; onClose: () => void; name: string; username: string; receiverId: string; avatar: string | null; type: "audio" | "video"; callId?: string; mode?: "outgoing" | "incoming"; };
 
 export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar, type, callId, mode = "outgoing" }: Props) {
   const [status, setStatus] = useState("Calling...");
@@ -56,6 +46,15 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
     endedRef.current.currentTime = 0;
     endedRef.current.play().catch(() => {});
   };
+  const applySpeaker = (speakerOn: boolean) => {
+    const sinkId = speakerOn ? "default" : "communications";
+    const targets: any[] = [remoteAudioRef.current, ringbackRef.current, endedRef.current];
+    for (const el of targets) {
+      if (el && (el as any).setSinkId) {
+        (el as any).setSinkId(sinkId).catch(() => {});
+      }
+    }
+  };
   const startRingback = () => {
     if (mode !== "outgoing") return;
     if (!ringbackRef.current) {
@@ -63,6 +62,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
       ringbackRef.current.loop = true;
       ringbackRef.current.preload = "auto";
     }
+    applySpeaker(isSpeaker);
     ringbackRef.current.currentTime = 0;
     ringbackRef.current.play().catch(() => {});
   };
@@ -70,6 +70,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
     setIsRemoteConnected(true);
     setStatus("Connected");
     stopRingback();
+    applySpeaker(isSpeaker);
     if (type === "video" && remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = remoteStream;
       remoteVideoRef.current.play().catch(() => {});
@@ -242,7 +243,11 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
     setIsCameraOff(next);
     streamRef.current?.getVideoTracks().forEach((track) => { track.enabled = !next; });
   };
-  const toggleSpeaker = () => setIsSpeaker(!isSpeaker);
+  const toggleSpeaker = () => {
+    const next = !isSpeaker;
+    setIsSpeaker(next);
+    applySpeaker(next);
+  };
   const handleEnd = async () => {
     if (closedRef.current) {
       onClose();
@@ -266,7 +271,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
   };
   return (
     <>
-      <div onClick={onClose} className={`fixed inset-0 bg-black/50 z-[60] md:hidden transition-opacity ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} />
+      <div onClick={handleEnd} className={`fixed inset-0 bg-black/50 z-[60] md:hidden transition-opacity ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} />
       <div className={`fixed z-[70] bg-zinc-950 text-white flex flex-col overflow-hidden transition-transform duration-300 inset-0 ${isOpen ? "translate-y-0" : "translate-y-full"} md:inset-auto md:bottom-6 md:right-6 md:w-[360px] md:h-[560px] md:rounded-2xl md:shadow-2xl md:border md:border-zinc-800 ${isOpen ? "md:translate-y-0" : "md:translate-y-10 md:pointer-events-none"}`}>
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
@@ -276,7 +281,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
               <p className="text-xs text-zinc-400 mt-1">{type === "audio" ? "Voice call" : "Video call"} • {status}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-zinc-800"><CaretDown size={20} /></button>
+          <button onClick={handleEnd} className="p-2 rounded-full hover:bg-zinc-800"><CaretDown size={20} /></button>
         </div>
         <div className="relative flex-1 flex flex-col items-center justify-center gap-4">
           {type === "audio" ? (
