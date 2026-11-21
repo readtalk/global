@@ -89,38 +89,40 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
         if (isMounted) setIsWsReady(true);
       };
       ws.onmessage = (event) => {
-        if (!isMounted) return;
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === "USER_CONNECTED") {
-            setOnlineUsers((prev) => prev.includes(data.userId) ? prev : [...prev, data.userId]);
-          } else if (data.type === "USER_DISCONNECTED") {
-            setOnlineUsers((prev) => prev.filter(id => id !== data.userId));
-          } else if (data.type === "NEW_MESSAGE") {
-            setLastMessage({ chatId: data.chatId, message: data.message });
-            if (data.message.user_id !== currentUserId) {
-              const audio = new Audio('/sound/incoming-chat-effect.mp3');
-              audio.play().catch(() => {});
-              if (navigator.vibrate) navigator.vibrate(200);
-            }
-          } else if (data.type === "CALL_INCOMING") {
-            setIncomingCall({
-              callId: data.callId,
-              callerId: data.callerId,
-              chatId: data.chatId,
-              callType: data.callType || "audio",
-            });
-          } else if (data.type === "CALL_ACCEPTED") {
-            setCallSignal({ callId: data.callId, type: "CALL_ACCEPTED", at: Date.now() });
-          } else if (data.type === "CALL_OFFER" || data.type === "CALL_ANSWER" || data.type === "CALL_ICE") {
-            setCallSdpSignal({ callId: data.callId, fromId: data.fromId || data.callerId || "", type: data.type, sdp: data.sdp, candidate: data.candidate, at: Date.now() });
-          } else if (data.type === "CALL_ENDED" || data.type === "CALL_DECLINED" || data.type === "CALL_CANCELLED" || data.type === "CALL_MISSED") {
-            if (data.callId) playEndedSound(data.callId);
-            setCallSignal({ callId: data.callId, type: data.type, at: Date.now() });
-            setIncomingCall(null);
-          }
-        } catch (err) { console.error("WS Error:", err); }
-      };
+  if (!isMounted) return;
+  try {
+    const data = JSON.parse(event.data);
+    if (data.type === "USER_CONNECTED") {
+      setOnlineUsers((prev) => prev.includes(data.userId) ? prev : [...prev, data.userId]);
+    } else if (data.type === "USER_DISCONNECTED") {
+      setOnlineUsers((prev) => prev.filter(id => id !== data.userId));
+    } else if (data.type === "NEW_MESSAGE") {
+      setLastMessage({ chatId: data.chatId, message: data.message });
+      if (data.message.user_id !== currentUserId) {
+        const audio = new Audio('/sound/incoming-chat-effect.mp3');
+        audio.play().catch(() => {});
+        if (navigator.vibrate) navigator.vibrate(200);
+      }
+    } else if (data.type === "CALL_INCOMING") {
+      if (data.callerId !== currentUserId) {
+        setIncomingCall({
+          callId: data.callId,
+          callerId: data.callerId,
+          chatId: data.chatId,
+          callType: data.callType || "audio",
+        });
+      }
+    } else if (data.type === "CALL_ACCEPTED") {
+      setCallSignal({ callId: data.callId, type: "CALL_ACCEPTED", at: Date.now() });
+    } else if (data.type === "CALL_OFFER" || data.type === "CALL_ANSWER" || data.type === "CALL_ICE") {
+      setCallSdpSignal({ callId: data.callId, fromId: data.fromId || data.callerId || "", type: data.type, sdp: data.sdp, candidate: data.candidate, at: Date.now() });
+    } else if (data.type === "CALL_ENDED" || data.type === "CALL_DECLINED" || data.type === "CALL_CANCELLED" || data.type === "CALL_MISSED") {
+      if (data.callId) playEndedSound(data.callId);
+      setCallSignal({ callId: data.callId, type: data.type, at: Date.now() });
+      setIncomingCall(null);
+    }
+  } catch (err) { console.error("WS Error:", err); }
+};
     };
     connect();
     const handleSessionChanged = () => { connect(); };
