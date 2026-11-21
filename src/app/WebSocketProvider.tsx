@@ -73,7 +73,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
           } else if (data.type === "NEW_MESSAGE") {
             setLastMessage({ chatId: data.chatId, message: data.message });
             if (data.message.user_id !== currentUserId) {
-              const audio = new Audio('/sound/echoed-ding-459.mp3');
+              const audio = new Audio('/sound/incoming-chat-effect.mp3');
               audio.play().catch(() => {});
               if (navigator.vibrate) navigator.vibrate(200);
             }
