@@ -6,9 +6,12 @@ import Link from "next/link";
 import { ArrowLeft, PaperPlaneRight, Check, DotsThreeVertical, Gear } from "@phosphor-icons/react/dist/ssr";
 import { useWebSocket } from "../../WebSocketProvider";
 import { useLanguage } from "@/context/LanguageContext";
+
 type Message = { id: string; chat_id: string; user_id: string; content: string; assets: string; created_at: number; status?: "delivered"; };
+
 const isSameDay = (a: number, b: number) => { const da = new Date(a * 1000); const db = new Date(b * 1000); return da.getFullYear() === db.getFullYear() && da.getMonth() === db.getMonth() && da.getDate() === db.getDate(); };
 const formatTime = (timestamp: number) => { return new Date(timestamp * 1000).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', }); };
+
 function ChatRoomContent() {
   const params = useParams();
   const router = useRouter();
@@ -32,6 +35,7 @@ function ChatRoomContent() {
     if (d.toDateString() === yesterday.toDateString()) return t("yesterday");
     return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
   };
+  
   useEffect(() => {
     const session = localStorage.getItem("session");
     if (session) {
@@ -75,7 +79,7 @@ function ChatRoomContent() {
     const text = content;
     setContent("");
     setIsSending(true);
-    const audio = new Audio('/sound/all-eyes-on-me.mp3');
+    const audio = new Audio('/sound/chat-sending-button.mp3');
     audio.play().catch(() => {});
     try {
       await fetch(`/api/chats/${id}/messages`, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, }, body: JSON.stringify({ content: text, assets: [] }), });
