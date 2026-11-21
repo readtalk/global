@@ -1,40 +1,142 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Phone, VideoCamera } from "@phosphor-icons/react/dist/ssr";
 import CallOverlay from "@/components/CallOverlay";
 import { useWebSocket } from "@/app/WebSocketProvider";
+
 type MutualUser = { id: string; username: string; name: string; avatar: string | null };
 
 export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?: MutualUser[] }) {
   const { incomingCall, clearIncomingCall } = useWebSocket();
   const [isAccepted, setIsAccepted] = useState(false);
+  const ringingRef = useRef<HTMLAudioElement | null>(null);
+  const callIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!incomingCall) {
+      setIsAccepted(false);
+      callIdRef.current = null;
+      return;
+    }
+    callIdRef.current = incomingCall.callId;
+  }, [incomingCall]);
+
+  useEffect(() => {
+    if (!incomingCall || isAccepted) {
+      if (ringingRef.current) {
+        ringingRef.current.pause();
+        ringingRef.current.currentTime = 0;
+      }
+      return;
+    }
+    if (!ringingRef.current) {
+      ringingRef.current = new Audio("/sound/incoming-call-ringing.mp3");
+      ringingRef.current.loop = true;
+      ringingRef.current.preload = "auto";
+    }
+    ringingRef.current.currentTime = 0;
+    ringingRef.current.play().catch(() => {});
+    return () => {
+      if (ringingRef.current) {
+        ringingRef.current.pause();
+        ringingRef.current.currentTime = 0;
+      }
+    };
+  }, [incomingCall, isAccepted]);
+
+  useEffect(() => {
+    return () => {
+      if (ringingRef.current) {
+        ringingRef.current.pause();
+        ringingRef.current.currentTime = 0;
+      }
+    };
+  }, []);
+
   if (!incomingCall) return null;
+
   const caller = mutualUsers.find(u => u.id === incomingCall.callerId);
   const fromName = caller?.name || incomingCall.callerId;
   const fromUsername = caller?.username || incomingCall.callerId;
   const fromAvatar = caller?.avatar || null;
   const fromId = incomingCall.callerId;
-  const handleAccept = () => {
+
+  const getMyId = (token: string) => {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload.properties?.id || payload.sub || "";
+    } catch {
+      return "";
+    }
+  };
+
+  const handleAccept = async () => {
+    const token = localStorage.getItem("session");
+    if (ringingRef.current) {
+      ringingRef.current.pause();
+      ringingRef.current.currentTime = 0;
+    }
+    if (token && incomingCall.callId) {
+      try {
+        await fetch(`https://auth.readtalk.workers.dev/calls/${incomingCall.callId}/accept`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+            "X-User-Id": getMyId(token),
+          },
+          body: JSON.stringify({}),
+        });
+      } catch {}
+    }
     setIsAccepted(true);
   };
-  const handleDecline = () => {
+
+  const handleDecline = async () => {
+    const token = localStorage.getItem("session");
+    if (ringingRef.current) {
+      ringingRef.current.pause();
+      ringingRef.current.currentTime = 0;
+    }
+    if (token && incomingCall.callId) {
+      try {
+        await fetch(`https://auth.readtalk.workers.dev/calls/${incomingCall.callId}/decline`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+            "X-User-Id": getMyId(token),
+          },
+          body: JSON.stringify({}),
+        });
+      } catch {}
+    }
+    const ended = new Audio("/sound/incoming-missed-call-ended.mp3");
+    ended.play().catch(() => {});
     clearIncomingCall();
     setIsAccepted(false);
   };
+
   if (isAccepted) {
     return (
       <CallOverlay
         isOpen={true}
-        onClose={() => { clearIncomingCall(); setIsAccepted(false); }}
+        onClose={() => {
+          clearIncomingCall();
+          setIsAccepted(false);
+        }}
         name={fromName}
         username={fromUsername}
         receiverId={fromId}
         avatar={fromAvatar}
         type={incomingCall.callType}
+        callId={incomingCall.callId}
+        mode="incoming"
       />
     );
   }
+
   return (
     <div className="fixed inset-0 z-[80] bg-zinc-950 text-white flex flex-col items-center justify-center gap-6 px-6">
       <img src={fromAvatar || "/default-avatar.png"} className="w-28 h-28 rounded-full object-cover bg-zinc-800" alt="" />
