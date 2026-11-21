@@ -4,9 +4,8 @@ import { useEffect, useRef, createContext, useContext, useState, useCallback } f
 
 type Message = { id: string; chat_id: string; user_id: string; content: string; assets: string; created_at: number; };
 type IncomingCallData = { callId: string; callerId: string; chatId: string; callType: "audio" | "video" };
-
 type CallSignal = { callId: string; type: "CALL_ACCEPTED" | "CALL_ENDED" | "CALL_DECLINED" | "CALL_CANCELLED" | "CALL_MISSED"; at: number } | null;
-
+type CallSdpSignal = { callId: string; fromId: string; type: "CALL_OFFER" | "CALL_ANSWER" | "CALL_ICE"; sdp?: any; candidate?: any; at: number } | null;
 type WebSocketContextType = {
   onlineUsers: string[];
   isWsReady: boolean;
@@ -15,32 +14,31 @@ type WebSocketContextType = {
   clearIncomingCall: () => void;
   callSignal: CallSignal;
   clearCallSignal: () => void;
+  callSdpSignal: CallSdpSignal;
+  clearCallSdpSignal: () => void;
+  sendCallSignal: (data: any) => void;
 };
-
 const WebSocketContext = createContext<WebSocketContextType>({
   onlineUsers: [], isWsReady: false, lastMessage: null, incomingCall: null,
   clearIncomingCall: () => {}, callSignal: null, clearCallSignal: () => {},
+  callSdpSignal: null, clearCallSdpSignal: () => {}, sendCallSignal: () => {},
 });
-export const useWebSocket = () => useContext(WebSocketContext);
 
+export const useWebSocket = () => useContext(WebSocketContext);
 export default function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [isWsReady, setIsWsReady] = useState(false);
   const [lastMessage, setLastMessage] = useState<{ chatId: string; message: Message } | null>(null);
   const [incomingCall, setIncomingCall] = useState<IncomingCallData | null>(null);
   const [callSignal, setCallSignal] = useState<CallSignal>(null);
+  const [callSdpSignal, setCallSdpSignal] = useState<CallSdpSignal>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const endedAudioRef = useRef<HTMLAudioElement | null>(null);
   const lastEndedRef = useRef<string>("");
-
   const playEndedSound = useCallback((callId: string) => {
-    // Cegah bunyi double kalo backend kirim CALL_ENDED 2x
-    const key = `${callId}-${Date.now()}`;
     if (lastEndedRef.current === callId) return;
     lastEndedRef.current = callId;
-    // Reset guard setelah 2 detik biar call berikutnya bisa bunyi lagi
     setTimeout(() => { if (lastEndedRef.current === callId) lastEndedRef.current = ""; }, 2000);
-
     if (!endedAudioRef.current) {
       endedAudioRef.current = new Audio('/sound/incoming-missed-call-ended.mp3');
       endedAudioRef.current.preload = 'auto';
@@ -49,10 +47,14 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
     endedAudioRef.current.play().catch(() => {});
     if (navigator.vibrate) navigator.vibrate(200);
   }, []);
-
   const clearIncomingCall = useCallback(() => setIncomingCall(null), []);
   const clearCallSignal = useCallback(() => setCallSignal(null), []);
-
+  const clearCallSdpSignal = useCallback(() => setCallSdpSignal(null), []);
+  const sendCallSignal = useCallback((data: any) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(data));
+    }
+  }, []);
   useEffect(() => {
     let isMounted = true;
     const connect = () => {
@@ -102,7 +104,6 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
               if (navigator.vibrate) navigator.vibrate(200);
             }
           } else if (data.type === "CALL_INCOMING") {
-            // INI YANG DULU DIBUANG SATPAM, SEKARANG DIKENALIN
             setIncomingCall({
               callId: data.callId,
               callerId: data.callerId,
@@ -110,12 +111,10 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
               callType: data.callType || "audio",
             });
           } else if (data.type === "CALL_ACCEPTED") {
-            // BARU: kasih tau caller kalo receiver udah pencet hijau
-            // CallOverlay pake ini buat ganti Ringing... -> Connected + stop ringback-tone + mulai remote-echo
             setCallSignal({ callId: data.callId, type: "CALL_ACCEPTED", at: Date.now() });
+          } else if (data.type === "CALL_OFFER" || data.type === "CALL_ANSWER" || data.type === "CALL_ICE") {
+            setCallSdpSignal({ callId: data.callId, fromId: data.fromId || data.callerId || "", type: data.type, sdp: data.sdp, candidate: data.candidate, at: Date.now() });
           } else if (data.type === "CALL_ENDED" || data.type === "CALL_DECLINED" || data.type === "CALL_CANCELLED" || data.type === "CALL_MISSED") {
-            // TEMPAT PERTAMA bunyi penutup: pas WS nerima call kelar dari lawan
-            // Biar kakek-nenek tau anaknya udah nutup / nolak, gak halo-halo lagi
             if (data.callId) playEndedSound(data.callId);
             setCallSignal({ callId: data.callId, type: data.type, at: Date.now() });
             setIncomingCall(null);
@@ -132,9 +131,8 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
       if (wsRef.current) { wsRef.current.close(); wsRef.current = null; }
     };
   }, [playEndedSound]);
-
   return (
-    <WebSocketContext.Provider value={{ onlineUsers, isWsReady, lastMessage, incomingCall, clearIncomingCall, callSignal, clearCallSignal }}>
+    <WebSocketContext.Provider value={{ onlineUsers, isWsReady, lastMessage, incomingCall, clearIncomingCall, callSignal, clearCallSignal, callSdpSignal, clearCallSdpSignal, sendCallSignal }}>
       {children}
     </WebSocketContext.Provider>
   );
