@@ -34,8 +34,11 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
   const endedRef = useRef<HTMLAudioElement | null>(null);
   const closedRef = useRef(false);
   const pendingCandidatesRef = useRef<any[]>([]);
+  const pendingSdpRef = useRef<any | null>(null);
   const lastSdpAtRef = useRef(0);
   const lastSignalAtRef = useRef(0);
+  const isReadySentRef = useRef(false);
+  const offerSentRef = useRef(false);
   const { callSignal, clearCallSignal, callSdpSignal, clearCallSdpSignal, sendCallSignal } = useWebSocket();
 
   const getMyId = (token: string) => {
@@ -103,13 +106,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
   const setupPc = (pc: RTCPeerConnection, myId: string) => {
     pc.onicecandidate = (e) => {
       if (e.candidate && callIdRef.current) {
-        sendCallSignal({
-          type: "CALL_ICE",
-          callId: callIdRef.current,
-          fromId: myId,
-          toId: receiverId,
-          candidate: e.candidate.toJSON(),
-        });
+        sendCallSignal({ type: "CALL_ICE", callId: callIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId, candidate: e.candidate.toJSON() });
       }
     };
     pc.ontrack = (event) => {
@@ -125,12 +122,53 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
     };
   };
 
+  const sendOffer = async () => {
+    if (offerSentRef.current) return;
+    if (!pcRef.current || !callIdRef.current) return;
+    offerSentRef.current = true;
+    try {
+      const token = localStorage.getItem("session");
+      const myId = token ? getMyId(token) : "";
+      const offer = await pcRef.current.createOffer();
+      await pcRef.current.setLocalDescription(offer);
+      sendCallSignal({ type: "CALL_OFFER", callId: callIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId, sdp: offer });
+      setStatus("Connecting...");
+    } catch {
+      offerSentRef.current = false;
+    }
+  };
+
+  const processPendingSdp = async () => {
+    const pending = pendingSdpRef.current;
+    const pc = pcRef.current;
+    if (!pending || !pc) return;
+    pendingSdpRef.current = null;
+    const token = localStorage.getItem("session");
+    const myId = token ? getMyId(token) : "";
+    if (pending.type === "CALL_OFFER" && mode === "incoming") {
+      await pc.setRemoteDescription(new RTCSessionDescription(pending.sdp));
+      for (const c of pendingCandidatesRef.current) {
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(c));
+        } catch {}
+      }
+      pendingCandidatesRef.current = [];
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      sendCallSignal({ type: "CALL_ANSWER", callId: callIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId, sdp: answer });
+      setStatus("Connecting...");
+    }
+  };
+
   useEffect(() => {
     if (!isOpen) return;
     closedRef.current = false;
     pendingCandidatesRef.current = [];
+    pendingSdpRef.current = null;
     lastSdpAtRef.current = 0;
     lastSignalAtRef.current = 0;
+    isReadySentRef.current = false;
+    offerSentRef.current = false;
     setStatus(mode === "incoming" ? "Connecting..." : "Calling...");
     setIsMuted(false);
     setIsSpeaker(false);
@@ -149,9 +187,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
           localVideoRef.current.srcObject = stream;
           await localVideoRef.current.play().catch(() => {});
         }
-        const pc = new RTCPeerConnection({
-          iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
-        });
+        const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }] });
         pcRef.current = pc;
         const myId = getMyId(token);
         setupPc(pc, myId);
@@ -171,6 +207,11 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
         } else {
           if (callId) callIdRef.current = callId;
           setStatus("Connecting...");
+          if (!isReadySentRef.current && callIdRef.current) {
+            isReadySentRef.current = true;
+            sendCallSignal({ type: "CALL_READY", callId: callIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId });
+          }
+          processPendingSdp();
         }
       } catch (error) {
         setStatus("Permission denied");
@@ -206,10 +247,18 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
     if (callSdpSignal.at <= lastSdpAtRef.current) return;
     lastSdpAtRef.current = callSdpSignal.at;
     const pc = pcRef.current;
-    if (!pc) return;
+    if (!pc) {
+      if (callSdpSignal.type === "CALL_OFFER") pendingSdpRef.current = callSdpSignal;
+      clearCallSdpSignal();
+      return;
+    }
     const token = localStorage.getItem("session");
     const myId = token ? getMyId(token) : "";
     if (callSdpSignal.type === "CALL_OFFER" && mode === "incoming") {
+      if (!isReadySentRef.current && callIdRef.current) {
+        isReadySentRef.current = true;
+        sendCallSignal({ type: "CALL_READY", callId: callIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId });
+      }
       (async () => {
         await pc.setRemoteDescription(new RTCSessionDescription(callSdpSignal.sdp));
         for (const c of pendingCandidatesRef.current) {
@@ -220,7 +269,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
         pendingCandidatesRef.current = [];
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        sendCallSignal({ type: "CALL_ANSWER", callId: callIdRef.current, fromId: myId, toId: receiverId, sdp: answer });
+        sendCallSignal({ type: "CALL_ANSWER", callId: callIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId, sdp: answer });
         setStatus("Connecting...");
       })();
     } else if (callSdpSignal.type === "CALL_ANSWER" && mode === "outgoing") {
@@ -249,20 +298,11 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
     if (callSignal.at <= lastSignalAtRef.current) return;
     lastSignalAtRef.current = callSignal.at;
     if (callSignal.type === "CALL_ACCEPTED") {
-      if (mode === "outgoing" && pcRef.current) {
-        (async () => {
-          try {
-            const token = localStorage.getItem("session");
-            const myId = token ? getMyId(token) : "";
-            const offer = await pcRef.current!.createOffer();
-            await pcRef.current!.setLocalDescription(offer);
-            sendCallSignal({ type: "CALL_OFFER", callId: callIdRef.current, fromId: myId, toId: receiverId, sdp: offer });
-            setStatus("Connecting...");
-          } catch {}
-        })();
-      } else {
-        setStatus("Connecting...");
-      }
+      setStatus("Connecting...");
+      clearCallSignal();
+    }
+    if (callSignal.type === "CALL_READY") {
+      if (mode === "outgoing") sendOffer();
       clearCallSignal();
     }
     if (callSignal.type === "CALL_ENDED" || callSignal.type === "CALL_DECLINED" || callSignal.type === "CALL_CANCELLED" || callSignal.type === "CALL_MISSED") {
@@ -342,13 +382,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
             </>
           ) : (
             <div className="w-full flex-1 mx-4 mb-2 bg-zinc-900 rounded-2xl flex items-center justify-center text-zinc-500 text-sm overflow-hidden">
-              {isRemoteConnected ? (
-                <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
-              ) : hasPermission ? (
-                <div className="w-full h-full flex items-center justify-center text-zinc-400 text-sm">Waiting for {name}...</div>
-              ) : (
-                "Video coming"
-              )}
+              {isRemoteConnected ? <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" /> : hasPermission ? <div className="w-full h-full flex items-center justify-center text-zinc-400 text-sm">Waiting for {name}...</div> : "Video coming"}
               <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
             </div>
           )}
