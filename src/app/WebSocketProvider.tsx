@@ -36,8 +36,11 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
   const [callSignal, setCallSignal] = useState<CallSignal>(null);
   const [callSdpSignal, setCallSdpSignal] = useState<CallSdpSignal>(null);
 
-  // CUMA 1 JALUR. roomWsRef DIHAPUS, itu yang bikin call putus.
   const wsRef = useRef<WebSocket | null>(null);
+  // BIARIN AJA, GAK DIHAPUS, GAK DIPAKE. Biar file lain yang import gak pecah.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const roomWsRef = useRef<WebSocket | null>(null);
+
   const endedAudioRef = useRef<HTMLAudioElement | null>(null);
   const lastEndedRef = useRef<string>("");
 
@@ -58,7 +61,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
   const clearCallSignal = useCallback(() => setCallSignal(null), []);
   const clearCallSdpSignal = useCallback(() => setCallSdpSignal(null), []);
 
-  // FIX 1: kirim pake wsRef yang udah connect, bukan roomWsRef yang null
+  // FIX 1: kirim pake wsRef yang udah connect, kayak chat. roomWs gak dipake.
   const sendCallSignal = useCallback((data: any) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(data));
@@ -106,7 +109,6 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
         if (!isMounted) return;
         try {
           const data = JSON.parse(event.data);
-
           if (data.type === "USER_CONNECTED") {
             setOnlineUsers((prev) => prev.includes(data.userId) ? prev : [...prev, data.userId]);
           } else if (data.type === "USER_DISCONNECTED") {
@@ -120,23 +122,16 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
             }
           } else if (data.type === "CALL_INCOMING") {
             if (data.callerId !== currentUserId) {
-              setIncomingCall({
-                callId: data.callId,
-                callerId: data.callerId,
-                chatId: data.chatId,
-                callType: data.callType || "audio",
-              });
+              setIncomingCall({ callId: data.callId, callerId: data.callerId, chatId: data.chatId, callType: data.callType || "audio" });
             }
           } else if (data.type === "CALL_ACCEPTED") {
-            // Tombol Accept dipencet -> nyampe sini, 2 sisi dapet
             setCallSignal({ callId: data.callId, type: "CALL_ACCEPTED", at: Date.now() });
           } else if (data.type === "CALL_ENDED" || data.type === "CALL_DECLINED" || data.type === "CALL_CANCELLED" || data.type === "CALL_MISSED") {
-            // Tombol Decline / End dipencet -> nyampe sini
             if (data.callId) playEndedSound(data.callId);
             setCallSignal({ callId: data.callId, type: data.type, at: Date.now() });
             setIncomingCall(null);
           }
-          // FIX 2: SDP harus ditangkep di ws yang sama, ini yang bikin CallOverlay gak pernah dapet Offer
+          // FIX 2: ini yang bikin call macet kemaren, gak ada handler-nya. Chat punya NEW_MESSAGE, call harus punya ini.
           else if (data.type === "CALL_OFFER" || data.type === "CALL_ANSWER" || data.type === "CALL_ICE") {
             if (data.fromId !== currentUserId) {
               setCallSdpSignal({
@@ -149,7 +144,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
               });
             }
           }
-          // FIX 3: SIGNAL dari CallOverlay lama, di-unwrap ke CALL_OFFER/ANSWER/ICE
+          // FIX 3: CallOverlay kirim SIGNAL, di-unwrap biar nyambung
           else if (data.type === "SIGNAL") {
             const inner = data.signalType || data.signal || data.kind;
             const realType = typeof inner === "string" && inner.startsWith("CALL_") ? inner : "CALL_OFFER";
@@ -164,9 +159,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
               });
             }
           }
-        } catch (err) {
-          console.error("WS Error:", err);
-        }
+        } catch (err) { console.error("WS Error:", err); }
       };
     };
 
@@ -181,10 +174,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
   }, [playEndedSound]);
 
   return (
-    <WebSocketContext.Provider value={{
-      onlineUsers, isWsReady, lastMessage, incomingCall, clearIncomingCall,
-      callSignal, clearCallSignal, callSdpSignal, clearCallSdpSignal, sendCallSignal
-    }}>
+    <WebSocketContext.Provider value={{ onlineUsers, isWsReady, lastMessage, incomingCall, clearIncomingCall, callSignal, clearCallSignal, callSdpSignal, clearCallSdpSignal, sendCallSignal }}>
       {children}
     </WebSocketContext.Provider>
   );
