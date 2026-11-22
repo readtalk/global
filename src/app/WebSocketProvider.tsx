@@ -18,12 +18,15 @@ type WebSocketContextType = {
   callSdpSignal: CallSdpSignal;
   clearCallSdpSignal: () => void;
   sendCallSignal: (data: any) => void;
+  connectRoomWs: (callId: string) => void;
+  disconnectRoomWs: () => void;
 };
 
 const WebSocketContext = createContext<WebSocketContextType>({
   onlineUsers: [], isWsReady: false, lastMessage: null, incomingCall: null,
   clearIncomingCall: () => {}, callSignal: null, clearCallSignal: () => {},
   callSdpSignal: null, clearCallSdpSignal: () => {}, sendCallSignal: () => {},
+  connectRoomWs: () => {}, disconnectRoomWs: () => {},
 });
 
 export const useWebSocket = () => useContext(WebSocketContext);
@@ -36,11 +39,10 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
   const [callSignal, setCallSignal] = useState<CallSignal>(null);
   const [callSdpSignal, setCallSdpSignal] = useState<CallSdpSignal>(null);
 
-  const wsRef = useRef<WebSocket | null>(null);
-  // BIARIN AJA, GAK DIHAPUS, GAK DIPAKE. Biar file lain yang import gak pecah.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const roomWsRef = useRef<WebSocket | null>(null);
-
+  const wsRef = useRef<WebSocket | null>(null); // DATA_DO
+  const roomWsRef = useRef<WebSocket | null>(null); // ROOM_DO - biarin, gak dihapus
+  const currentUserIdRef = useRef<string>("");
+  const roomCallIdRef = useRef<string>("");
   const endedAudioRef = useRef<HTMLAudioElement | null>(null);
   const lastEndedRef = useRef<string>("");
 
@@ -61,12 +63,57 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
   const clearCallSignal = useCallback(() => setCallSignal(null), []);
   const clearCallSdpSignal = useCallback(() => setCallSdpSignal(null), []);
 
-  // FIX 1: kirim pake wsRef yang udah connect, kayak chat. roomWs gak dipake.
-  const sendCallSignal = useCallback((data: any) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(data));
-    }
+  const disconnectRoomWs = useCallback(() => {
+    if (roomWsRef.current) { try { roomWsRef.current.close(); } catch {} roomWsRef.current = null; }
+    roomCallIdRef.current = "";
   }, []);
+
+  // Ini yang hilang di file lama lu: roomWsRef ada tapi gak pernah di-connect
+  // Dipanggil pas tombol Accept di IncomingCallOverlay / CallOverlay
+  const connectRoomWs = useCallback((callId: string) => {
+    const session = localStorage.getItem("session");
+    if (!session || !callId) return;
+    if (roomWsRef.current && roomWsRef.current.readyState === WebSocket.OPEN && roomCallIdRef.current === callId) return;
+    disconnectRoomWs();
+    roomCallIdRef.current = callId;
+    const currentUserId = currentUserIdRef.current;
+    const rws = new WebSocket(`wss://auth.readtalk.workers.dev/room?callId=${callId}&token=${session}`);
+    roomWsRef.current = rws;
+
+    rws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "CALL_OFFER" || data.type === "CALL_ANSWER" || data.type === "CALL_ICE") {
+          if (data.fromId !== currentUserId) {
+            setCallSdpSignal({ callId: data.callId || callId, fromId: data.fromId, type: data.type, sdp: data.sdp, candidate: data.candidate, at: Date.now() });
+          }
+        } else if (data.type === "SIGNAL") {
+          const inner = data.signalType || data.signal || data.kind;
+          const realType = typeof inner === "string" && inner.startsWith("CALL_") ? inner : "CALL_OFFER";
+          if (data.fromId !== currentUserId) {
+            setCallSdpSignal({ callId: data.callId || callId, fromId: data.fromId, type: realType, sdp: data.sdp, candidate: data.candidate, at: Date.now() });
+          }
+        }
+      } catch {}
+    };
+    rws.onclose = () => { if (roomWsRef.current === rws) roomWsRef.current = null; };
+  }, [disconnectRoomWs]);
+
+  // Ini yang bikin call macet: dulu kirim ke roomWs yang null, sekarang auto-connect dulu
+  const sendCallSignal = useCallback((data: any) => {
+    if (roomWsRef.current && roomWsRef.current.readyState === WebSocket.OPEN) {
+      roomWsRef.current.send(JSON.stringify(data));
+      return;
+    }
+    if (data.callId) {
+      connectRoomWs(data.callId);
+      setTimeout(() => {
+        if (roomWsRef.current && roomWsRef.current.readyState === WebSocket.OPEN) {
+          roomWsRef.current.send(JSON.stringify(data));
+        }
+      }, 350);
+    }
+  }, [connectRoomWs]);
 
   useEffect(() => {
     let isMounted = true;
@@ -79,6 +126,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
         const payload = JSON.parse(atob(session.split(".")[1]));
         currentUserId = payload.properties?.id || payload.sub;
       } catch {}
+      currentUserIdRef.current = currentUserId;
       setIsWsReady(false);
 
       const fetchOnlineUsers = async () => {
@@ -94,8 +142,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
         } catch {}
       };
 
-      const wsUrl = `wss://auth.readtalk.workers.dev/ws?token=${session}`;
-      const ws = new WebSocket(wsUrl);
+      const ws = new WebSocket(`wss://auth.readtalk.workers.dev/ws?token=${session}`);
       wsRef.current = ws;
 
       ws.onopen = async () => {
@@ -126,38 +173,12 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
             }
           } else if (data.type === "CALL_ACCEPTED") {
             setCallSignal({ callId: data.callId, type: "CALL_ACCEPTED", at: Date.now() });
+            connectRoomWs(data.callId); // DATA_DO -> ROOM_DO, pas tombol Accept
           } else if (data.type === "CALL_ENDED" || data.type === "CALL_DECLINED" || data.type === "CALL_CANCELLED" || data.type === "CALL_MISSED") {
             if (data.callId) playEndedSound(data.callId);
             setCallSignal({ callId: data.callId, type: data.type, at: Date.now() });
             setIncomingCall(null);
-          }
-          // FIX 2: ini yang bikin call macet kemaren, gak ada handler-nya. Chat punya NEW_MESSAGE, call harus punya ini.
-          else if (data.type === "CALL_OFFER" || data.type === "CALL_ANSWER" || data.type === "CALL_ICE") {
-            if (data.fromId !== currentUserId) {
-              setCallSdpSignal({
-                callId: data.callId,
-                fromId: data.fromId,
-                type: data.type,
-                sdp: data.sdp,
-                candidate: data.candidate,
-                at: Date.now(),
-              });
-            }
-          }
-          // FIX 3: CallOverlay kirim SIGNAL, di-unwrap biar nyambung
-          else if (data.type === "SIGNAL") {
-            const inner = data.signalType || data.signal || data.kind;
-            const realType = typeof inner === "string" && inner.startsWith("CALL_") ? inner : "CALL_OFFER";
-            if (data.fromId !== currentUserId) {
-              setCallSdpSignal({
-                callId: data.callId,
-                fromId: data.fromId,
-                type: realType,
-                sdp: data.sdp,
-                candidate: data.candidate,
-                at: Date.now(),
-              });
-            }
+            disconnectRoomWs();
           }
         } catch (err) { console.error("WS Error:", err); }
       };
@@ -170,11 +191,12 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
       isMounted = false;
       window.removeEventListener("session-changed", handleSessionChanged);
       if (wsRef.current) { wsRef.current.close(); wsRef.current = null; }
+      disconnectRoomWs();
     };
-  }, [playEndedSound]);
+  }, [playEndedSound, connectRoomWs, disconnectRoomWs]);
 
   return (
-    <WebSocketContext.Provider value={{ onlineUsers, isWsReady, lastMessage, incomingCall, clearIncomingCall, callSignal, clearCallSignal, callSdpSignal, clearCallSdpSignal, sendCallSignal }}>
+    <WebSocketContext.Provider value={{ onlineUsers, isWsReady, lastMessage, incomingCall, clearIncomingCall, callSignal, clearCallSignal, callSdpSignal, clearCallSdpSignal, sendCallSignal, connectRoomWs, disconnectRoomWs }}>
       {children}
     </WebSocketContext.Provider>
   );
