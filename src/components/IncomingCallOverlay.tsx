@@ -6,11 +6,13 @@ import CallOverlay from "@/components/CallOverlay";
 import { useWebSocket } from "@/app/WebSocketProvider";
 
 type MutualUser = { id: string; username: string; name: string; avatar: string | null };
+
 export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?: MutualUser[] }) {
   const { incomingCall, clearIncomingCall } = useWebSocket();
   const [isAccepted, setIsAccepted] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
   const ringingRef = useRef<HTMLAudioElement | null>(null);
+  
   useEffect(() => {
     if (!incomingCall) {
       setIsAccepted(false);
@@ -19,6 +21,7 @@ export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?
     }
     setIsBusy(false);
   }, [incomingCall]);
+  
   useEffect(() => {
     if (!incomingCall || isAccepted) {
       if (ringingRef.current) {
@@ -41,6 +44,7 @@ export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?
       }
     };
   }, [incomingCall, isAccepted]);
+  
   useEffect(() => {
     return () => {
       if (ringingRef.current) {
@@ -49,12 +53,15 @@ export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?
       }
     };
   }, []);
+  
   if (!incomingCall) return null;
+  
   const caller = mutualUsers.find(u => u.id === incomingCall.callerId);
   const fromName = caller?.name || incomingCall.callerId;
   const fromUsername = caller?.username || incomingCall.callerId;
   const fromAvatar = caller?.avatar || null;
   const fromId = incomingCall.callerId;
+  
   const getMyId = (token: string) => {
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
@@ -63,6 +70,7 @@ export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?
       return "";
     }
   };
+  
   const handleAccept = async () => {
     if (isBusy) return;
     setIsBusy(true);
@@ -73,7 +81,7 @@ export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?
     }
     if (token && incomingCall.callId) {
       try {
-        await fetch(`https://auth.readtalk.workers.dev/calls/${incomingCall.callId}/accept`, {
+        await fetch(`https://auth.readtalk.workers.dev/call/${incomingCall.callId}/accept`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-User-Id": getMyId(token) },
           body: JSON.stringify({}),
@@ -83,6 +91,7 @@ export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?
     setIsAccepted(true);
     setIsBusy(false);
   };
+  
   const handleDecline = async () => {
     if (isBusy) return;
     setIsBusy(true);
@@ -97,7 +106,7 @@ export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?
     setIsAccepted(false);
     if (token && incomingCall.callId) {
       try {
-        await fetch(`https://auth.readtalk.workers.dev/calls/${incomingCall.callId}/decline`, {
+        await fetch(`https://auth.readtalk.workers.dev/call/${incomingCall.callId}/decline`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-User-Id": getMyId(token) },
           body: JSON.stringify({}),
@@ -106,6 +115,7 @@ export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?
     }
     setIsBusy(false);
   };
+  
   if (isAccepted) {
     return (
       <CallOverlay
@@ -124,6 +134,7 @@ export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?
       />
     );
   }
+  
   return (
     <div className="fixed inset-0 z-[80] bg-zinc-950 text-white flex flex-col items-center justify-center gap-6 px-6">
       <img src={fromAvatar || "/default-avatar.png"} className="w-28 h-28 rounded-full object-cover bg-zinc-800" alt="" />
