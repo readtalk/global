@@ -17,11 +17,12 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
   const streamRef = useRef<MediaStream | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const callIdRef = useRef<string | null>(null);
+  // HAPUS: roomWsRef — istilah lama
   const ringbackRef = useRef<HTMLAudioElement | null>(null);
   const endedRef = useRef<HTMLAudioElement | null>(null);
   const closedRef = useRef(false);
   const pendingCandidatesRef = useRef<any[]>([]);
-  // ISTILAH DOANG: ambil dari WebSocketProvider yang online sekarang
+  // ISTILAH DOANG: tambah callSdpSignal + sendCallSignal
   const { callSignal, clearCallSignal, callSdpSignal, clearCallSdpSignal, sendCallSignal } = useWebSocket();
   const getMyId = (token: string) => { try { const payload = JSON.parse(atob(token.split(".")[1])); return payload.properties?.id || payload.sub || ""; } catch { return ""; } };
   const stopRingback = () => { if (ringbackRef.current) { ringbackRef.current.pause(); ringbackRef.current.currentTime = 0; } };
@@ -30,36 +31,29 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
   const startRingback = () => { if (mode !== "outgoing") return; if (!ringbackRef.current) { ringbackRef.current = new Audio("/sound/ringback-tone.mp3"); ringbackRef.current.loop = true; ringbackRef.current.preload = "auto"; } applySpeaker(isSpeaker); ringbackRef.current.currentTime = 0; ringbackRef.current.play().catch(() => {}); };
   const attachRemote = (remoteStream: MediaStream) => { setIsRemoteConnected(true); setStatus("Connected"); stopRingback(); applySpeaker(isSpeaker); if (type === "video" && remoteVideoRef.current) { remoteVideoRef.current.srcObject = remoteStream; remoteVideoRef.current.play().catch(() => {}); } if (remoteAudioRef.current) { remoteAudioRef.current.srcObject = remoteStream; remoteAudioRef.current.play().catch(() => {}); } };
   const setupPc = (pc: RTCPeerConnection, myId: string) => {
-    // ISTILAH DOANG: dulu roomWsRef.send({ type:"SIGNAL", target, signal:{ type:"CALL_ICE" } }) -> sekarang sendCallSignal({ type:"CALL_ICE" })
-    pc.onicecandidate = (e) => { if (e.candidate && callIdRef.current) { sendCallSignal({ type: "CALL_ICE", callId: callIdRef.current, fromId: myId, candidate: e.candidate.toJSON() }); } };
+    pc.onicecandidate = (e) => {
+      if (e.candidate && callIdRef.current) {
+        // ISTILAH DOANG: dulu roomWs.send({ type:"SIGNAL", target, signal:{ type:"CALL_ICE" } }) -> sekarang ini
+        sendCallSignal({ type: "CALL_ICE", callId: callIdRef.current, fromId: myId, candidate: e.candidate.toJSON() });
+      }
+    };
     pc.ontrack = (event) => { const remoteStream = event.streams[0]; if (remoteStream) attachRemote(remoteStream); };
     pc.onconnectionstatechange = () => { if (pc.connectionState === "connected") { setIsRemoteConnected(true); setStatus("Connected"); stopRingback(); } };
   };
-  // ... sisa file lu dari getUserMedia sampai JSX biarin persis, cuma ganti pengiriman OFFER/ANSWER yang tadinya roomWsRef jadi sendCallSignal:
-  // sendCallSignal({ type: "CALL_OFFER", callId: callIdRef.current, fromId: myId, sdp: offer })
-  // sendCallSignal({ type: "CALL_ANSWER", callId: callIdRef.current, fromId: myId, sdp: answer })
-  // dan baca sinyalnya dari callSdpSignal (bukan dari roomWs onmessage), dengan type yang sama: CALL_OFFER / CALL_ANSWER / CALL_ICE
   useEffect(() => {
-    if (!callSdpSignal || !isOpen) return;
-    if (callSdpSignal.callId !== callIdRef.current) return;
-    const pc = pcRef.current; if (!pc) return;
-    const run = async () => {
-      if (callSdpSignal.type === "CALL_OFFER" && mode === "incoming") {
-        await pc.setRemoteDescription(new RTCSessionDescription(callSdpSignal.sdp));
-        for (const c of pendingCandidatesRef.current) { try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch {} } pendingCandidatesRef.current = [];
-        const answer = await pc.createAnswer(); await pc.setLocalDescription(answer);
-        const token = localStorage.getItem("session");
-        sendCallSignal({ type: "CALL_ANSWER", callId: callIdRef.current, fromId: token ? getMyId(token) : "", sdp: answer });
-      } else if (callSdpSignal.type === "CALL_ANSWER" && mode === "outgoing") {
-        await pc.setRemoteDescription(new RTCSessionDescription(callSdpSignal.sdp));
-        for (const c of pendingCandidatesRef.current) { try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch {} } pendingCandidatesRef.current = [];
-      } else if (callSdpSignal.type === "CALL_ICE" && callSdpSignal.candidate) {
-        if (pc.remoteDescription) { try { await pc.addIceCandidate(new RTCIceCandidate(callSdpSignal.candidate)); } catch {} } else { pendingCandidatesRef.current.push(callSdpSignal.candidate); }
-      }
-      clearCallSdpSignal();
-    };
-    run();
-  }, [callSdpSignal, isOpen, mode]);
-  // JSX + sisa logika lu (startCall, hangup, mute, speaker, camera) biarin persis file lama lu
-  return null as any; // <-- ganti sama JSX lama lu, gue gak ubah
-}
+    if (!isOpen) return;
+    closedRef.current = false;
+    pendingCandidatesRef.current = [];
+    setStatus(mode === "incoming" ? "Connecting..." : "Calling...");
+    setIsMuted(false); setIsSpeaker(false); setIsCameraOff(false); setHasPermission(false); setIsRemoteConnected(false);
+    callIdRef.current = callId || null;
+    const startCall = async () => {
+      const token = localStorage.getItem("session");
+      if (!token) return;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === "video" });
+        streamRef.current = stream;
+        setHasPermission(true);
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+          await localVideoRef
