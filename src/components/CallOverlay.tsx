@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { Phone, Microphone, VideoCamera, SpeakerHigh, CaretDown } from "@phosphor-icons/react/dist/ssr";
 import { useWebSocket } from "@/app/WebSocketProvider";
 
-type Props = { isOpen: boolean; onClose: () => void; name: string; username: string; receiverId: string; avatar: string | null; type: "audio" | "video"; callId?: string; mode?: "outgoing" | "incoming"; };
+type Props = { isOpen: boolean; onClose: () => void; name: string; username: string; receiverId: string; avatar: string | null; type: "audio" | "video"; callId?: string; chatId?: string; mode?: "outgoing" | "incoming"; };
 
-export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar, type, callId, mode = "outgoing" }: Props) {
+export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar, type, callId, chatId, mode = "outgoing" }: Props) {
   const [status, setStatus] = useState("Calling...");
   const [isMuted, setIsMuted] = useState(false);
   const [isSpeaker, setIsSpeaker] = useState(false);
@@ -19,11 +19,12 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
   const streamRef = useRef<MediaStream | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const callIdRef = useRef<string | null>(null);
+  const roomWsRef = useRef<WebSocket | null>(null);
   const ringbackRef = useRef<HTMLAudioElement | null>(null);
   const endedRef = useRef<HTMLAudioElement | null>(null);
   const closedRef = useRef(false);
   const pendingCandidatesRef = useRef<any[]>([]);
-  const { callSignal, clearCallSignal, callSdpSignal, clearCallSdpSignal, sendCallSignal } = useWebSocket();
+  const { callSignal, clearCallSignal } = useWebSocket();
   
   const getMyId = (token: string) => {
     try {
@@ -89,8 +90,12 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
   
   const setupPc = (pc: RTCPeerConnection, myId: string) => {
     pc.onicecandidate = (e) => {
-      if (e.candidate && callIdRef.current) {
-        sendCallSignal({ type: "CALL_ICE", callId: callIdRef.current, fromId: myId, targetId: receiverId, candidate: e.candidate.toJSON() });
+      if (e.candidate && callIdRef.current && roomWsRef.current?.readyState === WebSocket.OPEN) {
+        roomWsRef.current.send(JSON.stringify({
+          type: "SIGNAL",
+          target: receiverId,
+          signal: { type: "CALL_ICE", callId: callIdRef.current, fromId: myId, candidate: e.candidate.toJSON() }
+        }));
       }
     };
     pc.ontrack = (event) => {
@@ -137,21 +142,72 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
         setupPc(pc, myId);
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
         
+        let activeChatId = chatId;
+        
         if (mode === "outgoing") {
           const res = await fetch("https://auth.readtalk.workers.dev/call/create", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-User-Id": myId },
             body: JSON.stringify({ target_user_id: receiverId, type }),
           });
-          const data = (await res.json().catch(() => null)) as { success?: boolean; callId?: string } | null;
+          const data = (await res.json().catch(() => null)) as { success?: boolean; callId?: string; chatId?: string } | null;
           if (data && data.success && data.callId) {
             callIdRef.current = data.callId;
+            if (data.chatId) activeChatId = data.chatId;
           }
           setStatus("Ringing...");
           startRingback();
         } else {
           if (callId) callIdRef.current = callId;
           setStatus("Connecting...");
+        }
+        
+        if (activeChatId) {
+          const wsUrl = `wss://auth.readtalk.workers.dev/chats/${activeChatId}/ws?userId=${myId}`;
+          const roomWs = new WebSocket(wsUrl);
+          roomWsRef.current = roomWs;
+          
+          roomWs.onmessage = (event) => {
+            try {
+              const msg = JSON.parse(event.data);
+              if (msg.type === "SIGNAL" && msg.signal) {
+                const signal = msg.signal;
+                if (signal.callId !== callIdRef.current) return;
+                
+                if (signal.type === "CALL_OFFER" && mode === "incoming") {
+                  (async () => {
+                    await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+                    for (const c of pendingCandidatesRef.current) {
+                      try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch {}
+                    }
+                    pendingCandidatesRef.current = [];
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+                    roomWs.send(JSON.stringify({
+                      type: "SIGNAL",
+                      target: receiverId,
+                      signal: { type: "CALL_ANSWER", callId: callIdRef.current, fromId: myId, sdp: answer }
+                    }));
+                    setStatus("Connecting...");
+                  })();
+                } else if (signal.type === "CALL_ANSWER" && mode === "outgoing") {
+                  (async () => {
+                    await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+                    for (const c of pendingCandidatesRef.current) {
+                      try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch {}
+                    }
+                    pendingCandidatesRef.current = [];
+                  })();
+                } else if (signal.type === "CALL_ICE" && signal.candidate) {
+                  if (pc.remoteDescription) {
+                    pc.addIceCandidate(new RTCIceCandidate(signal.candidate)).catch(() => {});
+                  } else {
+                    pendingCandidatesRef.current.push(signal.candidate);
+                  }
+                }
+              }
+            } catch {}
+          };
         }
       } catch (error) {
         setStatus("Permission denied");
@@ -160,6 +216,10 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
     startCall();
     return () => {
       stopRingback();
+      if (roomWsRef.current) {
+        roomWsRef.current.close();
+        roomWsRef.current = null;
+      }
       if (pcRef.current) {
         pcRef.current.close();
         pcRef.current = null;
@@ -172,7 +232,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
       if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
       if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
     };
-  }, [isOpen, type, receiverId]);
+  }, [isOpen, type, receiverId, chatId]);
   
   useEffect(() => {
     if (hasPermission && localVideoRef.current && streamRef.current) {
@@ -184,15 +244,20 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
   useEffect(() => {
     if (!callSignal || !callIdRef.current) return;
     if (callSignal.callId !== callIdRef.current) return;
+    
     if (callSignal.type === "CALL_ACCEPTED") {
-      if (mode === "outgoing" && pcRef.current) {
+      if (mode === "outgoing" && pcRef.current && roomWsRef.current?.readyState === WebSocket.OPEN) {
         (async () => {
           try {
             const token = localStorage.getItem("session");
             const myId = token ? getMyId(token) : "";
             const offer = await pcRef.current!.createOffer();
             await pcRef.current!.setLocalDescription(offer);
-            sendCallSignal({ type: "CALL_OFFER", callId: callIdRef.current, fromId: myId, targetId: receiverId, sdp: offer });
+            roomWsRef.current!.send(JSON.stringify({
+              type: "SIGNAL",
+              target: receiverId,
+              signal: { type: "CALL_OFFER", callId: callIdRef.current, fromId: myId, sdp: offer }
+            }));
             setStatus("Connecting...");
           } catch {}
         })();
@@ -201,6 +266,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
       }
       clearCallSignal();
     }
+    
     if (callSignal.type === "CALL_ENDED" || callSignal.type === "CALL_DECLINED" || callSignal.type === "CALL_CANCELLED" || callSignal.type === "CALL_MISSED") {
       if (!closedRef.current) {
         closedRef.current = true;
@@ -210,42 +276,6 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
       }
     }
   }, [callSignal, clearCallSignal, onClose]);
-  
-  useEffect(() => {
-    if (!callSdpSignal || !callIdRef.current || !pcRef.current) return;
-    if (callSdpSignal.callId !== callIdRef.current) return;
-    const pc = pcRef.current;
-    (async () => {
-      try {
-        if (callSdpSignal.type === "CALL_OFFER" && mode === "incoming") {
-          await pc.setRemoteDescription(new RTCSessionDescription(callSdpSignal.sdp));
-          for (const c of pendingCandidatesRef.current) {
-            try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch {}
-          }
-          pendingCandidatesRef.current = [];
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          const token = localStorage.getItem("session");
-          const myId = token ? getMyId(token) : "";
-          sendCallSignal({ type: "CALL_ANSWER", callId: callIdRef.current, fromId: myId, targetId: receiverId, sdp: answer });
-          setStatus("Connecting...");
-        } else if (callSdpSignal.type === "CALL_ANSWER" && mode === "outgoing") {
-          await pc.setRemoteDescription(new RTCSessionDescription(callSdpSignal.sdp));
-          for (const c of pendingCandidatesRef.current) {
-            try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch {}
-          }
-          pendingCandidatesRef.current = [];
-        } else if (callSdpSignal.type === "CALL_ICE" && callSdpSignal.candidate) {
-          if (pc.remoteDescription) {
-            try { await pc.addIceCandidate(new RTCIceCandidate(callSdpSignal.candidate)); } catch {}
-          } else {
-            pendingCandidatesRef.current.push(callSdpSignal.candidate);
-          }
-        }
-      } catch {}
-      clearCallSdpSignal();
-    })();
-  }, [callSdpSignal, clearCallSdpSignal]);
   
   const toggleMute = () => {
     const next = !isMuted;
