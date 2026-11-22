@@ -56,7 +56,7 @@ export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?
 
   if (!incomingCall) return null;
 
-  const caller = mutualUsers.find(u => u.id === incomingCall.callerId);
+  const caller = mutualUsers.find((u) => u.id === incomingCall.callerId);
   const fromName = caller?.yourname || incomingCall.callerId;
   const fromUsername = caller?.username || incomingCall.callerId;
   const fromAvatar = caller?.avatar || null;
@@ -130,6 +130,7 @@ export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?
         avatar={fromAvatar}
         type={incomingCall.callType}
         callId={incomingCall.callId}
+        chatId={incomingCall.chatId}
         mode="incoming"
       />
     );
