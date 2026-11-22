@@ -5,29 +5,22 @@ import { Phone, VideoCamera } from "@phosphor-icons/react/dist/ssr";
 import CallOverlay from "@/components/CallOverlay";
 import { useWebSocket } from "@/app/WebSocketProvider";
 
-type MutualUser = { id: string; username: string; yourname: string; avatar: string | null };
+type MutualUser = { id: string; username: string; name: string; avatar: string | null };
 
 export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?: MutualUser[] }) {
-  const { incomingCall, clearIncomingCall } = useWebSocket();
+  const { incomingCall, clearIncomingCall, connectRoomWs, disconnectRoomWs } = useWebSocket();
   const [isAccepted, setIsAccepted] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
   const ringingRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    if (!incomingCall) {
-      setIsAccepted(false);
-      setIsBusy(false);
-      return;
-    }
+    if (!incomingCall) { setIsAccepted(false); setIsBusy(false); return; }
     setIsBusy(false);
   }, [incomingCall]);
 
   useEffect(() => {
     if (!incomingCall || isAccepted) {
-      if (ringingRef.current) {
-        ringingRef.current.pause();
-        ringingRef.current.currentTime = 0;
-      }
+      if (ringingRef.current) { ringingRef.current.pause(); ringingRef.current.currentTime = 0; }
       return;
     }
     if (!ringingRef.current) {
@@ -37,82 +30,77 @@ export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?
     }
     ringingRef.current.currentTime = 0;
     ringingRef.current.play().catch(() => {});
-    return () => {
-      if (ringingRef.current) {
-        ringingRef.current.pause();
-        ringingRef.current.currentTime = 0;
-      }
-    };
+    return () => { if (ringingRef.current) { ringingRef.current.pause(); ringingRef.current.currentTime = 0; } };
   }, [incomingCall, isAccepted]);
 
   useEffect(() => {
-    return () => {
-      if (ringingRef.current) {
-        ringingRef.current.pause();
-        ringingRef.current.currentTime = 0;
-      }
-    };
+    return () => { if (ringingRef.current) { ringingRef.current.pause(); ringingRef.current.currentTime = 0; } };
   }, []);
 
   if (!incomingCall) return null;
 
-  const caller = mutualUsers.find((u) => u.id === incomingCall.callerId);
-  const fromName = caller?.yourname || incomingCall.callerId;
+  const caller = mutualUsers.find(u => u.id === incomingCall.callerId);
+  const fromName = caller?.name || incomingCall.callerId;
   const fromUsername = caller?.username || incomingCall.callerId;
   const fromAvatar = caller?.avatar || null;
   const fromId = incomingCall.callerId;
 
   const getMyId = (token: string) => {
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      return payload.properties?.id || payload.sub || "";
-    } catch {
-      return "";
-    }
+    try { const payload = JSON.parse(atob(token.split(".")[1])); return payload.properties?.id || payload.sub || ""; } catch { return ""; }
   };
 
+  const stopRinging = () => {
+    if (ringingRef.current) { ringingRef.current.pause(); ringingRef.current.currentTime = 0; }
+  };
+
+  // Tombol Accept: DATA_DO -> ROOM_DO
   const handleAccept = async () => {
     if (isBusy) return;
     setIsBusy(true);
     const token = localStorage.getItem("session");
-    if (ringingRef.current) {
-      ringingRef.current.pause();
-      ringingRef.current.currentTime = 0;
-    }
+    stopRinging();
+
     if (token && incomingCall.callId) {
       try {
         await fetch(`https://auth.readtalk.workers.dev/call/${incomingCall.callId}/accept`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "X-User-Id": getMyId(token) },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-User-Id": getMyId(token) },
           body: JSON.stringify({}),
         });
       } catch {}
     }
+
+    // FIX: ini yang hilang kemaren. Accept = pindah DATA_DO -> ROOM_DO
+    // Harus connect SEBELUM CallOverlay dibuka, biar Offer dari A gak kebuang
+    connectRoomWs(incomingCall.callId);
+
     setIsAccepted(true);
     setIsBusy(false);
   };
 
+  // Tombol Decline: cuma DATA_DO, gak usah connect ROOM_DO
   const handleDecline = async () => {
     if (isBusy) return;
     setIsBusy(true);
     const token = localStorage.getItem("session");
-    if (ringingRef.current) {
-      ringingRef.current.pause();
-      ringingRef.current.currentTime = 0;
-    }
+    stopRinging();
     const ended = new Audio("/sound/incoming-missed-call-ended.mp3");
     ended.play().catch(() => {});
-    clearIncomingCall();
-    setIsAccepted(false);
+
+    // FIX: POST dulu baru clear, jangan kebalik. Kemaren clear dulu jadi POST gak ke-detect callId.
     if (token && incomingCall.callId) {
       try {
         await fetch(`https://auth.readtalk.workers.dev/call/${incomingCall.callId}/decline`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "X-User-Id": getMyId(token) },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-User-Id": getMyId(token) },
           body: JSON.stringify({}),
         });
       } catch {}
     }
+
+    disconnectRoomWs();
+    clearIncomingCall();
+    setIsAccepted(false);
     setIsBusy(false);
   };
 
@@ -120,17 +108,13 @@ export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?
     return (
       <CallOverlay
         isOpen={true}
-        onClose={() => {
-          clearIncomingCall();
-          setIsAccepted(false);
-        }}
+        onClose={() => { disconnectRoomWs(); clearIncomingCall(); setIsAccepted(false); }}
         name={fromName}
         username={fromUsername}
         receiverId={fromId}
         avatar={fromAvatar}
         type={incomingCall.callType}
         callId={incomingCall.callId}
-        chatId={incomingCall.chatId}
         mode="incoming"
       />
     );
