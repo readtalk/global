@@ -1,140 +1,150 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Phone, VideoCamera } from "@phosphor-icons/react/dist/ssr";
-import CallOverlay from "@/components/CallOverlay";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useWebSocket } from "@/app/WebSocketProvider";
 
-type MutualUser = { id: string; username: string; name: string; avatar: string | null };
+type Props = {
+  isOpen: boolean;
+  onClose: () => void;
+  name: string;
+  username: string;
+  receiverId: string;
+  avatar: string | null;
+  type: "audio" | "video"; // BUKAN callType, samain sama IncomingCallOverlay
+  callId: string;
+  chatId?: string; // BARU, dari incomingCall.chatId
+  mode: "incoming" | "outgoing";
+};
 
-export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?: MutualUser[] }) {
-  const { incomingCall, clearIncomingCall, connectRoomWs, disconnectRoomWs } = useWebSocket();
-  const [isAccepted, setIsAccepted] = useState(false);
-  const [isBusy, setIsBusy] = useState(false);
-  const ringingRef = useRef<HTMLAudioElement | null>(null);
+export default function CallOverlay({ isOpen, onClose, name, username, receiverId, avatar, type, callId, chatId, mode }: Props) {
+  const { callSignal, callSdpSignal, clearCallSdpSignal, sendCallSignal, clearCallSignal } = useWebSocket();
 
-  useEffect(() => {
-    if (!incomingCall) { setIsAccepted(false); setIsBusy(false); return; }
-    setIsBusy(false);
-  }, [incomingCall]);
+  const pcRef = useRef<RTCPeerConnection | null>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [status, setStatus] = useState(mode === "outgoing" ? "calling..." : "connecting...");
+  const [muted, setMuted] = useState(false);
+  const [camOff, setCamOff] = useState(false);
+  const didInitRef = useRef(false);
 
-  useEffect(() => {
-    if (!incomingCall || isAccepted) {
-      if (ringingRef.current) { ringingRef.current.pause(); ringingRef.current.currentTime = 0; }
-      return;
-    }
-    if (!ringingRef.current) {
-      ringingRef.current = new Audio("/sound/incoming-call-ringing.mp3");
-      ringingRef.current.loop = true;
-      ringingRef.current.preload = "auto";
-    }
-    ringingRef.current.currentTime = 0;
-    ringingRef.current.play().catch(() => {});
-    return () => { if (ringingRef.current) { ringingRef.current.pause(); ringingRef.current.currentTime = 0; } };
-  }, [incomingCall, isAccepted]);
+  const getSession = () => localStorage.getItem("session") || "";
+  const getMyId = () => {
+    try { const p = JSON.parse(atob(getSession().split(".")[1])); return p.properties?.id || p.sub; } catch { return ""; }
+  };
 
-  useEffect(() => {
-    return () => { if (ringingRef.current) { ringingRef.current.pause(); ringingRef.current.currentTime = 0; } };
+  const cleanup = useCallback(() => {
+    try { pcRef.current?.close(); } catch {}
+    pcRef.current = null;
+    localStreamRef.current?.getTracks().forEach(t => t.stop());
+    localStreamRef.current = null;
   }, []);
 
-  if (!incomingCall) return null;
+  const handleEnd = useCallback(async () => {
+    try {
+      await fetch(`https://auth.readtalk.workers.dev/call/${callId}/end`, { method: "POST", headers: { Authorization: `Bearer ${getSession()}` } });
+    } catch {}
+    cleanup();
+    clearCallSignal();
+    onClose();
+  }, [callId, cleanup, clearCallSignal, onClose]);
 
-  const caller = mutualUsers.find(u => u.id === incomingCall.callerId);
-  const fromName = caller?.name || incomingCall.callerId;
-  const fromUsername = caller?.username || incomingCall.callerId;
-  const fromAvatar = caller?.avatar || null;
-  const fromId = incomingCall.callerId;
+  // FIX: incoming JANGAN nunggu CALL_ACCEPTED. Lu sendiri yang Accept, jadi langsung start.
+  // outgoing baru nunggu CALL_ACCEPTED dari DATA_DO.
+  useEffect(() => {
+    if (!isOpen || didInitRef.current) return;
+    const shouldStart = mode === "incoming" || (callSignal?.type === "CALL_ACCEPTED" && callSignal.callId === callId);
+    if (!shouldStart) return;
+    didInitRef.current = true;
 
-  const getMyId = (token: string) => {
-    try { const payload = JSON.parse(atob(token.split(".")[1])); return payload.properties?.id || payload.sub || ""; } catch { return ""; }
-  };
+    const start = async () => {
+      const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+      pcRef.current = pc;
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === "video" });
+      localStreamRef.current = stream;
+      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+      stream.getTracks().forEach(t => pc.addTrack(t, stream));
+      pc.ontrack = (e) => {
+        const s = e.streams[0];
+        if (remoteVideoRef.current) remoteVideoRef.current.srcObject = s;
+        if (remoteAudioRef.current) remoteAudioRef.current.srcObject = s;
+        setStatus("connected");
+      };
+      pc.onicecandidate = (e) => {
+        if (e.candidate) sendCallSignal({ type: "CALL_ICE", callId, chatId, fromId: getMyId(), candidate: e.candidate });
+      };
+      if (mode === "outgoing") {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        sendCallSignal({ type: "CALL_OFFER", callId, chatId, fromId: getMyId(), sdp: pc.localDescription });
+        setStatus("ringing...");
+      }
+    };
+    start();
+  }, [isOpen, mode, callSignal, callId, chatId, type, sendCallSignal]);
 
-  const stopRinging = () => {
-    if (ringingRef.current) { ringingRef.current.pause(); ringingRef.current.currentTime = 0; }
-  };
+  useEffect(() => {
+    if (!callSdpSignal || callSdpSignal.callId !== callId) return;
+    const pc = pcRef.current;
+    if (!pc) return;
+    const handle = async () => {
+      if (callSdpSignal.type === "CALL_OFFER" && mode === "incoming") {
+        await pc.setRemoteDescription(new RTCSessionDescription(callSdpSignal.sdp));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        sendCallSignal({ type: "CALL_ANSWER", callId, chatId, fromId: getMyId(), sdp: pc.localDescription });
+        setStatus("connected");
+      } else if (callSdpSignal.type === "CALL_ANSWER" && mode === "outgoing") {
+        await pc.setRemoteDescription(new RTCSessionDescription(callSdpSignal.sdp));
+        setStatus("connected");
+      } else if (callSdpSignal.type === "CALL_ICE" && callSdpSignal.candidate) {
+        try { await pc.addIceCandidate(new RTCIceCandidate(callSdpSignal.candidate)); } catch {}
+      }
+      clearCallSdpSignal();
+    };
+    handle();
+  }, [callSdpSignal, callId, chatId, mode, sendCallSignal, clearCallSdpSignal]);
 
-  // Tombol Accept: DATA_DO -> ROOM_DO
-  const handleAccept = async () => {
-    if (isBusy) return;
-    setIsBusy(true);
-    const token = localStorage.getItem("session");
-    stopRinging();
-
-    if (token && incomingCall.callId) {
-      try {
-        await fetch(`https://auth.readtalk.workers.dev/call/${incomingCall.callId}/accept`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-User-Id": getMyId(token) },
-          body: JSON.stringify({}),
-        });
-      } catch {}
+  useEffect(() => {
+    if (!callSignal || callSignal.callId !== callId) return;
+    if (callSignal.type === "CALL_ENDED" || callSignal.type === "CALL_DECLINED" || callSignal.type === "CALL_CANCELLED" || callSignal.type === "CALL_MISSED") {
+      cleanup();
+      clearCallSignal();
+      onClose();
     }
+  }, [callSignal, callId, cleanup, clearCallSignal, onClose]);
 
-    // FIX: ini yang hilang kemaren. Accept = pindah DATA_DO -> ROOM_DO
-    // Harus connect SEBELUM CallOverlay dibuka, biar Offer dari A gak kebuang
-    connectRoomWs(incomingCall.callId);
+  useEffect(() => () => cleanup(), [cleanup]);
+  useEffect(() => { if (!isOpen) didInitRef.current = false; }, [isOpen]);
 
-    setIsAccepted(true);
-    setIsBusy(false);
+  if (!isOpen) return null;
+
+  const toggleMute = () => {
+    const t = localStreamRef.current?.getAudioTracks()[0];
+    if (t) { t.enabled = !t.enabled; setMuted(!t.enabled); }
   };
-
-  // Tombol Decline: cuma DATA_DO, gak usah connect ROOM_DO
-  const handleDecline = async () => {
-    if (isBusy) return;
-    setIsBusy(true);
-    const token = localStorage.getItem("session");
-    stopRinging();
-    const ended = new Audio("/sound/incoming-missed-call-ended.mp3");
-    ended.play().catch(() => {});
-
-    // FIX: POST dulu baru clear, jangan kebalik. Kemaren clear dulu jadi POST gak ke-detect callId.
-    if (token && incomingCall.callId) {
-      try {
-        await fetch(`https://auth.readtalk.workers.dev/call/${incomingCall.callId}/decline`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-User-Id": getMyId(token) },
-          body: JSON.stringify({}),
-        });
-      } catch {}
-    }
-
-    disconnectRoomWs();
-    clearIncomingCall();
-    setIsAccepted(false);
-    setIsBusy(false);
+  const toggleCam = () => {
+    const t = localStreamRef.current?.getVideoTracks()[0];
+    if (t) { t.enabled = !t.enabled; setCamOff(!t.enabled); }
   };
-
-  if (isAccepted) {
-    return (
-      <CallOverlay
-        isOpen={true}
-        onClose={() => { disconnectRoomWs(); clearIncomingCall(); setIsAccepted(false); }}
-        name={fromName}
-        username={fromUsername}
-        receiverId={fromId}
-        avatar={fromAvatar}
-        type={incomingCall.callType}
-        callId={incomingCall.callId}
-        mode="incoming"
-      />
-    );
-  }
 
   return (
-    <div className="fixed inset-0 z-[80] bg-zinc-950 text-white flex flex-col items-center justify-center gap-6 px-6">
-      <img src={fromAvatar || "/default-avatar.png"} className="w-28 h-28 rounded-full object-cover bg-zinc-800" alt="" />
-      <div className="text-center">
-        <p className="text-xl font-bold">{fromName}</p>
-        <p className="text-zinc-400 text-sm mt-1">@{fromUsername}</p>
-        <p className="text-zinc-400 text-sm mt-3">{incomingCall.callType === "audio" ? "Voice call" : "Video call"} • Incoming...</p>
-      </div>
-      <div className="flex items-center gap-10 mt-4">
-        <button onClick={handleDecline} disabled={isBusy} className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center disabled:opacity-50">
-          <Phone size={28} weight="fill" className="rotate-[135deg]" />
-        </button>
-        <button onClick={handleAccept} disabled={isBusy} className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center disabled:opacity-50">
-          {incomingCall.callType === "audio" ? <Phone size={28} weight="fill" /> : <VideoCamera size={28} weight="fill" />}
-        </button>
+    <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center">
+      <p className="text-white/70 text-sm">{status} - {name} @{username}</p>
+      {type === "video" ? (
+        <>
+          <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
+          <video ref={localVideoRef} autoPlay muted playsInline className="absolute bottom-24 right-4 w-32 h-44 object-cover rounded-xl border" />
+        </>
+      ) : (
+        <img src={avatar || "/default-avatar.png"} className="w-28 h-28 rounded-full object-cover" alt="" />
+      )}
+      <audio ref={remoteAudioRef} autoPlay playsInline />
+      <div className="absolute bottom-6 flex gap-4">
+        <button onClick={toggleMute} className="w-14 h-14 rounded-full bg-white/20 text-white">{muted ? "🔇" : "🎤"}</button>
+        {type === "video" && <button onClick={toggleCam} className="w-14 h-14 rounded-full bg-white/20 text-white">{camOff ? "📷❌" : "📷"}</button>}
+        <button onClick={handleEnd} className="w-14 h-14 rounded-full bg-red-500 text-white text-2xl">📞</button>
       </div>
     </div>
   );
