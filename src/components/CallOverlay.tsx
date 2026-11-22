@@ -30,6 +30,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
   const streamRef = useRef<MediaStream | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const callIdRef = useRef<string | null>(null);
+  const chatIdRef = useRef<string | null>(null);
   const ringbackRef = useRef<HTMLAudioElement | null>(null);
   const endedRef = useRef<HTMLAudioElement | null>(null);
   const closedRef = useRef(false);
@@ -106,7 +107,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
   const setupPc = (pc: RTCPeerConnection, myId: string) => {
     pc.onicecandidate = (e) => {
       if (e.candidate && callIdRef.current) {
-        sendCallSignal({ type: "CALL_ICE", callId: callIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId, candidate: e.candidate.toJSON() });
+        sendCallSignal({ type: "CALL_ICE", callId: callIdRef.current, chatId: chatIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId, candidate: e.candidate.toJSON() });
       }
     };
     pc.ontrack = (event) => {
@@ -131,7 +132,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
       const myId = token ? getMyId(token) : "";
       const offer = await pcRef.current.createOffer();
       await pcRef.current.setLocalDescription(offer);
-      sendCallSignal({ type: "CALL_OFFER", callId: callIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId, sdp: offer });
+      sendCallSignal({ type: "CALL_OFFER", callId: callIdRef.current, chatId: chatIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId, sdp: offer });
       setStatus("Connecting...");
     } catch {
       offerSentRef.current = false;
@@ -155,7 +156,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
       pendingCandidatesRef.current = [];
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
-      sendCallSignal({ type: "CALL_ANSWER", callId: callIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId, sdp: answer });
+      sendCallSignal({ type: "CALL_ANSWER", callId: callIdRef.current, chatId: chatIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId, sdp: answer });
       setStatus("Connecting...");
     }
   };
@@ -176,6 +177,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
     setHasPermission(false);
     setIsRemoteConnected(false);
     callIdRef.current = callId || null;
+    chatIdRef.current = chatId || null;
     const startCall = async () => {
       const token = localStorage.getItem("session");
       if (!token) return;
@@ -201,15 +203,17 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
           const data = (await res.json().catch(() => null)) as { success?: boolean; callId?: string; chatId?: string } | null;
           if (data && data.success && data.callId) {
             callIdRef.current = data.callId;
+            if (data.chatId) chatIdRef.current = data.chatId;
           }
           setStatus("Ringing...");
           startRingback();
         } else {
           if (callId) callIdRef.current = callId;
+          if (chatId) chatIdRef.current = chatId;
           setStatus("Connecting...");
           if (!isReadySentRef.current && callIdRef.current) {
             isReadySentRef.current = true;
-            sendCallSignal({ type: "CALL_READY", callId: callIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId });
+            sendCallSignal({ type: "CALL_READY", callId: callIdRef.current, chatId: chatIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId });
           }
           processPendingSdp();
         }
@@ -257,7 +261,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
     if (callSdpSignal.type === "CALL_OFFER" && mode === "incoming") {
       if (!isReadySentRef.current && callIdRef.current) {
         isReadySentRef.current = true;
-        sendCallSignal({ type: "CALL_READY", callId: callIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId });
+        sendCallSignal({ type: "CALL_READY", callId: callIdRef.current, chatId: chatIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId });
       }
       (async () => {
         await pc.setRemoteDescription(new RTCSessionDescription(callSdpSignal.sdp));
@@ -269,7 +273,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
         pendingCandidatesRef.current = [];
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        sendCallSignal({ type: "CALL_ANSWER", callId: callIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId, sdp: answer });
+        sendCallSignal({ type: "CALL_ANSWER", callId: callIdRef.current, chatId: chatIdRef.current, fromId: myId, from: myId, toId: receiverId, target: receiverId, sdp: answer });
         setStatus("Connecting...");
       })();
     } else if (callSdpSignal.type === "CALL_ANSWER" && mode === "outgoing") {
