@@ -1,175 +1,123 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { useWebSocket } from "./WebSocketProvider";
+import { useEffect, useRef, useState } from "react";
+import { Phone, VideoCamera } from "@phosphor-icons/react/dist/ssr";
+import CallOverlay from "@/components/CallOverlay";
+import { useWebSocket } from "@/app/WebSocketProvider";
 
-type Props = {
-  callId: string;
-  chatId: string;
-  callType: "audio" | "video";
-  mode: "outgoing" | "incoming"; // outgoing = yang pencet Call di CallOverlay, incoming = yang pencet Accept di IncomingCallOverlay
-  onClose: () => void;
-};
+type MutualUser = { id: string; username: string; name: string; avatar: string | null };
 
-export default function CallOverlay({ callId, chatId, callType, mode, onClose }: Props) {
-  const { callSignal, callSdpSignal, clearCallSdpSignal, sendCallSignal, connectRoomWs, disconnectRoomWs, clearCallSignal } = useWebSocket();
+export default function IncomingCallOverlay({ mutualUsers = [] }: { mutualUsers?: MutualUser[] }) {
+  const { incomingCall, clearIncomingCall } = useWebSocket();
+  const [isAccepted, setIsAccepted] = useState(false);
+  const [isBusy, setIsBusy] = useState(false);
+  const ringingRef = useRef<HTMLAudioElement | null>(null);
 
-  const pcRef = useRef<RTCPeerConnection | null>(null);
-  const localStreamRef = useRef<MediaStream | null>(null);
-  const localVideoRef = useRef<HTMLVideoElement | null>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
-  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
-  const [status, setStatus] = useState(mode === "outgoing" ? "calling..." : "connecting...");
-  const [muted, setMuted] = useState(false);
-  const [camOff, setCamOff] = useState(false);
-  const didInitRef = useRef(false);
-
-  const getSession = () => localStorage.getItem("session") || "";
-  const getMyId = () => {
-    try { const p = JSON.parse(atob(getSession().split(".")[1])); return p.properties?.id || p.sub; } catch { return ""; }
-  };
-
-  const cleanup = useCallback(() => {
-    try { pcRef.current?.close(); } catch {}
-    pcRef.current = null;
-    localStreamRef.current?.getTracks().forEach(t => t.stop());
-    localStreamRef.current = null;
-    disconnectRoomWs();
-  }, [disconnectRoomWs]);
-
-  // Tombol End di CallOverlay -> DATA_DO -> CALL_ENDED -> ROOM_DO putus
-  const handleEnd = useCallback(async () => {
-    try {
-      await fetch(`https://auth.readtalk.workers.dev/call/${callId}/end`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${getSession()}` },
-      });
-    } catch {}
-    cleanup();
-    clearCallSignal();
-    onClose();
-  }, [callId, cleanup, clearCallSignal, onClose]);
-
-  // DATA_DO -> ROOM_DO: pas CALL_ACCEPTED, baru connect ROOM_DO + bikin PeerConnection
   useEffect(() => {
-    if (didInitRef.current) return;
-    // Incoming: tombol Accept di IncomingCallOverlay udah dipencet, langsung connect ROOM_DO
-    // Outgoing: nunggu CALL_ACCEPTED dari DATA_DO dulu
-    const shouldStart = mode === "incoming" || (callSignal?.type === "CALL_ACCEPTED" && callSignal.callId === callId);
-    if (!shouldStart) return;
-    didInitRef.current = true;
+    if (!incomingCall) { setIsAccepted(false); setIsBusy(false); return; }
+    setIsBusy(false);
+  }, [incomingCall]);
 
-    const start = async () => {
-      // 1. Pindah DATA_DO -> ROOM_DO
-      connectRoomWs(callId);
-
-      // 2. Bikin PeerConnection
-      const pc = new RTCPeerConnection({
-        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-      });
-      pcRef.current = pc;
-
-      // 3. Media lokal sesuai tombol Call yang dipencet: audio / video
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: callType === "video",
-      });
-      localStreamRef.current = stream;
-      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
-      stream.getTracks().forEach(t => pc.addTrack(t, stream));
-
-      pc.ontrack = (e) => {
-        const s = e.streams[0];
-        if (remoteVideoRef.current) remoteVideoRef.current.srcObject = s;
-        if (remoteAudioRef.current) remoteAudioRef.current.srcObject = s;
-        setStatus("connected");
-      };
-
-      // 4. ICE -> kirim lewat ROOM_DO, bukan DATA_DO
-      pc.onicecandidate = (e) => {
-        if (e.candidate) {
-          sendCallSignal({ type: "CALL_ICE", callId, chatId, fromId: getMyId(), candidate: e.candidate });
-        }
-      };
-
-      // 5. Caller (CallOverlay outgoing) yang bikin Offer, callee nunggu Offer
-      if (mode === "outgoing") {
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        // Tunggu ROOM_DO connect dulu dikit, biar Offer gak kebuang kayak kemaren
-        setTimeout(() => {
-          sendCallSignal({ type: "CALL_OFFER", callId, chatId, fromId: getMyId(), sdp: pc.localDescription });
-        }, 400);
-        setStatus("ringing...");
-      }
-    };
-    start();
-  }, [mode, callSignal, callId, chatId, callType, connectRoomWs]);
-
-  // Terima SDP lewat ROOM_DO -> callSdpSignal
   useEffect(() => {
-    if (!callSdpSignal || callSdpSignal.callId !== callId) return;
-    const pc = pcRef.current;
-    if (!pc) return;
-
-    const handle = async () => {
-      if (callSdpSignal.type === "CALL_OFFER" && mode === "incoming") {
-        await pc.setRemoteDescription(new RTCSessionDescription(callSdpSignal.sdp));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        sendCallSignal({ type: "CALL_ANSWER", callId, chatId, fromId: getMyId(), sdp: pc.localDescription });
-        setStatus("connected");
-      } else if (callSdpSignal.type === "CALL_ANSWER" && mode === "outgoing") {
-        await pc.setRemoteDescription(new RTCSessionDescription(callSdpSignal.sdp));
-        setStatus("connected");
-      } else if (callSdpSignal.type === "CALL_ICE" && callSdpSignal.candidate) {
-        try { await pc.addIceCandidate(new RTCIceCandidate(callSdpSignal.candidate)); } catch {}
-      }
-      clearCallSdpSignal();
-    };
-    handle();
-  }, [callSdpSignal, callId, chatId, mode, sendCallSignal, clearCallSdpSignal]);
-
-  // Lawan pencet End / Decline -> DATA_DO kirim CALL_ENDED -> tutup
-  useEffect(() => {
-    if (!callSignal || callSignal.callId !== callId) return;
-    if (callSignal.type === "CALL_ENDED" || callSignal.type === "CALL_DECLINED" || callSignal.type === "CALL_CANCELLED" || callSignal.type === "CALL_MISSED") {
-      cleanup();
-      clearCallSignal();
-      onClose();
+    if (!incomingCall || isAccepted) {
+      if (ringingRef.current) { ringingRef.current.pause(); ringingRef.current.currentTime = 0; }
+      return;
     }
-  }, [callSignal, callId, cleanup, clearCallSignal, onClose]);
+    if (!ringingRef.current) {
+      ringingRef.current = new Audio("/sound/incoming-call-ringing.mp3");
+      ringingRef.current.loop = true;
+      ringingRef.current.preload = "auto";
+    }
+    ringingRef.current.currentTime = 0;
+    ringingRef.current.play().catch(() => {});
+    return () => { if (ringingRef.current) { ringingRef.current.pause(); ringingRef.current.currentTime = 0; } };
+  }, [incomingCall, isAccepted]);
 
-  useEffect(() => () => cleanup(), [cleanup]);
+  if (!incomingCall) return null;
 
-  const toggleMute = () => {
-    const t = localStreamRef.current?.getAudioTracks()[0];
-    if (t) { t.enabled = !t.enabled; setMuted(!t.enabled); }
+  const caller = mutualUsers.find(u => u.id === incomingCall.callerId);
+  const fromName = caller?.name || incomingCall.callerId;
+  const fromUsername = caller?.username || incomingCall.callerId;
+  const fromAvatar = caller?.avatar || null;
+
+  const getMyId = (token: string) => {
+    try { const payload = JSON.parse(atob(token.split(".")[1])); return payload.properties?.id || payload.sub || ""; } catch { return ""; }
   };
-  const toggleCam = () => {
-    const t = localStreamRef.current?.getVideoTracks()[0];
-    if (t) { t.enabled = !t.enabled; setCamOff(!t.enabled); }
+  const stopRinging = () => { if (ringingRef.current) { ringingRef.current.pause(); ringingRef.current.currentTime = 0; } };
+
+  const handleAccept = async () => {
+    if (isBusy) return;
+    setIsBusy(true);
+    const token = localStorage.getItem("session");
+    stopRinging();
+    if (token && incomingCall.callId) {
+      try {
+        await fetch(`https://auth.readtalk.workers.dev/call/${incomingCall.callId}/accept`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-User-Id": getMyId(token) },
+          body: JSON.stringify({}),
+        });
+      } catch {}
+    }
+    // Kasih tau CallOverlay: lu yang Accept, jangan nunggu CALL_ACCEPTED lagi
+    setIsAccepted(true);
+    setIsBusy(false);
   };
+
+  const handleDecline = async () => {
+    if (isBusy) return;
+    setIsBusy(true);
+    const token = localStorage.getItem("session");
+    stopRinging();
+    const ended = new Audio("/sound/incoming-missed-call-ended.mp3");
+    ended.play().catch(() => {});
+    if (token && incomingCall.callId) {
+      try {
+        await fetch(`https://auth.readtalk.workers.dev/call/${incomingCall.callId}/decline`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-User-Id": getMyId(token) },
+          body: JSON.stringify({}),
+        });
+      } catch {}
+    }
+    clearIncomingCall();
+    setIsAccepted(false);
+    setIsBusy(false);
+  };
+
+  // FIX: kasih chatId ke CallOverlay, jangan cuma callId. auth.ts butuh callId + chatId buat forward.
+  if (isAccepted) {
+    return (
+      <CallOverlay
+        isOpen={true}
+        onClose={() => { clearIncomingCall(); setIsAccepted(false); }}
+        name={fromName}
+        username={fromUsername}
+        receiverId={incomingCall.callerId}
+        avatar={fromAvatar}
+        type={incomingCall.callType}
+        callId={incomingCall.callId}
+        chatId={incomingCall.chatId}
+        mode="incoming"
+      />
+    );
+  }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center">
-      <p className="text-white/70 text-sm">{status} - {callType}</p>
-
-      {callType === "video" ? (
-        <>
-          <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
-          <video ref={localVideoRef} autoPlay muted playsInline className="absolute bottom-24 right-4 w-32 h-44 object-cover rounded-xl border" />
-        </>
-      ) : (
-        <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center text-4xl">📞</div>
-      )}
-      <audio ref={remoteAudioRef} autoPlay playsInline />
-
-      {/* Tombol di CallOverlay */}
-      <div className="absolute bottom-6 flex gap-4">
-        <button onClick={toggleMute} className="w-14 h-14 rounded-full bg-white/20 text-white">{muted ? "🔇" : "🎤"}</button>
-        {callType === "video" && <button onClick={toggleCam} className="w-14 h-14 rounded-full bg-white/20 text-white">{camOff ? "📷❌" : "📷"}</button>}
-        <button onClick={handleEnd} className="w-14 h-14 rounded-full bg-red-500 text-white text-2xl">📞</button>
+    <div className="fixed inset-0 z-[80] bg-zinc-950 text-white flex flex-col items-center justify-center gap-6 px-6">
+      <img src={fromAvatar || "/default-avatar.png"} className="w-28 h-28 rounded-full object-cover bg-zinc-800" alt="" />
+      <div className="text-center">
+        <p className="text-xl font-bold">{fromName}</p>
+        <p className="text-zinc-400 text-sm mt-1">@{fromUsername}</p>
+        <p className="text-zinc-400 text-sm mt-3">{incomingCall.callType === "audio" ? "Voice call" : "Video call"} • Incoming...</p>
+      </div>
+      <div className="flex items-center gap-10 mt-4">
+        <button onClick={handleDecline} disabled={isBusy} className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center disabled:opacity-50">
+          <Phone size={28} weight="fill" className="rotate-[135deg]" />
+        </button>
+        <button onClick={handleAccept} disabled={isBusy} className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center disabled:opacity-50">
+          {incomingCall.callType === "audio" ? <Phone size={28} weight="fill" /> : <VideoCamera size={28} weight="fill" />}
+        </button>
       </div>
     </div>
   );
