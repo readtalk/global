@@ -24,6 +24,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
   const closedRef = useRef(false);
   const pendingCandidatesRef = useRef<any[]>([]);
   const { callSignal, clearCallSignal, callSdpSignal, clearCallSdpSignal, sendCallSignal } = useWebSocket();
+  
   const getMyId = (token: string) => {
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
@@ -32,12 +33,14 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
       return "";
     }
   };
+  
   const stopRingback = () => {
     if (ringbackRef.current) {
       ringbackRef.current.pause();
       ringbackRef.current.currentTime = 0;
     }
   };
+  
   const playEnded = () => {
     if (!endedRef.current) {
       endedRef.current = new Audio("/sound/incoming-missed-call-ended.mp3");
@@ -46,6 +49,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
     endedRef.current.currentTime = 0;
     endedRef.current.play().catch(() => {});
   };
+  
   const applySpeaker = (speakerOn: boolean) => {
     const sinkId = speakerOn ? "default" : "communications";
     const targets: any[] = [remoteAudioRef.current, ringbackRef.current, endedRef.current];
@@ -55,6 +59,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
       }
     }
   };
+  
   const startRingback = () => {
     if (mode !== "outgoing") return;
     if (!ringbackRef.current) {
@@ -66,6 +71,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
     ringbackRef.current.currentTime = 0;
     ringbackRef.current.play().catch(() => {});
   };
+  
   const attachRemote = (remoteStream: MediaStream) => {
     setIsRemoteConnected(true);
     setStatus("Connected");
@@ -80,6 +86,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
       remoteAudioRef.current.play().catch(() => {});
     }
   };
+  
   const setupPc = (pc: RTCPeerConnection, myId: string) => {
     pc.onicecandidate = (e) => {
       if (e.candidate && callIdRef.current) {
@@ -98,6 +105,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
       }
     };
   };
+  
   useEffect(() => {
     if (!isOpen) return;
     closedRef.current = false;
@@ -109,6 +117,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
     setHasPermission(false);
     setIsRemoteConnected(false);
     callIdRef.current = callId || null;
+    
     const startCall = async () => {
       const token = localStorage.getItem("session");
       if (!token) return;
@@ -127,8 +136,9 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
         const myId = getMyId(token);
         setupPc(pc, myId);
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+        
         if (mode === "outgoing") {
-          const res = await fetch("https://auth.readtalk.workers.dev/calls", {
+          const res = await fetch("https://auth.readtalk.workers.dev/call/create", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-User-Id": myId },
             body: JSON.stringify({ target_user_id: receiverId, type }),
@@ -163,12 +173,14 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
       if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
     };
   }, [isOpen, type, receiverId]);
+  
   useEffect(() => {
     if (hasPermission && localVideoRef.current && streamRef.current) {
       localVideoRef.current.srcObject = streamRef.current;
       localVideoRef.current.play().catch(() => {});
     }
   }, [hasPermission, type]);
+  
   useEffect(() => {
     if (!callSignal || !callIdRef.current) return;
     if (callSignal.callId !== callIdRef.current) return;
@@ -198,6 +210,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
       }
     }
   }, [callSignal, clearCallSignal, onClose]);
+  
   useEffect(() => {
     if (!callSdpSignal || !callIdRef.current || !pcRef.current) return;
     if (callSdpSignal.callId !== callIdRef.current) return;
@@ -233,21 +246,25 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
       clearCallSdpSignal();
     })();
   }, [callSdpSignal, clearCallSdpSignal]);
+  
   const toggleMute = () => {
     const next = !isMuted;
     setIsMuted(next);
     streamRef.current?.getAudioTracks().forEach((track) => { track.enabled = !next; });
   };
+  
   const toggleCamera = () => {
     const next = !isCameraOff;
     setIsCameraOff(next);
     streamRef.current?.getVideoTracks().forEach((track) => { track.enabled = !next; });
   };
+  
   const toggleSpeaker = () => {
     const next = !isSpeaker;
     setIsSpeaker(next);
     applySpeaker(next);
   };
+  
   const handleEnd = async () => {
     if (closedRef.current) {
       onClose();
@@ -260,7 +277,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
     if (token && callIdRef.current) {
       try {
         let myId = getMyId(token);
-        await fetch(`https://auth.readtalk.workers.dev/calls/${callIdRef.current}/end`, {
+        await fetch(`https://auth.readtalk.workers.dev/call/${callIdRef.current}/end`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-User-Id": myId },
           body: JSON.stringify({}),
@@ -269,6 +286,7 @@ export default function CallOverlay({ isOpen, onClose, name, receiverId, avatar,
     }
     onClose();
   };
+  
   return (
     <>
       <div onClick={handleEnd} className={`fixed inset-0 bg-black/50 z-[60] md:hidden transition-opacity ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} />
