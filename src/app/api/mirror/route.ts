@@ -1,15 +1,8 @@
-//
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("Authorization");
-
-    if (!authHeader) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
     const { env } = getCloudflareContext();
     const body = (await request.json()) as {
       action: string;
