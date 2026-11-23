@@ -9,7 +9,8 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
   const remoteRef = useRef<HTMLVideoElement>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
 
-  
+  const isConnected = status.startsWith("connected");
+
   const handleClose = () => {
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
     localStreamRef.current = null;
@@ -117,7 +118,7 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
           remoteRef.current.srcObject = remoteStream;
           remoteRef.current.play().catch(() => {});
         }
-        setStatus("connected 🟢");
+        setStatus("connected ✅");
       } catch (e: any) {
         if (!cancelled) setStatus(`failed: ${e?.message || e}`);
       }
@@ -134,16 +135,46 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
 
   return (
     <div className="fixed inset-0 z-[9999] bg-black flex flex-col">
-      {/* REMOTE = FULLSCREEN */}
-      <div className="flex-1 relative min-h-0 bg-black">
+      <div className="flex-1 relative min-h-0 bg-black overflow-hidden">
+        {/* REMOTE — baru keliatan full pas connected */}
         <video
           ref={remoteRef}
           autoPlay
           playsInline
-          className="absolute inset-0 w-full h-full object-cover"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+            isConnected ? "opacity-100" : "opacity-0"
+          }`}
         />
 
-        {/* Header nempel di atas video */}
+        {/* FASE 1: LAGI NUNGGU — LOCAL GEDE */}
+        {!isConnected && (
+          <div className="absolute inset-0">
+            <video
+              ref={localRef}
+              autoPlay
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30">
+              <p className="text-white font-bold text-lg">Memanggil...</p>
+              <p className="text-white/70 text-xs mt-1">{status}</p>
+            </div>
+          </div>
+        )}
+
+        {/* FASE 2: UDAH CONNECTED — LOCAL KECIL POJOK */}
+        {isConnected && (
+          <video
+            ref={localRef}
+            autoPlay
+            muted
+            playsInline
+            className="absolute bottom-24 right-4 w-28 aspect-[3/4] object-cover rounded-2xl border border-white/30 bg-zinc-900 shadow-lg"
+          />
+        )}
+
+        {/* Header */}
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/60 to-transparent">
           <div>
             <p className="font-bold text-white leading-none">Mirror</p>
@@ -154,22 +185,13 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
           </button>
         </div>
 
-        {/* LOCAL = KECIL, POJOK KANAN BAWAH KAYAK WA */}
-        <video
-          ref={localRef}
-          autoPlay
-          muted
-          playsInline
-          className="absolute bottom-24 right-4 w-28 aspect-[3/4] object-cover rounded-2xl border border-white/30 bg-zinc-900 shadow-lg"
-        />
-
         {status.startsWith("failed") && (
           <p className="absolute top-16 left-4 right-4 text-center text-red-400 text-xs bg-black/60 rounded-lg py-2 px-3 break-words">
             {status}
           </p>
         )}
 
-        {/* Tombol merah nempel di bawah video */}
+        {/* Tombol merah */}
         <div className="absolute bottom-0 left-0 right-0 flex justify-center py-5 bg-gradient-to-t from-black/60 to-transparent">
           <button
             onClick={handleClose}
