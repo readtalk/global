@@ -11,6 +11,7 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
 
   const isConnected = status.startsWith("connected");
 
+  // Close = setara reload halaman buat overlay ini
   const handleClose = () => {
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
     localStreamRef.current = null;
@@ -136,7 +137,7 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
   return (
     <div className="fixed inset-0 z-[9999] bg-black flex flex-col">
       <div className="flex-1 relative min-h-0 bg-black overflow-hidden">
-        {/* REMOTE — baru keliatan full pas connected */}
+        {/* REMOTE = FULLSCREEN */}
         <video
           ref={remoteRef}
           autoPlay
@@ -146,36 +147,30 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
           }`}
         />
 
-        {/* FASE 1: LAGI NUNGGU — LOCAL GEDE */}
-        {!isConnected && (
-          <div className="absolute inset-0">
-            <video
-              ref={localRef}
-              autoPlay
-              muted
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30">
-              <p className="text-white font-bold text-lg">Memanggil...</p>
-              <p className="text-white/70 text-xs mt-1">{status}</p>
-            </div>
+        {/* LOCAL = CUMA 1 VIDEO, CLASS-NYA AJA YANG GANTI */}
+        {/* Biar gak gelap kayak kemarin */}
+        <video
+          ref={localRef}
+          autoPlay
+          muted
+          playsInline
+          className={
+            isConnected
+              ? "absolute bottom-24 right-4 w-28 aspect-[3/4] object-cover rounded-2xl border border-white/30 bg-zinc-900 shadow-lg z-10"
+              : "absolute inset-0 w-full h-full object-cover"
+          }
+        />
+
+        {/* FASE 1: Lagi manggil — cuma overlay teks, bukan video baru */}
+        {!isConnected && !status.startsWith("failed") && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30 pointer-events-none">
+            <p className="text-white font-bold text-lg">Memanggil...</p>
+            <p className="text-white/70 text-xs mt-1">{status}</p>
           </div>
         )}
 
-        {/* FASE 2: UDAH CONNECTED — LOCAL KECIL POJOK */}
-        {isConnected && (
-          <video
-            ref={localRef}
-            autoPlay
-            muted
-            playsInline
-            className="absolute bottom-24 right-4 w-28 aspect-[3/4] object-cover rounded-2xl border border-white/30 bg-zinc-900 shadow-lg"
-          />
-        )}
-
         {/* Header */}
-        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/60 to-transparent">
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/60 to-transparent z-20">
           <div>
             <p className="font-bold text-white leading-none">Mirror</p>
             <p className="text-xs text-white/70 mt-1">{status}</p>
@@ -186,13 +181,13 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
         </div>
 
         {status.startsWith("failed") && (
-          <p className="absolute top-16 left-4 right-4 text-center text-red-400 text-xs bg-black/60 rounded-lg py-2 px-3 break-words">
+          <p className="absolute top-16 left-4 right-4 text-center text-red-400 text-xs bg-black/60 rounded-lg py-2 px-3 break-words z-20">
             {status}
           </p>
         )}
 
         {/* Tombol merah */}
-        <div className="absolute bottom-0 left-0 right-0 flex justify-center py-5 bg-gradient-to-t from-black/60 to-transparent">
+        <div className="absolute bottom-0 left-0 right-0 flex justify-center py-5 bg-gradient-to-t from-black/60 to-transparent z-20">
           <button
             onClick={handleClose}
             className="w-14 h-14 rounded-full bg-red-500 text-white flex items-center justify-center active:scale-95 shadow-lg"
