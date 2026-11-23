@@ -3,11 +3,17 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export async function POST(req: Request) {
   const { env } = getCloudflareContext();
-  const { action, sessionId, sdp, tracks } = await req.json();
+  // FIX DI SINI: cast ke any, soalnya req.json() = unknown di Next 16
+  const { action, sessionId, sdp, tracks } = (await req.json()) as {
+    action: string;
+    sessionId?: string;
+    sdp?: string;
+    tracks?: any[];
+  };
 
-  const APP_ID = env.CALL_APP_ID as string;
-  // Secret-nya jangan taro di vars, taro di secrets: `npx wrangler secret put CALL_APP_SECRET`
-  const APP_SECRET = env.CALL_APP_SECRET as string;
+  const APP_ID = (env as any).CALL_APP_ID as string;
+  const APP_SECRET = (env as any).CALL_APP_SECRET as string;
+  const TURN_KEY_ID = (env as any).CALL_TURN_KEY_ID as string;
   const BASE = `https://rtc.live.cloudflare.com/v1/apps/${APP_ID}`;
 
   let url = "";
@@ -28,10 +34,9 @@ export async function POST(req: Request) {
     body = { sessionDescription: { type: "answer", sdp } };
     method = "PUT";
   }
-  // TURN dari vars lu
   if (action === "turn") {
     const turnRes = await fetch(
-      `https://rtc.live.cloudflare.com/v1/turn/keys/${env.CALL_TURN_KEY_ID}/credentials/generate`,
+      `https://rtc.live.cloudflare.com/v1/turn/keys/${TURN_KEY_ID}/credentials/generate`,
       {
         method: "POST",
         headers: { Authorization: `Bearer ${APP_SECRET}`, "content-type": "application/json" },
