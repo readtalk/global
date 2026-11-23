@@ -5,12 +5,12 @@ import { DotsThreeVertical, Gear, House, GraduationCap, BuildingOffice } from "@
 import { useLanguage } from "@/context/LanguageContext";
 import PanelCommunity from "@/components/PanelCommunity";
 
-type Category = "family" | "school" | "corporate";
+type Category = "neighbors" | "schools" | "organization";
 
 const categories = [
-  { id: "family" as Category, label: "Neighbors", Icon: House },
-  { id: "school" as Category, label: "High School", Icon: GraduationCap },
-  { id: "corporate" as Category, label: "Corporate", Icon: BuildingOffice },
+  { id: "neighbors" as Category, label: "Neighbors", Icon: House },
+  { id: "schools" as Category, label: "Schools", Icon: GraduationCap },
+  { id: "organization" as Category, label: "Organization", Icon: BuildingOffice },
 ];
 
 type Community = {
