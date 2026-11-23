@@ -1,55 +1,70 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-export async function POST(req: Request) {
-  const { env } = getCloudflareContext();
-  // FIX DI SINI: cast ke any, soalnya req.json() = unknown di Next 16
-  const { action, sessionId, sdp, tracks } = (await req.json()) as {
-    action: string;
-    sessionId?: string;
-    sdp?: string;
-    tracks?: any[];
-  };
+export async function POST(request: NextRequest) {
+  try {
+    const authHeader = request.headers.get("Authorization");
 
-  const APP_ID = (env as any).CALL_APP_ID as string;
-  const APP_SECRET = (env as any).CALL_APP_SECRET as string;
-  const TURN_KEY_ID = (env as any).CALL_TURN_KEY_ID as string;
-  const BASE = `https://rtc.live.cloudflare.com/v1/apps/${APP_ID}`;
+    if (!authHeader) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
 
-  let url = "";
-  let body: any = {};
-  let method = "POST";
+    const { env } = getCloudflareContext();
+    const body = (await request.json()) as {
+      action: string;
+      sessionId?: string;
+      sdp?: string;
+      tracks?: any[];
+    };
 
-  if (action === "newSession") {
-    url = `${BASE}/sessions/new`;
-    body = { sessionDescription: { type: "offer", sdp } };
-  }
-  if (action === "newTracks") {
-    url = `${BASE}/sessions/${sessionId}/tracks/new`;
-    body = { tracks };
-    if (sdp) body.sessionDescription = { type: "offer", sdp };
-  }
-  if (action === "renegotiate") {
-    url = `${BASE}/sessions/${sessionId}/renegotiate`;
-    body = { sessionDescription: { type: "answer", sdp } };
-    method = "PUT";
-  }
-  if (action === "turn") {
-    const turnRes = await fetch(
-      `https://rtc.live.cloudflare.com/v1/turn/keys/${TURN_KEY_ID}/credentials/generate`,
-      {
-        method: "POST",
-        headers: { Authorization: `Bearer ${APP_SECRET}`, "content-type": "application/json" },
-        body: JSON.stringify({ ttl: 86400 }),
-      }
-    );
-    return NextResponse.json(await turnRes.json());
-  }
+    const APP_ID = (env as any).CALL_APP_ID as string;
+    const APP_SECRET = (env as any).CALL_APP_SECRET as string;
+    const TURN_KEY_ID = (env as any).CALL_TURN_KEY_ID as string;
+    const BASE = `https://rtc.live.cloudflare.com/v1/apps/${APP_ID}`;
 
-  const res = await fetch(url, {
-    method,
-    headers: { "content-type": "application/json", Authorization: `Bearer ${APP_SECRET}` },
-    body: JSON.stringify(body),
-  });
-  return NextResponse.json(await res.json());
+    let url = "";
+    let reqBody: any = {};
+    let method = "POST";
+
+    if (body.action === "newSession") {
+      url = `${BASE}/sessions/new`;
+      reqBody = { sessionDescription: { type: "offer", sdp: body.sdp } };
+    }
+    if (body.action === "newTracks") {
+      url = `${BASE}/sessions/${body.sessionId}/tracks/new`;
+      reqBody = { tracks: body.tracks };
+      if (body.sdp) reqBody.sessionDescription = { type: "offer", sdp: body.sdp };
+    }
+    if (body.action === "renegotiate") {
+      url = `${BASE}/sessions/${body.sessionId}/renegotiate`;
+      reqBody = { sessionDescription: { type: "answer", sdp: body.sdp } };
+      method = "PUT";
+    }
+    if (body.action === "turn") {
+      const res = await fetch(
+        `https://rtc.live.cloudflare.com/v1/turn/keys/${TURN_KEY_ID}/credentials/generate`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${APP_SECRET}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ ttl: 86400 }),
+        }
+      );
+      const data = await res.json();
+      return NextResponse.json(data, { status: res.status });
+    }
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${APP_SECRET}`,
+      },
+      body: JSON.stringify(reqBody),
+    });
+
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
+  }
 }
