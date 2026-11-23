@@ -22,7 +22,6 @@ function MirrorContent() {
         body: JSON.stringify(body),
       });
       const data = (await res.json()) as any;
-      // INI KUNCINYA: kalo Cloudflare / route nolak, tampilkan alasannya
       if (!res.ok) throw new Error(`API ${res.status}: ${JSON.stringify(data).slice(0, 300)}`);
       if (data.errorCode) throw new Error(`Cloudflare: ${data.errorDescription}`);
       return data;
@@ -30,19 +29,22 @@ function MirrorContent() {
 
     async function run() {
       try {
+        // Persis kayak index.html: STUN + max-bundle
         pc = new RTCPeerConnection({
           iceServers: [{ urls: "stun:stun.cloudflare.com:3478" }],
           bundlePolicy: "max-bundle",
         });
 
+        // Persis kayak index.html: video: true, audio: true
         const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         if (localRef.current) localRef.current.srcObject = localStream;
 
+        // Persis kayak index.html: sendonly
         const transceivers = localStream.getTracks().map((track) =>
           pc.addTransceiver(track, { direction: "sendonly" })
         );
 
-        setStatus("1/4 newSession...");
+        // 1. newSession
         await pc.setLocalDescription(await pc.createOffer());
         const newSessionRes = (await callApi({ action: "newSession", sdp: pc.localDescription!.sdp })) as {
           sessionId: string;
@@ -51,16 +53,15 @@ function MirrorContent() {
         const sessionId = newSessionRes.sessionId;
         await pc.setRemoteDescription(new RTCSessionDescription(newSessionRes.sessionDescription));
 
-        setStatus("2/4 waiting ICE...");
+        // 2. Tunggu connected - persis kayak index.html, timeout 5s
         await new Promise((resolve, reject) => {
           pc.addEventListener("iceconnectionstatechange", (ev: any) => {
             if (ev.target.iceConnectionState === "connected") resolve(true);
-            if (ev.target.iceConnectionState === "failed") reject(new Error("ICE failed"));
           });
-          setTimeout(() => reject(new Error("connect timeout 5s")), 8000);
+          setTimeout(() => reject(new Error("connect timeout")), 5000);
         });
 
-        setStatus("3/4 newTracks local...");
+        // 3. newTracks local
         const trackObjects = transceivers.map((t) => ({
           location: "local",
           mid: t.mid,
@@ -75,7 +76,7 @@ function MirrorContent() {
         })) as { sessionDescription: RTCSessionDescriptionInit };
         await pc.setRemoteDescription(new RTCSessionDescription(newLocalRes.sessionDescription));
 
-        setStatus("4/4 newTracks remote...");
+        // 4. newTracks remote - minta balik track yang sama
         const remoteTrackObjects = trackObjects.map((t) => ({
           location: "remote",
           sessionId,
@@ -86,7 +87,7 @@ function MirrorContent() {
           const tracks: MediaStreamTrack[] = [];
           pc.ontrack = (e) => {
             tracks.push(e.track);
-            if (tracks.length >= 2) resolve(tracks);
+            if (tracks.length >= 2) resolve(tracks); // video & audio ready
           };
         });
 
@@ -100,21 +101,27 @@ function MirrorContent() {
         };
 
         if (newRemoteRes.requiresImmediateRenegotiation) {
-          await pc.setRemoteDescription(new RTCSessionDescription(newRemoteRes.sessionDescription));
-          await pc.setLocalDescription(await pc.createAnswer());
-          await callApi({ action: "renegotiate", sessionId, sdp: pc.localDescription!.sdp });
+          if (newRemoteRes.sessionDescription.type === "offer") {
+            await pc.setRemoteDescription(new RTCSessionDescription(newRemoteRes.sessionDescription));
+            await pc.setLocalDescription(await pc.createAnswer());
+            await callApi({ action: "renegotiate", sessionId, sdp: pc.localDescription!.sdp });
+          }
         }
 
+        // 5. INI KUNCINYA, persis kayak index.html:
+        // video + audio digabung di 1 MediaStream, taro di 1 <video>
         const remoteTracks = await remoteTracksPromise;
         const remoteStream = new MediaStream();
         remoteStream.addTrack(remoteTracks[0]);
         remoteStream.addTrack(remoteTracks[1]);
-        if (remoteRef.current) remoteRef.current.srcObject = remoteStream;
+        if (remoteRef.current) {
+          remoteRef.current.srcObject = remoteStream;
+          // Paksa play, biar audio-nya gak ke-block di HP
+          remoteRef.current.play().catch(() => {});
+        }
         setStatus("connected ✅");
       } catch (e: any) {
-        // Tampilkan error aslinya, jangan cuma "failed"
         setStatus(`failed: ${e?.message || e}`);
-        console.error(e);
       }
     }
 
@@ -122,7 +129,6 @@ function MirrorContent() {
     return () => pc?.close();
   }, []);
 
-  // Fallback kalo key navMirror belum ada di LanguageContext
   const title = t("navMirror") === "navMirror" ? "Mirror" : t("navMirror");
 
   return (
@@ -145,13 +151,15 @@ function MirrorContent() {
 
       <div className="flex-1 overflow-y-auto min-h-0 pb-20 md:pb-0 bg-white dark:bg-zinc-950 transition-colors">
         <div className="max-w-2xl mx-auto bg-white dark:bg-zinc-950 transition-colors">
-          <p className="text-center text-red-500 text-xs py-3 px-4 break-words">{status}</p>
+          {status.startsWith("failed") && <p className="text-center text-red-500 text-xs py-3 px-4 break-words">{status}</p>}
           <div>
             <h2 className="text-sm text-gray-900 dark:text-zinc-50 px-4 py-2">Local stream</h2>
+            {/* Persis index.html: autoplay muted */}
             <video ref={localRef} autoPlay muted playsInline className="w-full" />
           </div>
           <div>
             <h2 className="text-sm text-gray-900 dark:text-zinc-50 px-4 py-2">Remote echo stream</h2>
+            {/* Persis index.html: autoplay TANPA muted, jadi video + audio keluar dari sini */}
             <video ref={remoteRef} autoPlay playsInline className="w-full" />
           </div>
         </div>
