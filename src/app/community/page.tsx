@@ -1,8 +1,7 @@
-//
 "use client";
 
 import { useState, Suspense } from "react";
-import { DotsThreeVertical, Gear, House, School, BuildingOffice } from "@phosphor-icons/react/dist/ssr";
+import { DotsThreeVertical, Gear, House, GraduationCap, BuildingOffice } from "@phosphor-icons/react/dist/ssr";
 import { useLanguage } from "@/context/LanguageContext";
 import PanelCommunity from "@/components/PanelCommunity";
 
@@ -10,7 +9,7 @@ type Category = "family" | "school" | "corporate";
 
 const categories = [
   { id: "family" as Category, label: "Family / Neighbors", Icon: House },
-  { id: "school" as Category, label: "High School", Icon: School },
+  { id: "school" as Category, label: "High School", Icon: GraduationCap },
   { id: "corporate" as Category, label: "Corporate", Icon: BuildingOffice },
 ];
 
