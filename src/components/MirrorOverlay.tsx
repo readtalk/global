@@ -34,9 +34,10 @@ export default function MirrorOverlay({ isOpen, onClose, name, username, receive
     let pc: RTCPeerConnection;
     let cancelled = false;
 
-    // === SELIPAN: tadinya fetch /api/mirror, sekarang fetch /api/call/* via call.ts ===
-    // route.ts terusin -> satpam index.ts approve /call -> call.ts yang fetch ke Cloudflare
-    // Crypto tetep: Bearer session, biar biodata gak dibajak
+    // === FIX 1: Baca balesan call.ts yang bener ===
+    // call.ts /call/session -> { success, sessionId, session }
+    // call.ts /call/tracks + /call/renegotiate -> { success, ...(result) }
+    // sessionDescription ngumpet di dalam session / result
     async function callApi(path: string, body: any) {
       const session = localStorage.getItem("session");
       const res = await fetch(path, {
@@ -50,12 +51,11 @@ export default function MirrorOverlay({ isOpen, onClose, name, username, receive
       const data = (await res.json()) as any;
       if (!res.ok) throw new Error(`API ${res.status}: ${JSON.stringify(data).slice(0, 300)}`);
       if (data.errorCode) throw new Error(`Cloudflare: ${data.errorDescription}`);
-      // call.ts balikin { success, sessionId, sdp / sessionDescription }
-      // Kita samain bentuknya biar logika bawah gak berubah
+      const result = data.session || data.result || data;
       return {
-        sessionId: data.sessionId,
-        sessionDescription: data.sessionDescription ?? data.sdp,
-        requiresImmediateRenegotiation: data.requiresImmediateRenegotiation,
+        sessionId: data.sessionId || result.sessionId,
+        sessionDescription: result.sessionDescription || data.sessionDescription,
+        requiresImmediateRenegotiation: result.requiresImmediateRenegotiation,
       };
     }
 
@@ -65,10 +65,7 @@ export default function MirrorOverlay({ isOpen, onClose, name, username, receive
           iceServers: [{ urls: "stun:stun.cloudflare.com:3478" }],
           bundlePolicy: "max-bundle",
         });
-        const localStream = await navigator.mediaDevices.getUserMedia({
-          video: type === "video",
-          audio: true,
-        });
+        const localStream = await navigator.mediaDevices.getUserMedia({ video: type === "video", audio: true });
         localStreamRef.current = localStream;
         if (cancelled) return;
         if (localRef.current) localRef.current.srcObject = localStream;
@@ -76,8 +73,8 @@ export default function MirrorOverlay({ isOpen, onClose, name, username, receive
         const transceivers = localStream.getTracks().map((track) => pc.addTransceiver(track, { direction: "sendonly" }));
         await pc.setLocalDescription(await pc.createOffer());
 
-        // DULU: callApi({ action: "newSession" })
-        // SEKARANG: POST /api/call/session
+        // === FIX 2: Nama endpoint ngikutin call.ts ===
+        // /call/session - bikin session baru
         const newSessionRes = (await callApi("/api/call/session", { sdp: pc.localDescription!.sdp })) as any;
         const sessionId = newSessionRes.sessionId;
         await pc.setRemoteDescription(new RTCSessionDescription(newSessionRes.sessionDescription));
@@ -92,35 +89,35 @@ export default function MirrorOverlay({ isOpen, onClose, name, username, receive
         const trackObjects = transceivers.map((t) => ({ location: "local", mid: t.mid, trackName: t.sender.track!.id }));
         await pc.setLocalDescription(await pc.createOffer());
 
-        // DULU: callApi({ action: "newTracks" })
-        // SEKARANG: POST /api/call/tracks/new
-        const newLocalRes = (await callApi("/api/call/tracks/new", { sessionId, tracks: trackObjects, sdp: pc.localDescription!.sdp })) as any;
+        // FIX 2: /call/tracks - BUKAN /call/tracks/new
+        const newLocalRes = (await callApi("/api/call/tracks", { sessionId, tracks: trackObjects, sdp: pc.localDescription!.sdp })) as any;
         await pc.setRemoteDescription(new RTCSessionDescription(newLocalRes.sessionDescription));
 
         const remoteTrackObjects = trackObjects.map((t) => ({ location: "remote", sessionId, trackName: t.trackName }));
+        // FIX BONUS: kalo audio, cuma 1 track, jangan nunggu 2
+        const expectedTracks = trackObjects.length;
         const remoteTracksPromise = new Promise<MediaStreamTrack[]>((resolve) => {
           const tracks: MediaStreamTrack[] = [];
           pc.ontrack = (e) => {
             tracks.push(e.track);
-            if (tracks.length >= 2) resolve(tracks);
+            if (tracks.length >= expectedTracks) resolve(tracks);
           };
         });
 
-        const newRemoteRes = (await callApi("/api/call/tracks/new", { sessionId, tracks: remoteTrackObjects })) as any;
+        // FIX 2: /call/tracks lagi buat subscribe remote
+        const newRemoteRes = (await callApi("/api/call/tracks", { sessionId, tracks: remoteTrackObjects })) as any;
         if (newRemoteRes.requiresImmediateRenegotiation) {
-          if (newRemoteRes.sessionDescription.type === "offer") {
+          if (newRemoteRes.sessionDescription?.type === "offer") {
             await pc.setRemoteDescription(new RTCSessionDescription(newRemoteRes.sessionDescription));
             await pc.setLocalDescription(await pc.createAnswer());
-            // DULU: callApi({ action: "renegotiate" })
-            // SEKARANG: POST /api/call/session dengan sessionId yang sama
-            await callApi("/api/call/session", { sessionId, sdp: pc.localDescription!.sdp });
+            // === FIX 3: renegotiate itu endpoint sendiri di call.ts ===
+            await callApi("/api/call/renegotiate", { sessionId, sdp: pc.localDescription!.sdp });
           }
         }
 
         const remoteTracks = await remoteTracksPromise;
         const remoteStream = new MediaStream();
-        remoteStream.addTrack(remoteTracks[0]);
-        remoteStream.addTrack(remoteTracks[1]);
+        remoteTracks.forEach((t) => remoteStream.addTrack(t));
         if (cancelled) return;
         if (remoteRef.current) {
           remoteRef.current.srcObject = remoteStream;
@@ -147,7 +144,6 @@ export default function MirrorOverlay({ isOpen, onClose, name, username, receive
         <video ref={localRef} autoPlay muted playsInline className={isConnected ? "absolute bottom-24 right-4 w-28 aspect-[3/4] object-cover rounded-2xl border border-white/30 bg-zinc-900 shadow-lg z-10" : "absolute inset-0 w-full h-full object-cover"} />
         {!isConnected && !status.startsWith("failed") && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30 pointer-events-none">
-            {/* Biodata dari PanelCall tetep tampil, bukan cuma "Mirror" */}
             <p className="text-white font-bold text-lg">{name ? `Memanggil ${name}...` : "Memanggil..."}</p>
             {username && <p className="text-white/70 text-xs mt-1">@{username}</p>}
             <p className="text-white/70 text-xs mt-1">{status}</p>
