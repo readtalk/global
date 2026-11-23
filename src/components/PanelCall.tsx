@@ -1,10 +1,9 @@
-//
 "use client";
 
 import { useState } from "react";
 import { ArrowLeft, Phone, VideoCamera, X } from "@phosphor-icons/react/dist/ssr";
 import { useLanguage } from "@/context/LanguageContext";
-import CallOverlay from "@/components/CallOverlay";
+import MirrorOverlay from "@/components/MirrorOverlay";
 
 type MutualUser = {
   id: string;
@@ -77,8 +76,9 @@ export default function PanelCall({ isOpen, onClose, mutuals, isLoading }: Panel
           )}
         </div>
       </div>
+
       {selectedUser && (
-        <CallOverlay
+        <MirrorOverlay
           isOpen={isOverlayOpen}
           onClose={handleCloseOverlay}
           name={selectedUser.yourname}
