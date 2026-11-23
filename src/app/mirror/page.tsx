@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { DotsThreeVertical, Gear, Phone, PhoneCall } from "@phosphor-icons/react/dist/ssr";
