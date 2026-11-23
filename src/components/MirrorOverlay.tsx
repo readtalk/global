@@ -3,15 +3,23 @@
 import { useEffect, useRef, useState } from "react";
 import { X, PhoneDisconnect } from "@phosphor-icons/react/dist/ssr";
 
-export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+type MirrorOverlayProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  name?: string;
+  username?: string;
+  receiverId?: string;
+  avatar?: string | null;
+  type?: "audio" | "video";
+};
+
+export default function MirrorOverlay({ isOpen, onClose, name, username, receiverId, avatar, type = "video" }: MirrorOverlayProps) {
   const [status, setStatus] = useState("connecting...");
   const localRef = useRef<HTMLVideoElement>(null);
   const remoteRef = useRef<HTMLVideoElement>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
-
   const isConnected = status.startsWith("connected");
 
-  // Close = setara reload halaman buat overlay ini
   const handleClose = () => {
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
     localStreamRef.current = null;
@@ -26,16 +34,29 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
     let pc: RTCPeerConnection;
     let cancelled = false;
 
-    async function callApi(body: any) {
-      const res = await fetch("/api/mirror", {
+    // === SELIPAN: tadinya fetch /api/mirror, sekarang fetch /api/call/* via call.ts ===
+    // route.ts terusin -> satpam index.ts approve /call -> call.ts yang fetch ke Cloudflare
+    // Crypto tetep: Bearer session, biar biodata gak dibajak
+    async function callApi(path: string, body: any) {
+      const session = localStorage.getItem("session");
+      const res = await fetch(path, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session}`,
+        },
         body: JSON.stringify(body),
       });
       const data = (await res.json()) as any;
       if (!res.ok) throw new Error(`API ${res.status}: ${JSON.stringify(data).slice(0, 300)}`);
       if (data.errorCode) throw new Error(`Cloudflare: ${data.errorDescription}`);
-      return data;
+      // call.ts balikin { success, sessionId, sdp / sessionDescription }
+      // Kita samain bentuknya biar logika bawah gak berubah
+      return {
+        sessionId: data.sessionId,
+        sessionDescription: data.sessionDescription ?? data.sdp,
+        requiresImmediateRenegotiation: data.requiresImmediateRenegotiation,
+      };
     }
 
     async function run() {
@@ -44,20 +65,20 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
           iceServers: [{ urls: "stun:stun.cloudflare.com:3478" }],
           bundlePolicy: "max-bundle",
         });
-        const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const localStream = await navigator.mediaDevices.getUserMedia({
+          video: type === "video",
+          audio: true,
+        });
         localStreamRef.current = localStream;
         if (cancelled) return;
         if (localRef.current) localRef.current.srcObject = localStream;
 
-        const transceivers = localStream.getTracks().map((track) =>
-          pc.addTransceiver(track, { direction: "sendonly" })
-        );
-
+        const transceivers = localStream.getTracks().map((track) => pc.addTransceiver(track, { direction: "sendonly" }));
         await pc.setLocalDescription(await pc.createOffer());
-        const newSessionRes = (await callApi({ action: "newSession", sdp: pc.localDescription!.sdp })) as {
-          sessionId: string;
-          sessionDescription: RTCSessionDescriptionInit;
-        };
+
+        // DULU: callApi({ action: "newSession" })
+        // SEKARANG: POST /api/call/session
+        const newSessionRes = (await callApi("/api/call/session", { sdp: pc.localDescription!.sdp })) as any;
         const sessionId = newSessionRes.sessionId;
         await pc.setRemoteDescription(new RTCSessionDescription(newSessionRes.sessionDescription));
 
@@ -68,25 +89,15 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
           setTimeout(() => reject(new Error("connect timeout")), 5000);
         });
 
-        const trackObjects = transceivers.map((t) => ({
-          location: "local",
-          mid: t.mid,
-          trackName: t.sender.track!.id,
-        }));
+        const trackObjects = transceivers.map((t) => ({ location: "local", mid: t.mid, trackName: t.sender.track!.id }));
         await pc.setLocalDescription(await pc.createOffer());
-        const newLocalRes = (await callApi({
-          action: "newTracks",
-          sessionId,
-          tracks: trackObjects,
-          sdp: pc.localDescription!.sdp,
-        })) as { sessionDescription: RTCSessionDescriptionInit };
+
+        // DULU: callApi({ action: "newTracks" })
+        // SEKARANG: POST /api/call/tracks/new
+        const newLocalRes = (await callApi("/api/call/tracks/new", { sessionId, tracks: trackObjects, sdp: pc.localDescription!.sdp })) as any;
         await pc.setRemoteDescription(new RTCSessionDescription(newLocalRes.sessionDescription));
 
-        const remoteTrackObjects = trackObjects.map((t) => ({
-          location: "remote",
-          sessionId,
-          trackName: t.trackName,
-        }));
+        const remoteTrackObjects = trackObjects.map((t) => ({ location: "remote", sessionId, trackName: t.trackName }));
         const remoteTracksPromise = new Promise<MediaStreamTrack[]>((resolve) => {
           const tracks: MediaStreamTrack[] = [];
           pc.ontrack = (e) => {
@@ -94,19 +105,15 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
             if (tracks.length >= 2) resolve(tracks);
           };
         });
-        const newRemoteRes = (await callApi({
-          action: "newTracks",
-          sessionId,
-          tracks: remoteTrackObjects,
-        })) as {
-          requiresImmediateRenegotiation?: boolean;
-          sessionDescription: RTCSessionDescriptionInit;
-        };
+
+        const newRemoteRes = (await callApi("/api/call/tracks/new", { sessionId, tracks: remoteTrackObjects })) as any;
         if (newRemoteRes.requiresImmediateRenegotiation) {
           if (newRemoteRes.sessionDescription.type === "offer") {
             await pc.setRemoteDescription(new RTCSessionDescription(newRemoteRes.sessionDescription));
             await pc.setLocalDescription(await pc.createAnswer());
-            await callApi({ action: "renegotiate", sessionId, sdp: pc.localDescription!.sdp });
+            // DULU: callApi({ action: "renegotiate" })
+            // SEKARANG: POST /api/call/session dengan sessionId yang sama
+            await callApi("/api/call/session", { sessionId, sdp: pc.localDescription!.sdp });
           }
         }
 
@@ -119,79 +126,47 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
           remoteRef.current.srcObject = remoteStream;
           remoteRef.current.play().catch(() => {});
         }
-        setStatus("connected ✅");
+        setStatus("connected 🟢");
       } catch (e: any) {
         if (!cancelled) setStatus(`failed: ${e?.message || e}`);
       }
     }
-
     run();
     return () => {
       cancelled = true;
       pc?.close();
     };
-  }, [isOpen]);
+  }, [isOpen, type]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] bg-black flex flex-col">
       <div className="flex-1 relative min-h-0 bg-black overflow-hidden">
-        {/* REMOTE = FULLSCREEN */}
-        <video
-          ref={remoteRef}
-          autoPlay
-          playsInline
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-            isConnected ? "opacity-100" : "opacity-0"
-          }`}
-        />
-
-        {/* LOCAL = CUMA 1 VIDEO, CLASS-NYA AJA YANG GANTI */}
-        {/* Biar gak gelap kayak kemarin */}
-        <video
-          ref={localRef}
-          autoPlay
-          muted
-          playsInline
-          className={
-            isConnected
-              ? "absolute bottom-24 right-4 w-28 aspect-[3/4] object-cover rounded-2xl border border-white/30 bg-zinc-900 shadow-lg z-10"
-              : "absolute inset-0 w-full h-full object-cover"
-          }
-        />
-
-        {/* FASE 1: Lagi manggil — cuma overlay teks, bukan video baru */}
+        <video ref={remoteRef} autoPlay playsInline className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isConnected ? "opacity-100" : "opacity-0"}`} />
+        <video ref={localRef} autoPlay muted playsInline className={isConnected ? "absolute bottom-24 right-4 w-28 aspect-[3/4] object-cover rounded-2xl border border-white/30 bg-zinc-900 shadow-lg z-10" : "absolute inset-0 w-full h-full object-cover"} />
         {!isConnected && !status.startsWith("failed") && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30 pointer-events-none">
-            <p className="text-white font-bold text-lg">Memanggil...</p>
+            {/* Biodata dari PanelCall tetep tampil, bukan cuma "Mirror" */}
+            <p className="text-white font-bold text-lg">{name ? `Memanggil ${name}...` : "Memanggil..."}</p>
+            {username && <p className="text-white/70 text-xs mt-1">@{username}</p>}
             <p className="text-white/70 text-xs mt-1">{status}</p>
           </div>
         )}
-
-        {/* Header */}
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/60 to-transparent z-20">
           <div>
-            <p className="font-bold text-white leading-none">Mirror</p>
+            <p className="font-bold text-white leading-none">{name || "Mirror"}</p>
             <p className="text-xs text-white/70 mt-1">{status}</p>
           </div>
           <button onClick={handleClose} className="p-2 rounded-full bg-black/40 text-white backdrop-blur">
             <X size={20} />
           </button>
         </div>
-
         {status.startsWith("failed") && (
-          <p className="absolute top-16 left-4 right-4 text-center text-red-400 text-xs bg-black/60 rounded-lg py-2 px-3 break-words z-20">
-            {status}
-          </p>
+          <p className="absolute top-16 left-4 right-4 text-center text-red-400 text-xs bg-black/60 rounded-lg py-2 px-3 break-words z-20">{status}</p>
         )}
-
-        {/* Tombol merah */}
         <div className="absolute bottom-0 left-0 right-0 flex justify-center py-5 bg-gradient-to-t from-black/60 to-transparent z-20">
-          <button
-            onClick={handleClose}
-            className="w-14 h-14 rounded-full bg-red-500 text-white flex items-center justify-center active:scale-95 shadow-lg"
-          >
+          <button onClick={handleClose} className="w-14 h-14 rounded-full bg-red-500 text-white flex items-center justify-center active:scale-95 shadow-lg">
             <PhoneDisconnect size={26} weight="fill" />
           </button>
         </div>
