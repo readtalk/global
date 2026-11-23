@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useState, Suspense, useEffect, useRef } from "react";
+import { DotsThreeVertical, Gear } from "@phosphor-icons/react/dist/ssr";
+import { useLanguage } from "@/context/LanguageContext";
 
-export default function MirrorPage() {
+function MirrorContent() {
+  const { t } = useLanguage();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [status, setStatus] = useState("connecting");
+
   const localRef = useRef<HTMLVideoElement>(null);
   const remoteRef = useRef<HTMLVideoElement>(null);
 
@@ -10,7 +16,7 @@ export default function MirrorPage() {
     let pc: RTCPeerConnection;
 
     async function run() {
-      // 1. PC sama kayak file lu
+      // --- Ini logika dari index.html lu, gak gue ubah ---
       pc = new RTCPeerConnection({
         iceServers: [{ urls: "stun:stun.cloudflare.com:3478" }],
         bundlePolicy: "max-bundle",
@@ -23,7 +29,7 @@ export default function MirrorPage() {
         pc.addTransceiver(track, { direction: "sendonly" })
       );
 
-      // 2. newSession, tapi manggil route.ts, BUKAN langsung ke Cloudflare
+      // newSession -> manggil file yang dipanggil (route.ts)
       await pc.setLocalDescription(await pc.createOffer());
       const newSessionRes = await fetch("/api/mirror", {
         method: "POST",
@@ -39,7 +45,7 @@ export default function MirrorPage() {
         setTimeout(() => reject("connect timeout"), 5000);
       });
 
-      // 3. newTracks local
+      // newTracks local
       const trackObjects = transceivers.map((t) => ({
         location: "local",
         mid: t.mid,
@@ -52,7 +58,7 @@ export default function MirrorPage() {
       }).then((r) => r.json());
       await pc.setRemoteDescription(new RTCSessionDescription(newLocalRes.sessionDescription));
 
-      // 4. pull balik jadi remote echo, sama kayak file lu
+      // pull balik jadi remote echo
       const remoteTrackObjects = trackObjects.map((t) => ({
         location: "remote",
         sessionId,
@@ -86,23 +92,50 @@ export default function MirrorPage() {
       remoteStream.addTrack(remoteTracks[0]);
       remoteStream.addTrack(remoteTracks[1]);
       if (remoteRef.current) remoteRef.current.srcObject = remoteStream;
+      setStatus("connected");
     }
 
-    run();
+    run().catch(() => setStatus("failed"));
     return () => pc?.close();
   }, []);
 
   return (
-    <div className="grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-      <h1 style={{ gridColumn: "1 / -1" }}>Realtime Echo Demo</h1>
-      <div>
-        <h2>Local stream</h2>
-        <video ref={localRef} autoPlay muted playsInline style={{ width: "100%" }} />
+    <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-950 transition-colors">
+      {/* Header ngikutin CommunitiesPage lu persis */}
+      <div className="flex-none bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50 transition-colors">{t("navMirror")}</h1>
+        <div className="relative">
+          <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-50 p-1 transition-colors">
+            <DotsThreeVertical size={24} weight="bold" />
+          </button>
+          {isDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-800 z-50 overflow-hidden flex flex-col py-1 transition-colors">
+              <a href="/settings" onClick={() => setIsDropdownOpen(false)} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors">
+                <Gear size={16} /> {t("settings")}
+              </a>
+            </div>
+          )}
+        </div>
       </div>
-      <div>
-        <h2>Remote echo stream</h2>
-        <video ref={remoteRef} autoPlay playsInline style={{ width: "100%" }} />
+
+      {/* Isi mirror, gantiin "noCommunitiesYet" lu */}
+      <div className="flex-1 overflow-y-auto min-h-0 pb-20 md:pb-0 bg-white dark:bg-zinc-950 transition-colors">
+        <div className="max-w-2xl mx-auto bg-white dark:bg-zinc-950 transition-colors">
+          <p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-3">{status}</p>
+          <div>
+            <h2 className="text-sm text-gray-900 dark:text-zinc-50 px-4 py-2">Local stream</h2>
+            <video ref={localRef} autoPlay muted playsInline className="w-full" />
+          </div>
+          <div>
+            <h2 className="text-sm text-gray-900 dark:text-zinc-50 px-4 py-2">Remote echo stream</h2>
+            <video ref={remoteRef} autoPlay playsInline className="w-full" />
+          </div>
+        </div>
       </div>
     </div>
   );
+}
+
+export default function MirrorPage() {
+  return <Suspense fallback={<div className="fixed inset-0 z-[9999] bg-white dark:bg-zinc-950 transition-colors" />}><MirrorContent /></Suspense>;
 }
