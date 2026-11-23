@@ -1,4 +1,3 @@
-//
 "use client";
 
 import { useState, Suspense, useEffect, useRef } from "react";
@@ -17,7 +16,6 @@ function MirrorContent() {
     let pc: RTCPeerConnection;
 
     async function run() {
-      // --- Ini logika dari index.html lu, gak gue ubah ---
       pc = new RTCPeerConnection({
         iceServers: [{ urls: "stun:stun.cloudflare.com:3478" }],
         bundlePolicy: "max-bundle",
@@ -30,36 +28,41 @@ function MirrorContent() {
         pc.addTransceiver(track, { direction: "sendonly" })
       );
 
-      // newSession -> manggil file yang dipanggil (route.ts)
-      await pc.setLocalDescription(await pc.createOffer());
-      const newSessionRes = await fetch("/api/mirror", {
+      // FIX 1: cast newSession
+      const newSessionRes = (await fetch("/api/mirror", {
         method: "POST",
         body: JSON.stringify({ action: "newSession", sdp: pc.localDescription!.sdp }),
-      }).then((r) => r.json());
+      }).then((r) => r.json())) as {
+        sessionId: string;
+        sessionDescription: RTCSessionDescriptionInit;
+      };
+      // Ini yang error tadi di line 39, sekarang udah di-cast
       const sessionId = newSessionRes.sessionId;
       await pc.setRemoteDescription(new RTCSessionDescription(newSessionRes.sessionDescription));
 
-      await new Promise((resolve, reject) => {
-        pc.addEventListener("iceconnectionstatechange", (ev: any) => {
-          if (ev.target.iceConnectionState === "connected") resolve(true);
-        });
-        setTimeout(() => reject("connect timeout"), 5000);
-      });
+      await pc.setLocalDescription(await pc.createOffer());
+      // FIX 2: cast newLocal
+      const newLocalRes = (await fetch("/api/mirror", {
+        method: "POST",
+        body: JSON.stringify({
+          action: "newTracks",
+          sessionId,
+          tracks: transceivers.map((t) => ({
+            location: "local",
+            mid: t.mid,
+            trackName: t.sender.track!.id,
+          })),
+          sdp: pc.localDescription!.sdp,
+        }),
+      }).then((r) => r.json())) as { sessionDescription: RTCSessionDescriptionInit };
+      await pc.setRemoteDescription(new RTCSessionDescription(newLocalRes.sessionDescription));
 
-      // newTracks local
       const trackObjects = transceivers.map((t) => ({
         location: "local",
         mid: t.mid,
         trackName: t.sender.track!.id,
       }));
-      await pc.setLocalDescription(await pc.createOffer());
-      const newLocalRes = await fetch("/api/mirror", {
-        method: "POST",
-        body: JSON.stringify({ action: "newTracks", sessionId, tracks: trackObjects, sdp: pc.localDescription!.sdp }),
-      }).then((r) => r.json());
-      await pc.setRemoteDescription(new RTCSessionDescription(newLocalRes.sessionDescription));
 
-      // pull balik jadi remote echo
       const remoteTrackObjects = trackObjects.map((t) => ({
         location: "remote",
         sessionId,
@@ -74,10 +77,14 @@ function MirrorContent() {
         };
       });
 
-      const newRemoteRes = await fetch("/api/mirror", {
+      // FIX 3: cast newRemote
+      const newRemoteRes = (await fetch("/api/mirror", {
         method: "POST",
         body: JSON.stringify({ action: "newTracks", sessionId, tracks: remoteTrackObjects }),
-      }).then((r) => r.json());
+      }).then((r) => r.json())) as {
+        requiresImmediateRenegotiation?: boolean;
+        sessionDescription: RTCSessionDescriptionInit;
+      };
 
       if (newRemoteRes.requiresImmediateRenegotiation) {
         await pc.setRemoteDescription(new RTCSessionDescription(newRemoteRes.sessionDescription));
@@ -102,7 +109,6 @@ function MirrorContent() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-950 transition-colors">
-      {/* Header ngikutin CommunitiesPage lu persis */}
       <div className="flex-none bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors">
         <h1 className="text-xl font-bold text-gray-900 dark:text-zinc-50 transition-colors">{t("navMirror")}</h1>
         <div className="relative">
@@ -119,7 +125,6 @@ function MirrorContent() {
         </div>
       </div>
 
-      {/* Isi mirror, gantiin "noCommunitiesYet" lu */}
       <div className="flex-1 overflow-y-auto min-h-0 pb-20 md:pb-0 bg-white dark:bg-zinc-950 transition-colors">
         <div className="max-w-2xl mx-auto bg-white dark:bg-zinc-950 transition-colors">
           <p className="text-center text-gray-500 dark:text-zinc-400 text-sm py-3">{status}</p>
