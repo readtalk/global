@@ -8,7 +8,7 @@ import PanelCommunity from "@/components/PanelCommunity";
 type Category = "family" | "school" | "corporate";
 
 const categories = [
-  { id: "family" as Category, label: "Family / Neighbors", Icon: House },
+  { id: "family" as Category, label: "Neighbors", Icon: House },
   { id: "school" as Category, label: "High School", Icon: GraduationCap },
   { id: "corporate" as Category, label: "Corporate", Icon: BuildingOffice },
 ];
