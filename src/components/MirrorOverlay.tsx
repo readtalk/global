@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import { X, PhoneDisconnect } from "@phosphor-icons/react/dist/ssr";
 
@@ -6,6 +7,17 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
   const [status, setStatus] = useState("connecting...");
   const localRef = useRef<HTMLVideoElement>(null);
   const remoteRef = useRef<HTMLVideoElement>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
+
+  
+  const handleClose = () => {
+    localStreamRef.current?.getTracks().forEach((t) => t.stop());
+    localStreamRef.current = null;
+    if (localRef.current) localRef.current.srcObject = null;
+    if (remoteRef.current) remoteRef.current.srcObject = null;
+    setStatus("connecting...");
+    onClose();
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -31,6 +43,7 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
           bundlePolicy: "max-bundle",
         });
         const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localStreamRef.current = localStream;
         if (cancelled) return;
         if (localRef.current) localRef.current.srcObject = localStream;
 
@@ -104,7 +117,7 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
           remoteRef.current.srcObject = remoteStream;
           remoteRef.current.play().catch(() => {});
         }
-        setStatus("connected ✅");
+        setStatus("connected 🟢");
       } catch (e: any) {
         if (!cancelled) setStatus(`failed: ${e?.message || e}`);
       }
@@ -120,61 +133,51 @@ export default function MirrorOverlay({ isOpen, onClose }: { isOpen: boolean; on
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-white dark:bg-zinc-950 flex flex-col">
-      {/* Header overlay */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-zinc-800">
-        <div>
-          <p className="font-bold text-gray-900 dark:text-zinc-50 leading-none">Mirror</p>
-          <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">{status}</p>
-        </div>
-        <button onClick={onClose} className="p-2 rounded-full bg-zinc-100 dark:bg-zinc-900">
-          <X size={20} />
-        </button>
-      </div>
+    <div className="fixed inset-0 z-[9999] bg-black flex flex-col">
+      {/* REMOTE = FULLSCREEN */}
+      <div className="flex-1 relative min-h-0 bg-black">
+        <video
+          ref={remoteRef}
+          autoPlay
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        />
 
-      {/* ISI YANG LU PASTE TADI, CUMA UKURANNYA SQUARE */}
-      <div className="flex-1 overflow-y-auto pb-20">
-        <div className="max-w-2xl mx-auto">
-          {status.startsWith("failed") && (
-            <p className="text-center text-red-500 text-xs py-3 px-4 break-words">{status}</p>
-          )}
-
+        {/* Header nempel di atas video */}
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/60 to-transparent">
           <div>
-            <h2 className="text-sm text-gray-900 dark:text-zinc-50 px-4 py-2">Local stream</h2>
-            {/* SQUARE: aspect-square + object-cover, biar kotak 1:1 */}
-            <div className="px-4">
-              <video
-                ref={localRef}
-                autoPlay
-                muted
-                playsInline
-                className="w-full aspect-square object-cover rounded-2xl bg-black"
-              />
-            </div>
+            <p className="font-bold text-white leading-none">Mirror</p>
+            <p className="text-xs text-white/70 mt-1">{status}</p>
           </div>
-
-          <div>
-            <h2 className="text-sm text-gray-900 dark:text-zinc-50 px-4 py-2">Remote echo stream</h2>
-            {/* SQUARE: aspect-square + object-cover, video + audio dari sini */}
-            <div className="px-4">
-              <video
-                ref={remoteRef}
-                autoPlay
-                playsInline
-                className="w-full aspect-square object-cover rounded-2xl bg-black"
-              />
-            </div>
-          </div>
+          <button onClick={handleClose} className="p-2 rounded-full bg-black/40 text-white backdrop-blur">
+            <X size={20} />
+          </button>
         </div>
-      </div>
 
-      <div className="flex justify-center py-5 bg-white dark:bg-zinc-950 border-t border-gray-200 dark:border-zinc-800">
-        <button
-          onClick={onClose}
-          className="w-14 h-14 rounded-full bg-red-500 text-white flex items-center justify-center active:scale-95"
-        >
-          <PhoneDisconnect size={26} weight="fill" />
-        </button>
+        {/* LOCAL = KECIL, POJOK KANAN BAWAH KAYAK WA */}
+        <video
+          ref={localRef}
+          autoPlay
+          muted
+          playsInline
+          className="absolute bottom-24 right-4 w-28 aspect-[3/4] object-cover rounded-2xl border border-white/30 bg-zinc-900 shadow-lg"
+        />
+
+        {status.startsWith("failed") && (
+          <p className="absolute top-16 left-4 right-4 text-center text-red-400 text-xs bg-black/60 rounded-lg py-2 px-3 break-words">
+            {status}
+          </p>
+        )}
+
+        {/* Tombol merah nempel di bawah video */}
+        <div className="absolute bottom-0 left-0 right-0 flex justify-center py-5 bg-gradient-to-t from-black/60 to-transparent">
+          <button
+            onClick={handleClose}
+            className="w-14 h-14 rounded-full bg-red-500 text-white flex items-center justify-center active:scale-95 shadow-lg"
+          >
+            <PhoneDisconnect size={26} weight="fill" />
+          </button>
+        </div>
       </div>
     </div>
   );
