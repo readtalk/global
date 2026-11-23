@@ -5,7 +5,7 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 type PanelCommunityProps = {
   isOpen: boolean;
   onClose: () => void;
-  category?: "neighbors" | "graduate" | "corporate" | null;
+  category?: "neighbors" | "schools" | "organization" | null;
 };
 
 export default function PanelCommunity({ isOpen, onClose, category }: PanelCommunityProps) {
