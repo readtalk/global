@@ -10,7 +10,7 @@ type Category = "neighbors" | "schools" | "corporate";
 const categories = [
   { id: "neighbors" as Category, label: "Neighbors", Icon: House },
   { id: "schools" as Category, label: "Schools", Icon: GraduationCap },
-  { id: "organization" as Category, label: "Corporate", Icon: BuildingOffice },
+  { id: "corporate" as Category, label: "Corporate", Icon: BuildingOffice },
 ];
 
 type Community = {
