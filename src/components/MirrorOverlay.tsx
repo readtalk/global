@@ -193,7 +193,7 @@ export default function MirrorOverlay({
 
         {!isConnected && !status.startsWith("failed") && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30 pointer-events-none">
-            <p className="text-white font-bold text-lg">{name ? `⇄ ${name}...` : "Ringing..."}</p>
+            <p className="text-white font-bold text-lg">{name ? `Calling ${name}...` : "Calling..."}</p>
             {username && <p className="text-white/70 text-xs mt-1">@{username}</p>}
             <p className="text-white/70 text-xs mt-1">{status}</p>
           </div>
