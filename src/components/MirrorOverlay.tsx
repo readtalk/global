@@ -149,7 +149,7 @@ export default function MirrorOverlay({
           remoteRef.current.srcObject = remoteStream;
           remoteRef.current.play().catch(() => {});
         }
-        setStatus("connecting ⚪🟢");
+        setStatus("connected: ⇄");
       } catch (e: any) {
         if (!cancelled) setStatus(`failed: ${e?.message || e}`);
       }
