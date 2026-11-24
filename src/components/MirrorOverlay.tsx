@@ -149,7 +149,7 @@ export default function MirrorOverlay({
           remoteRef.current.srcObject = remoteStream;
           remoteRef.current.play().catch(() => {});
         }
-        setStatus("connected: ⇄");
+        setStatus("00:00:00");
       } catch (e: any) {
         if (!cancelled) setStatus(`failed: ${e?.message || e}`);
       }
@@ -193,7 +193,7 @@ export default function MirrorOverlay({
 
         {!isConnected && !status.startsWith("failed") && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30 pointer-events-none">
-            <p className="text-white font-bold text-lg">{name ? `Memanggil ${name}...` : "Memanggil..."}</p>
+            <p className="text-white font-bold text-lg">{name ? `⇄ ${name}...` : "Ringing..."}</p>
             {username && <p className="text-white/70 text-xs mt-1">@{username}</p>}
             <p className="text-white/70 text-xs mt-1">{status}</p>
           </div>
