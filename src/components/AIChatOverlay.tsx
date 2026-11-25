@@ -202,16 +202,8 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 				className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity md:hidden"
 				onClick={onClose}
 			/>
-			<div
-				className={`fixed top-0 right-0 h-full w-full md:w-[60vw] bg-white dark:bg-zinc-950 z-50 flex flex-col border-l border-gray-200 dark:border-zinc-800 md:shadow-none shadow-2xl transition-transform duration-300 ease-in-out md:transition-none md:transform-none ${isAnimating ? "translate-x-0" : "translate-x-full"}`}
-				style={{
-					backgroundImage: "url('/anna-laura-ai.png')",
-					backgroundSize: "contain",
-					backgroundPosition: "center",
-					backgroundRepeat: "no-repeat",
-				}}
-			>
-				<div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-zinc-800 transition-colors">
+			<div className={`fixed top-0 right-0 h-full w-full md:w-[60vw] bg-white dark:bg-zinc-950 z-50 flex flex-col border-l border-gray-200 dark:border-zinc-800 md:shadow-none shadow-2xl transition-transform duration-300 ease-in-out md:transition-none md:transform-none ${isAnimating ? "translate-x-0" : "translate-x-full"}`}>
+				<div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 transition-colors">
 					<button
 						onClick={onClose}
 						className="md:hidden p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-zinc-900 rounded-full transition-colors"
@@ -221,7 +213,15 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 					<h2 className="text-lg font-bold text-gray-900 dark:text-zinc-50">Anna Laura AI</h2>
 				</div>
 
-				<div className="flex-1 overflow-y-auto p-4 space-y-4">
+				<div
+					className="flex-1 overflow-y-auto p-4 space-y-4"
+					style={{
+						backgroundImage: "url('/bg/anna-laura-ai.png')",
+						backgroundSize: "contain",
+						backgroundPosition: "center",
+						backgroundRepeat: "no-repeat",
+					}}
+				>
 					{messages.length === 0 ? (
 						<div className="flex justify-center items-center h-full">
 							<p className="text-gray-500 dark:text-zinc-400 text-sm">Chat with Anna Laura AI</p>
