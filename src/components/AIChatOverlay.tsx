@@ -217,7 +217,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 					className="flex-1 overflow-y-auto p-4 space-y-4"
 					style={{
 						backgroundImage: "url('/bg/anna-laura-ai.png')",
-						backgroundSize: "63% auto",
+						backgroundSize: "auto",
 						backgroundPosition: "center",
 						backgroundRepeat: "no-repeat",
 					}}
