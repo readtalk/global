@@ -205,7 +205,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 			<div
 				className={`fixed top-0 right-0 h-full w-full md:w-[60vw] bg-white dark:bg-zinc-950 z-50 flex flex-col border-l border-gray-200 dark:border-zinc-800 md:shadow-none shadow-2xl transition-transform duration-300 ease-in-out md:transition-none md:transform-none ${isAnimating ? "translate-x-0" : "translate-x-full"}`}
 				style={{
-					backgroundImage: "url('/bg/anna-laura-ai.png')",
+					backgroundImage: "url('/anna-laura-ai.png')",
 					backgroundSize: "contain",
 					backgroundPosition: "center",
 					backgroundRepeat: "no-repeat",
