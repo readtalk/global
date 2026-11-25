@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, PaperPlaneRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, PaperPlaneRight, Copy, Check, CodeSimple } from "@phosphor-icons/react/dist/ssr";
 
 type ChatMessage = {
 	role: "user" | "assistant";
@@ -76,6 +76,75 @@ const formatTime = (timestamp: number) => {
 		minute: "2-digit",
 	});
 };
+
+// --- RENDERER BARU: Biar code ke-detect ---
+function CodeBlock({ lang, code }: { lang: string; code: string }) {
+	const [copied, setCopied] = useState(false);
+
+	const handleCopy = async () => {
+		try {
+			await navigator.clipboard.writeText(code.trim());
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
+		} catch {}
+	};
+
+	return (
+		<div className="overflow-hidden rounded-xl bg-zinc-950 border border-zinc-800 my-2 -mx-1">
+			<div className="flex items-center justify-between px-3 py-2 bg-zinc-900 border-b border-zinc-800">
+				<div className="flex items-center gap-1.5">
+					<CodeSimple size={14} className="text-zinc-400" />
+					<span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wide">{lang || "code"}</span>
+				</div>
+				<button
+					onClick={handleCopy}
+					className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-white transition-colors"
+				>
+					{copied ? <Check size={13} weight="bold" className="text-emerald-400" /> : <Copy size={13} />}
+					{copied ? "Copied!" : "Copy"}
+				</button>
+			</div>
+			<pre className="p-3 overflow-x-auto text-[13px] leading-relaxed text-zinc-100 font-mono whitespace-pre">
+				<code>{code}</code>
+			</pre>
+		</div>
+	);
+}
+
+function MessageContent({ content }: { content: string }) {
+	const parts = content.split(/(```[\s\S]*?(?:```|$))/g);
+
+	return (
+		<div className="text-[15px] leading-relaxed break-words space-y-1.5 w-full min-w-0">
+			{parts.map((part, i) => {
+				if (part.startsWith("```")) {
+					const match = part.match(/```(\w+)?\n?([\s\S]*?)(?:```|$)/);
+					return <CodeBlock key={i} lang={match?.[1] || "code"} code={match?.[2] || ""} />;
+				}
+				// Teks biasa + inline code + bold
+				return (
+					<p key={i} className="whitespace-pre-wrap">
+						{part.split(/(`[^`]+`)/g).map((p, j) => {
+							if (p.startsWith("`") && p.endsWith("`") && p.length > 2) {
+								return (
+									<code key={j} className="px-1.5 py-0.5 rounded-md bg-black/10 dark:bg-white/15 text-[13px] font-mono text-zinc-900 dark:text-zinc-100">
+										{p.slice(1, -1)}
+									</code>
+								);
+							}
+							return p.split(/(\*\*[^*]+\*\*)/g).map((b, k) => {
+								if (b.startsWith("**") && b.endsWith("**")) {
+									return <strong key={k} className="font-semibold">{b.slice(2, -2)}</strong>;
+								}
+								return <span key={k}>{b}</span>;
+							});
+						})}
+					</p>
+				);
+			})}
+		</div>
+	);
+}
 
 export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps) {
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -243,11 +312,11 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 										</div>
 									)}
 									<div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-										<div className={`max-w-[75%] px-4 py-2 rounded-2xl flex flex-col gap-1 transition-colors ${isMe ? "bg-gray-200 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 rounded-br-sm" : "bg-gray-100 dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 rounded-bl-sm"}`}>
+										<div className={`max-w-[75%] md:max-w-[80%] px-4 py-2 rounded-2xl flex flex-col gap-1 transition-colors overflow-hidden ${isMe ? "bg-gray-200 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 rounded-br-sm" : "bg-gray-100 dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 rounded-bl-sm"}`}>
 											{isTyping ? (
 												<span className="text-xs text-gray-400 dark:text-zinc-500 animate-pulse py-0.5">Thinking...</span>
 											) : (
-												<p className="text-[15px] whitespace-pre-wrap break-words">{msg.content}</p>
+												<MessageContent content={msg.content} />
 											)}
 											{!isTyping && (
 												<div className={`flex items-center justify-end gap-1 ${isMe ? "text-gray-500 dark:text-zinc-400" : "text-gray-400 dark:text-zinc-500"}`}>
