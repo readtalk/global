@@ -217,7 +217,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 					className="flex-1 overflow-y-auto p-4 space-y-4"
 					style={{
 						backgroundImage: "url('/bg/anna-laura-ai.png')",
-						backgroundSize: "auto",
+						backgroundSize: "55% auto",
 						backgroundPosition: "center",
 						backgroundRepeat: "no-repeat",
 					}}
@@ -245,7 +245,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 									<div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
 										<div className={`max-w-[75%] px-4 py-2 rounded-2xl flex flex-col gap-1 transition-colors ${isMe ? "bg-gray-200 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 rounded-br-sm" : "bg-gray-100 dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 rounded-bl-sm"}`}>
 											{isTyping ? (
-												<span className="text-xs text-gray-400 dark:text-zinc-500 animate-pulse py-0.5">Typing...</span>
+												<span className="text-xs text-gray-400 dark:text-zinc-500 animate-pulse py-0.5">Thinking...</span>
 											) : (
 												<p className="text-[15px] whitespace-pre-wrap break-words">{msg.content}</p>
 											)}
