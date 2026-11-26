@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, PaperPlaneRight, Copy, Check, CodeSimple } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, PaperPlaneRight, Copy, Check, CodeSimple, Smiley, Keyboard } from "@phosphor-icons/react/dist/ssr";
 import MathPattern from "@/components/MathPattern";
 import EmoticonPicker from "@/components/EmoticonPicker";
 
@@ -146,21 +146,26 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	};
 
+	const toggleEmoticon = () => {
+		if (!showEmoticon) {
+			inputRef.current?.blur();
+			setShowEmoticon(true);
+		} else {
+			setShowEmoticon(false);
+			requestAnimationFrame(() => inputRef.current?.focus());
+		}
+	};
+
+	const closeEmoticonAndFocus = () => {
+		setShowEmoticon(false);
+		requestAnimationFrame(() => inputRef.current?.focus());
+	};
+
 	const handleInsertEmoji = (emoji: string) => {
 		const input = inputRef.current;
-		if (!input) {
-			setContent((p) => p + emoji);
-			return;
-		}
-		const start = input.selectionStart ?? content.length;
-		const end = input.selectionEnd ?? content.length;
-		const next = content.slice(0, start) + emoji + content.slice(end);
-		setContent(next);
-		requestAnimationFrame(() => {
-			input.focus();
-			const pos = start + emoji.length;
-			input.setSelectionRange(pos, pos);
-		});
+		const start = input?.selectionStart ?? content.length;
+		const end = input?.selectionEnd ?? content.length;
+		setContent(content.slice(0, start) + emoji + content.slice(end));
 	};
 
 	const handleSend = async () => {
@@ -292,13 +297,13 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 						<EmoticonPicker
 							mode={typeof window !== "undefined" && window.innerWidth < 768 ? "bottom-sheet" : "popover"}
 							onSelect={handleInsertEmoji}
-							onClose={() => setShowEmoticon(false)}
+							onClose={closeEmoticonAndFocus}
 						/>
 					)}
-					<button onClick={() => setShowEmoticon(!showEmoticon)} className="bg-gray-100 dark:bg-zinc-900 p-2.5 rounded-full hover:bg-gray-200 dark:hover:bg-zinc-800 transition flex items-center justify-center text-xl leading-none">
-						🙂
+					<button onClick={toggleEmoticon} className="bg-gray-100 dark:bg-zinc-900 p-2.5 rounded-full hover:bg-gray-200 dark:hover:bg-zinc-800 transition flex items-center justify-center">
+						{showEmoticon ? <Keyboard size={20} className="text-gray-600 dark:text-zinc-300" /> : <Smiley size={20} className="text-gray-600 dark:text-zinc-300" />}
 					</button>
-					<input ref={inputRef} type="text" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Type a message..." className="flex-1 bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-zinc-400 transition-colors" onKeyDown={(e) => e.key === "Enter" && handleSend()} />
+					<input ref={inputRef} type="text" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Type a message..." className="flex-1 bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-zinc-400 transition-colors" onFocus={() => setShowEmoticon(false)} onKeyDown={(e) => e.key === "Enter" && handleSend()} />
 					<button onClick={handleSend} disabled={isSending || !content.trim()} className="bg-black dark:bg-white text-white dark:text-black p-2.5 rounded-full hover:bg-gray-800 dark:hover:bg-gray-200 transition disabled:opacity-50 flex items-center justify-center">
 						<PaperPlaneRight size={20} weight="fill" />
 					</button>
