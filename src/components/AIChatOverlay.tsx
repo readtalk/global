@@ -131,8 +131,17 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 	const [isSending, setIsSending] = useState(false);
 	const [isAnimating, setIsAnimating] = useState(false);
 	const [showEmoticon, setShowEmoticon] = useState(false);
+	const [isMobile, setIsMobile] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const cursorRef = useRef(0);
+
+	useEffect(() => {
+		const update = () => setIsMobile(window.innerWidth < 768);
+		update();
+		window.addEventListener("resize", update);
+		return () => window.removeEventListener("resize", update);
+	}, []);
 
 	useEffect(() => {
 		if (isOpen) {
@@ -148,6 +157,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 
 	const toggleEmoticon = () => {
 		if (!showEmoticon) {
+			if (inputRef.current) cursorRef.current = inputRef.current.selectionStart ?? content.length;
 			inputRef.current?.blur();
 			setShowEmoticon(true);
 		} else {
@@ -162,10 +172,10 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 	};
 
 	const handleInsertEmoji = (emoji: string) => {
-		const input = inputRef.current;
-		const start = input?.selectionStart ?? content.length;
-		const end = input?.selectionEnd ?? content.length;
-		setContent(content.slice(0, start) + emoji + content.slice(end));
+		const pos = cursorRef.current;
+		const next = content.slice(0, pos) + emoji + content.slice(pos);
+		setContent(next);
+		cursorRef.current = pos + emoji.length;
 	};
 
 	const handleSend = async () => {
@@ -177,6 +187,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 		const aiIndex = history.length;
 		setMessages([...history, { role: "assistant", content: "", created_at: now }]);
 		setContent("");
+		cursorRef.current = 0;
 		setShowEmoticon(false);
 		setIsSending(true);
 		const audio = new Audio('/sound/all-eyes-on-me.mp3');
@@ -292,21 +303,32 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 						<div ref={messagesEndRef} />
 					</div>
 				</div>
-				<div className="relative flex-none bg-white dark:bg-zinc-950 border-t border-gray-200 dark:border-zinc-800 p-3 flex gap-2 pb-safe pb-[max(12px,env(safe-area-inset-bottom))] transition-colors">
-					{showEmoticon && (
+				<div className="flex-none bg-white dark:bg-zinc-950 border-t border-gray-200 dark:border-zinc-800 transition-colors">
+					<div className="relative">
+						<div className="p-3 flex gap-2 pb-[max(12px,env(safe-area-inset-bottom))]">
+							<button onClick={toggleEmoticon} className="bg-gray-100 dark:bg-zinc-900 p-2.5 rounded-full hover:bg-gray-200 dark:hover:bg-zinc-800 transition flex items-center justify-center">
+								{showEmoticon ? <Keyboard size={20} className="text-gray-600 dark:text-zinc-300" /> : <Smiley size={20} className="text-gray-600 dark:text-zinc-300" />}
+							</button>
+							<input ref={inputRef} type="text" value={content} onChange={(e) => { setContent(e.target.value); cursorRef.current = e.target.selectionStart ?? e.target.value.length; }} onSelect={(e) => { cursorRef.current = e.currentTarget.selectionStart ?? content.length; }} placeholder="Type a message..." className="flex-1 bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-zinc-400 transition-colors" onFocus={() => setShowEmoticon(false)} onKeyDown={(e) => e.key === "Enter" && handleSend()} />
+							<button onClick={handleSend} disabled={isSending || !content.trim()} className="bg-black dark:bg-white text-white dark:text-black p-2.5 rounded-full hover:bg-gray-800 dark:hover:bg-gray-200 transition disabled:opacity-50 flex items-center justify-center">
+								<PaperPlaneRight size={20} weight="fill" />
+							</button>
+						</div>
+						{showEmoticon && !isMobile && (
+							<EmoticonPicker
+								mode="popover"
+								onSelect={handleInsertEmoji}
+								onClose={closeEmoticonAndFocus}
+							/>
+						)}
+					</div>
+					{showEmoticon && isMobile && (
 						<EmoticonPicker
-							mode={typeof window !== "undefined" && window.innerWidth < 768 ? "bottom-sheet" : "popover"}
+							mode="bottom-sheet"
 							onSelect={handleInsertEmoji}
 							onClose={closeEmoticonAndFocus}
 						/>
 					)}
-					<button onClick={toggleEmoticon} className="bg-gray-100 dark:bg-zinc-900 p-2.5 rounded-full hover:bg-gray-200 dark:hover:bg-zinc-800 transition flex items-center justify-center">
-						{showEmoticon ? <Keyboard size={20} className="text-gray-600 dark:text-zinc-300" /> : <Smiley size={20} className="text-gray-600 dark:text-zinc-300" />}
-					</button>
-					<input ref={inputRef} type="text" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Type a message..." className="flex-1 bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-zinc-400 transition-colors" onFocus={() => setShowEmoticon(false)} onKeyDown={(e) => e.key === "Enter" && handleSend()} />
-					<button onClick={handleSend} disabled={isSending || !content.trim()} className="bg-black dark:bg-white text-white dark:text-black p-2.5 rounded-full hover:bg-gray-800 dark:hover:bg-gray-200 transition disabled:opacity-50 flex items-center justify-center">
-						<PaperPlaneRight size={20} weight="fill" />
-					</button>
 				</div>
 			</div>
 		</>
