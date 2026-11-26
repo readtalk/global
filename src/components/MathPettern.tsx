@@ -1,3 +1,4 @@
+//
 "use client";
 
 import { Sigma, Pi, SquareRoot, Function, Triangle, Circle, Cube, Ruler, Calculator, Percent, Infinity as InfinityIcon, Divide, Equals, Plus, Minus, X, ChartLine } from "@phosphor-icons/react/dist/ssr";
