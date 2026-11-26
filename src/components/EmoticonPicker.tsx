@@ -97,5 +97,5 @@ export default function EmoticonPicker({ onSelect, onClose, onBackspace, default
   );
 
   if (mode === "bottom-sheet") return <div className="w-full bg-white dark:bg-zinc-900 text-black dark:text-white border-t border-neutral-200 dark:border-zinc-800 overflow-hidden shrink-0">{content}</div>;
-return <div className="absolute bottom-full left-0 w-[360px] max-w-[92vw] bg-white dark:bg-zinc-900 text-black dark:text-white border border-neutral-200 dark:border-zinc-800 rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.15)] overflow-hidden z-50">{content}</div>;
+return <div className="absolute bottom-full left-0 w-full md:w-[360px] max-w-[92vw] md:max-w-none bg-white dark:bg-zinc-900 text-black dark:text-white border border-neutral-200 dark:border-zinc-800 rounded-t-2xl md:rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.15)] overflow-hidden z-50">{content}</div>;
 }
