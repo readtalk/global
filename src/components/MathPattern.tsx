@@ -23,54 +23,71 @@ export default function MathPattern() {
   const shapes = [Cube, Prism, Cylinder, Sphere, Pie, TriangleRuler, Ruler, SineGraph, ParabolaGraph, CoordGraph];
   const cells = [];
   for (let r = 0; r < 11; r++) for (let c = 0; c < 7; c++) cells.push({ r, c });
+  const kawinSet = new Set([12, 47]);
 
-  // BINTANG KAWIN: cuma 2 pasang yang sengaja dibikin nempel. Sisanya GAK BOLEH nempel.
-  // Ini yang bikin langit lu hidup, bukan berantakan.
-  const kawinSet = new Set([12, 47]); // index cell yang jadi bintang kawin
+  // KENTANG: rumus dilempar, bukan dijajar.
+  // Kita bikin 3 lapis lemparan biar penuh dari ujung ke ujung.
+  // Lapis 1: rumus panjang, 12 biji, dilempar acak penuh
+  // Lapis 2: rumus panjang lagi tapi lebih kecil + kebalik, dilempar lagi, ngisi sela-sela lapis 1
+  // Lapis 3: sin-cos-tan kecil, dilempar paling banyak, ngisi sela-sela yang masih kosong
+  // Jadi yang bikin penuh tuh bukan kubusnya ditambah, tapi kentangnya yang dilempar terus sampe sela-nya ketutup.
 
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      {/* BINTANG KECIL DULU = sin-cos-tan, di belakang, ngelilingin bulan */}
-      {symbols.map((s, i) => {
-        const size = 14 + rnd(i * 11 + 5) * 28;
-        return (
-          <div key={`sym-${i}`} className="absolute font-bold text-zinc-900/[0.08] dark:text-white/[0.09]" style={{ top: `${(i * 19 + 4) % 90}%`, left: `${(i * 29 + 10) % 88}%`, transform: `rotate(${((i * 41) % 24) - 12}deg)`, fontSize: `${size}px` }}>
-            {s}
-          </div>
-        );
-      })}
-
-      {/* BULAN + BINTANG GEDE = icon, tapi BULAN GAK NINDIH BINTANG */}
+      {/* KUBUS-SEGITIGA-LINGKARAN: tetep di cell-nya, ukuran beda-beda, arsir beda rasa */}
       {cells.map(({ r, c }, i) => {
         const Shape = shapes[i % shapes.length];
         const isMirror = (r + c) % 2 === 1;
         const isKawin = kawinSet.has(i);
-        // VISION LU: scale random kayak bintang, 0.45x - 2.1x, TAPI...
-        // kalau dia gede, dia tetep di cell-nya sendiri, gak meluber ke cell tetangga
-        // caranya: kita bungkus di cell 14.5% x 9.2% yang flex center, jadi mau 2.1x pun dia tetep di tengah cell-nya
-        // kecuali 2 yang bintang kawin, itu sengaja digeser biar nempel
         const scale = 0.45 + rnd(i * 3 + 7) * 1.65;
-        const kawinShiftX = isKawin ? 22 : 0;
-        const kawinShiftY = isKawin ? -10 : 0;
+        // beda rasa: ada yang tipis, ada yang agak tebel, biar kubus sama kubus gak sama persis
+        const weight = 0.7 + rnd(i * 7 + 2) * 0.8;
         return (
           <div key={`s-${i}`} className="absolute flex items-center justify-center text-zinc-900/[0.09] dark:text-white/[0.10]" style={{ top: `${r * 9.2}%`, left: `${c * 14.5 - 1}%`, width: "14.5%", height: "9.2%" }}>
-            <div style={{ transform: `translate(${kawinShiftX}px, ${kawinShiftY}px) rotate(${((i * 31) % 20) - 10}deg) scale(${scale}) scaleX(${isMirror ? -1 : 1})` }}>
-              <Shape />
+            <div style={{ transform: `translate(${isKawin ? 22 : 0}px, ${isKawin ? -10 : 0}px) rotate(${((i * 31) % 20) - 10}deg) scale(${scale}) scaleX(${isMirror ? -1 : 1})`, opacity: 0.7 + rnd(i) * 0.3 }}>
+              <div style={{ ['--w' as any]: weight }}>
+                <Shape />
+              </div>
             </div>
           </div>
         );
       })}
 
-      {formulas.map((f, i) => (
-        <div key={`f-${i}`} className="absolute whitespace-nowrap text-[13px] font-medium text-zinc-900/[0.10] dark:text-white/[0.11]" style={{ top: `${(i * 17 + 8) % 92}%`, left: `${(i * 23 + 4) % 68}%`, transform: `rotate(${i % 2 === 0 ? -4 : 4}deg) scaleX(${i % 3 === 0 ? -1 : 1})` }}>
-          {f}
-        </div>
-      ))}
-      {formulas.map((f, i) => (
-        <div key={`f2-${i}`} className="absolute whitespace-nowrap text-[11px] text-zinc-900/[0.07] dark:text-white/[0.08]" style={{ top: `${(i * 23 + 48) % 94}%`, left: `${(i * 31 + 38) % 62}%`, transform: `rotate(${i % 2 === 0 ? 5 : -5}deg) scaleX(-1)` }}>
-          {f}
-        </div>
-      ))}
+      {/* LAPIS KENTANG 1: rumus panjang, dilempar acak, ukuran 11-16px */}
+      {formulas.map((f, i) => {
+        const top = rnd(i * 13 + 101) * 92;
+        const left = rnd(i * 29 + 202) * 70;
+        const size = 11 + rnd(i * 7 + 3) * 5;
+        return (
+          <div key={`f-${i}`} className="absolute whitespace-nowrap font-medium text-zinc-900/[0.10] dark:text-white/[0.11]" style={{ top: `${top}%`, left: `${left}%`, fontSize: `${size}px`, transform: `rotate(${((i * 37) % 14) - 7}deg) scaleX(${i % 3 === 0 ? -1 : 1})` }}>
+            {f}
+          </div>
+        );
+      })}
+
+      {/* LAPIS KENTANG 2: rumus yang sama tapi dilempar lagi ke tempat lain, lebih kecil, ngisi sela */}
+      {formulas.map((f, i) => {
+        const top = rnd(i * 41 + 505) * 94;
+        const left = rnd(i * 17 + 606) * 65;
+        const size = 9 + rnd(i * 11 + 9) * 4;
+        return (
+          <div key={`f2-${i}`} className="absolute whitespace-nowrap text-zinc-900/[0.07] dark:text-white/[0.08]" style={{ top: `${top}%`, left: `${left}%`, fontSize: `${size}px`, transform: `rotate(${((i * 53) % 16) - 8}deg) scaleX(-1)` }}>
+            {f}
+          </div>
+        );
+      })}
+
+      {/* LAPIS KENTANG 3: sin-cos-tan + simbol kecil, dilempar PALING BANYAK, 3x lipat, biar sela kecil ketutup */}
+      {[...symbols, ...symbols, ...symbols].map((s, i) => {
+        const top = rnd(i * 19 + 707) * 96;
+        const left = rnd(i * 31 + 808) * 92;
+        const size = 12 + rnd(i * 23 + 5) * 30;
+        return (
+          <div key={`sym-${i}`} className="absolute font-bold text-zinc-900/[0.08] dark:text-white/[0.09]" style={{ top: `${top}%`, left: `${left}%`, fontSize: `${size}px`, transform: `rotate(${((i * 41) % 30) - 15}deg)` }}>
+            {s}
+          </div>
+        );
+      })}
     </div>
   );
 }
