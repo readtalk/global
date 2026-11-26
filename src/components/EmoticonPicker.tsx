@@ -15,8 +15,10 @@ const SKIN_TONES: SkinTone[] = ["🏻", "🏼", "🏽", "🏾", "🏿"];
 const BLOCKED_SUBSTRINGS = ["🏳️‍🌈","🏳️‍⚧️","⚧","👩‍❤️‍👩","👨‍❤️‍👨","🧑‍❤️‍🧑","👩‍❤️‍💋‍👩","👨‍❤️‍💋‍👨","🧑‍❤️‍💋‍🧑","👩‍👩‍👦","👩‍👩‍👧","👨‍👨‍👦","👨‍👨‍👧","🫃","🫄","🤱","👰‍♂️","🤵‍♀️","🧔‍♀️","👨‍🍼","🧑‍🍼"];
 function isBlocked(e: string) { return BLOCKED_SUBSTRINGS.some((b) => e.includes(b)); }
 
-// INI YANG BENERIN TANDA TANYA ? - jangan pake Extended_Pictographic lagi
-function split(s: string): string[] { return s.match(/\p{RGI_Emoji}/gu) ?? []; }
+function split(s: string): string[] {  
+  const seg = new (Intl as any).Segmenter("en", { granularity: "grapheme" });
+  return [...seg.segment(s)].map((x: any) => x.segment).filter(Boolean);
+}
 
 const SMILEYS = "😀😃😄😁😆🥹😅😂🤣🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😚😋😛😝😜🤪🤨🧐🤓😎🥸🤩🥳😏😒😞😔😟😕🙁☹️😣😖😫😩🥺😢😭😤😠😡🤬🤯😳🥵🥶😱😨😰😥😓🤗🤔🫣🤭🫢🫡🤫🫠🤥😶🫥😐🫤😑🫨😬🙄😯😦😧😮😲🥱😴🤤😪😵🤐🥴🤢🤮🤧😷🤒🤕🤑🤠😈👿👹👺🤡💩👻💀☠️👽👾🤖🎃😺😸😹😻😼😽🙀😿😾";
 const ANIMALS = "💐🌹🥀🌺🌷🪷🌸💮🏵🪻🌻🌼🍂🍁🍄🌾🌿🌱🍃☘️🍀🪴🌵🌴🌳🌲🙈🙉🙊🐵🦁🐯🐱🐶🐺🐻🐨🐼🐹🐭🐰🦊🐮🐷🐽🐗🦄🐴🐲🦎🐉🦖🦕🐢🐊🐍🐸🐇🐁🐀🐈🐩🐕🦮🐖🐎🐄🐂🐃🦬🐏🐑🐐🦌🦙🦥🦘🦓🐘🦣🦏🦛🦒🐆🐅🐒🦍🦧🐪🐫🐿🦫🦝🦨🦡🦔🦦🦇🪽🪶🐦🐓🐔🐣🐤🐥🦅🦉🦜🕊🦤🦢🦆🪿🦩🦚🦃🐧🦭🦈🐬🐋🐳🐟🐠🐡🦐🦞🦀🦑🐙🪼🦪🪸🦂🕷🕸🐚🐌🐜🦗🪲🦟🪳🪰🐝🐞🦋🐛🪱🦠🐾";
