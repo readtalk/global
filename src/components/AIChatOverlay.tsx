@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, PaperPlaneRight, Copy, Check, CodeSimple } from "@phosphor-icons/react/dist/ssr";
 import MathPattern from "@/components/MathPattern";
+import EmoticonPicker from "@/components/EmoticonPicker";
 
 type ChatMessage = {
 	role: "user" | "assistant";
@@ -129,7 +130,9 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 	const [content, setContent] = useState("");
 	const [isSending, setIsSending] = useState(false);
 	const [isAnimating, setIsAnimating] = useState(false);
+	const [showEmoticon, setShowEmoticon] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		if (isOpen) {
@@ -143,6 +146,23 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	};
 
+	const handleInsertEmoji = (emoji: string) => {
+		const input = inputRef.current;
+		if (!input) {
+			setContent((p) => p + emoji);
+			return;
+		}
+		const start = input.selectionStart ?? content.length;
+		const end = input.selectionEnd ?? content.length;
+		const next = content.slice(0, start) + emoji + content.slice(end);
+		setContent(next);
+		requestAnimationFrame(() => {
+			input.focus();
+			const pos = start + emoji.length;
+			input.setSelectionRange(pos, pos);
+		});
+	};
+
 	const handleSend = async () => {
 		if (!content.trim() || isSending) return;
 		const text = content;
@@ -152,6 +172,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 		const aiIndex = history.length;
 		setMessages([...history, { role: "assistant", content: "", created_at: now }]);
 		setContent("");
+		setShowEmoticon(false);
 		setIsSending(true);
 		const audio = new Audio('/sound/all-eyes-on-me.mp3');
 		audio.play().catch(() => {});
@@ -266,8 +287,18 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 						<div ref={messagesEndRef} />
 					</div>
 				</div>
-				<div className="flex-none bg-white dark:bg-zinc-950 border-t border-gray-200 dark:border-zinc-800 p-3 flex gap-2 pb-safe pb-[max(12px,env(safe-area-inset-bottom))] transition-colors">
-					<input type="text" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Type a message..." className="flex-1 bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-zinc-400 transition-colors" onKeyDown={(e) => e.key === "Enter" && handleSend()} />
+				<div className="relative flex-none bg-white dark:bg-zinc-950 border-t border-gray-200 dark:border-zinc-800 p-3 flex gap-2 pb-safe pb-[max(12px,env(safe-area-inset-bottom))] transition-colors">
+					{showEmoticon && (
+						<EmoticonPicker
+							mode={typeof window !== "undefined" && window.innerWidth < 768 ? "bottom-sheet" : "popover"}
+							onSelect={handleInsertEmoji}
+							onClose={() => setShowEmoticon(false)}
+						/>
+					)}
+					<button onClick={() => setShowEmoticon(!showEmoticon)} className="bg-gray-100 dark:bg-zinc-900 p-2.5 rounded-full hover:bg-gray-200 dark:hover:bg-zinc-800 transition flex items-center justify-center text-xl leading-none">
+						🙂
+					</button>
+					<input ref={inputRef} type="text" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Type a message..." className="flex-1 bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-zinc-400 transition-colors" onKeyDown={(e) => e.key === "Enter" && handleSend()} />
 					<button onClick={handleSend} disabled={isSending || !content.trim()} className="bg-black dark:bg-white text-white dark:text-black p-2.5 rounded-full hover:bg-gray-800 dark:hover:bg-gray-200 transition disabled:opacity-50 flex items-center justify-center">
 						<PaperPlaneRight size={20} weight="fill" />
 					</button>
