@@ -230,7 +230,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 						className="pointer-events-none absolute inset-0 z-0"
 						style={{
 							backgroundImage: "url('/bg/anna-laura-ai.png')",
-							backgroundSize: "75% auto",
+							backgroundSize: "95% auto",
 							backgroundPosition: "center",
 							backgroundRepeat: "no-repeat",
 						}}
