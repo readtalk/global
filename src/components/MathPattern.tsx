@@ -1,10 +1,9 @@
-//
 "use client";
 
-import { Sigma, Pi, SquareRoot, Function, Triangle, Circle, Cube, Ruler, Calculator, Percent, Infinity as InfinityIcon, Divide, Equals, Plus, Minus, X, ChartLine } from "@phosphor-icons/react/dist/ssr";
+import { Sigma, Pi, Radical, Function, Triangle, Circle, Cube, Ruler, Calculator, Percent, Infinity as InfinityIcon, Divide, Equals, Plus, Minus, X, ChartLine } from "@phosphor-icons/react/dist/ssr";
 
 export default function MathPattern() {
-	const icons = [Sigma, Pi, SquareRoot, Function, Triangle, Circle, Cube, Ruler, Calculator, Percent, InfinityIcon, Divide, Equals, Plus, Minus, X, ChartLine];
+	const icons = [Sigma, Pi, Radical, Function, Triangle, Circle, Cube, Ruler, Calculator, Percent, InfinityIcon, Divide, Equals, Plus, Minus, X, ChartLine];
 	const positions = [
 		{ top: "2%", left: "4%", rotate: "-12deg", size: 56 },
 		{ top: "6%", left: "38%", rotate: "10deg", size: 44 },
