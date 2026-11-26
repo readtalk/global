@@ -315,7 +315,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 						<div ref={messagesEndRef} />
 					</div>
 				</div>
-				<div className="flex-none bg-white dark:bg-zinc-950 border-t border-gray-200 dark:border-zinc-800 transition-colors">
+			      <div className="flex-none relative bg-white dark:bg-zinc-950 border-t border-gray-200 dark:border-zinc-800 transition-colors">
 					<div className="relative">
 						<div className="p-3 flex gap-2 pb-[max(12px,env(safe-area-inset-bottom))]">
 							<button onClick={toggleEmoticon} className="bg-gray-100 dark:bg-zinc-900 p-2.5 rounded-full hover:bg-gray-200 dark:hover:bg-zinc-800 transition flex items-center justify-center">
@@ -326,7 +326,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 								<PaperPlaneRight size={20} weight="fill" />
 							</button>
 						</div>
-						{showEmoticon && !isMobile && (
+						{showEmoticon && (
 							<EmoticonPicker
 								mode="popover"
 								onSelect={handleInsertEmoji}
@@ -335,14 +335,6 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 							/>
 						)}
 					</div>
-					{showEmoticon && isMobile && (
-						<EmoticonPicker
-							mode="bottom-sheet"
-							onSelect={handleInsertEmoji}
-							onClose={closeEmoticonAndFocus}
-							onBackspace={handleBackspace}
-						/>
-					)}
 				</div>
 			</div>
 		</>
