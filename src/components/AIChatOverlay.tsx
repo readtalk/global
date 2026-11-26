@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, PaperPlaneRight, Copy, Check, CodeSimple } from "@phosphor-icons/react/dist/ssr";
-import MathPattern from "./MathPattern";
+import MathPattern from "@/components/MathPattern";
 
 type ChatMessage = {
 	role: "user" | "assistant";
