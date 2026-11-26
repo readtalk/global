@@ -178,6 +178,18 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 		cursorRef.current = pos + emoji.length;
 	};
 
+	const handleBackspace = () => {
+		const pos = cursorRef.current;
+		if (pos === 0) return;
+		const before = content.slice(0, pos);
+		const after = content.slice(pos);
+		const seg = new (Intl as any).Segmenter("en", { granularity: "grapheme" });
+		const chars = [...seg.segment(before)].map((x: any) => x.segment);
+		const nextBefore = chars.slice(0, -1).join("");
+		setContent(nextBefore + after);
+		cursorRef.current = nextBefore.length;
+	};
+
 	const handleSend = async () => {
 		if (!content.trim() || isSending) return;
 		const text = content;
@@ -319,6 +331,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 								mode="popover"
 								onSelect={handleInsertEmoji}
 								onClose={closeEmoticonAndFocus}
+								onBackspace={handleBackspace}
 							/>
 						)}
 					</div>
@@ -327,6 +340,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 							mode="bottom-sheet"
 							onSelect={handleInsertEmoji}
 							onClose={closeEmoticonAndFocus}
+							onBackspace={handleBackspace}
 						/>
 					)}
 				</div>
