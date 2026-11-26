@@ -223,7 +223,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 					</button>
 					<h2 className="text-lg font-bold text-gray-900 dark:text-zinc-50">Anna Laura AI</h2>
 				</div>
-				<div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ backgroundImage: "url('/bg/anna-laura-ai.png')", backgroundSize: "55% auto", backgroundPosition: "center", backgroundRepeat: "no-repeat" }}>
+				<div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ backgroundImage: "url('/bg/anna-laura-ai.png')", backgroundSize: "75% auto", backgroundPosition: "center", backgroundRepeat: "no-repeat" }}>
 					{messages.length === 0 ? (
 						<div className="flex justify-center items-center h-full">
 							<p className="text-gray-500 dark:text-zinc-400 text-sm">Chat with Anna Laura AI</p>
