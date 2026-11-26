@@ -14,74 +14,83 @@ function SineGraph() { return (<svg width="88" height="44" viewBox="0 0 88 44" f
 function ParabolaGraph() { return (<svg width="72" height="56" viewBox="0 0 72 56" fill="none" stroke="currentColor" strokeWidth="1"><path d="M6 28 L66 28 M36 4 L36 52" /><path d="M10 6 C20 26 28 28 36 28 C44 28 52 26 62 6" /><path d="M10 28 L62 28" /></svg>); }
 function CoordGraph() { return (<svg width="72" height="56" viewBox="0 0 72 56" fill="none" stroke="currentColor" strokeWidth="1"><path d="M6 28 L66 28 M36 4 L36 52" /><circle cx="24" cy="18" r="2" fill="currentColor" /><circle cx="44" cy="34" r="2" fill="currentColor" /><circle cx="52" cy="14" r="2" fill="currentColor" /><circle cx="20" cy="38" r="2" fill="currentColor" /><path d="M24 18 L44 34 L52 14" strokeDasharray="2 2" /></svg>); }
 
-// --- INI YANG BEDA: MESIN ACAK BARU, BUKAN Math.sin LAGI ---
-// hash + mulberry32, biar nyebar beneran, gak ada gelombang tersembunyi
 function hash(seed: number) {
   let t = seed + 0x6D2B79F5;
   t = Math.imul(t ^ (t >>> 15), t | 1);
   t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
-// tiap properti pake seed beda, biar gak saling ngikutin
-function rand(seed: number, salt: number) {
-  return hash(seed * 1000 + salt * 7919 + 13);
-}
+function rand(seed: number, salt: number) { return hash(seed * 1000 + salt * 7919 + 13); }
 
 export default function MathPattern() {
   const shapes = [Cube, Prism, Cylinder, Sphere, Pie, TriangleRuler, Ruler, SineGraph, ParabolaGraph, CoordGraph];
+  const ROWS = 11;
+  const COLS = 7;
+
+  // 1. ICONS: 1 cell 1 icon, gak numpuk
   const cells = [];
-  for (let r = 0; r < 11; r++) {
-    for (let c = 0; c < 7; c++) {
-      cells.push({ r, c });
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) cells.push({ r, c });
+
+  // 2. SYMBOLS: ditaro di pojok-pojok cell, ngelilingin icon, BUKAN di tengah cell
+  // jadi symbol gak pernah nimpa icon
+  const surround = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      // tiap icon dikelilingi 3-4 symbol di sekelilingnya: atas-kiri, atas-kanan, bawah-kiri, bawah-kanan
+      const corners = [
+        { dx: -4.5, dy: -2.2 }, { dx: 4.8, dy: -2.4 },
+        { dx: -4.8, dy: 2.6 }, { dx: 4.5, dy: 2.4 },
+      ];
+      corners.forEach((pos, k) => {
+        surround.push({ r, c, ...pos, k });
+      });
     }
   }
+
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      {cells.map(({ r, c }, i) => {
-        const Shape = shapes[Math.floor(rand(i, 99) * shapes.length) % shapes.length]; // shape-nya juga diacak, bukan urutan 0-9 terus
-        // SCALE: distribusi gak rata, biar ada yang kecil banget & gede banget, bukan cuma di tengah-tengah
-        // pake pangkat biar nyebar: ada yang 0.3x, ada yang 2.4x
-        const scaleRaw = rand(i, 1);
-        const scale = 0.3 + Math.pow(scaleRaw, 1.4) * 2.1; // 0.3 - 2.4, random beneran
-        // POSISI: tetep grid, tapi digeser acak ±3% biar gak lurus sempurna, ada yang numpuk
-        const jitterX = (rand(i, 2) - 0.5) * 6;
-        const jitterY = (rand(i, 3) - 0.5) * 4;
-        // ROTASI: -35° sampe +35°, acak total, bukan (i*31)%20 lagi yang ngulang tiap 20
-        const rotate = (rand(i, 4) - 0.5) * 70;
-        // OPACITY: 0.05 - 0.14 acak, biar ada yang samar banget, ada yang tegas
-        const opacity = 0.05 + rand(i, 5) * 0.09;
-        // MIRROR: acak 50/50, bukan (r+c)%2 lagi yang bikin pola catur
-        const isMirror = rand(i, 6) > 0.5;
+      {/* LAYER 1: SYMBOLS DULU, DI BELAKANG, JADI KALO KEPEPET PUN ICON YANG MENANG */}
+      {surround.map(({ r, c, dx, dy, k }, i) => {
+        const s = symbols[Math.floor(rand(i, 50) * symbols.length)];
+        const size = 10 + rand(i, 51) * 14; // kecil aja, 10-24px, biar jadi pengawal, bukan raja
+        const rotate = (rand(i, 52) - 0.5) * 40;
+        const opacity = 0.06 + rand(i, 53) * 0.06;
         return (
-          <div key={`s-${i}`} className="absolute text-zinc-900 dark:text-white" style={{ top: `${r * 9.2 + jitterY}%`, left: `${c * 14.5 - 1 + jitterX}%`, transform: `rotate(${rotate}deg) scale(${scale}) scaleX(${isMirror ? -1 : 1})`, opacity }}>
-            <Shape />
-          </div>
-        );
-      })}
-      {formulas.map((f, i) => {
-        const scale = 0.6 + rand(i, 11) * 0.9;
-        const rotate = (rand(i, 12) - 0.5) * 16;
-        const opacity = 0.07 + rand(i, 13) * 0.06;
-        return (
-          <div key={`f-${i}`} className="absolute whitespace-nowrap text-[13px] font-medium text-zinc-900 dark:text-white" style={{ top: `${rand(i, 14) * 92}%`, left: `${rand(i, 15) * 68}%`, transform: `rotate(${rotate}deg) scale(${scale})`, opacity }}>
-            {f}
-          </div>
-        );
-      })}
-      {symbols.map((s, i) => {
-        const size = 12 + Math.pow(rand(i, 21), 1.5) * 36; // 12px - 48px, acak gak rata
-        const rotate = (rand(i, 22) - 0.5) * 50;
-        const opacity = 0.05 + rand(i, 23) * 0.07;
-        return (
-          <div key={`sym-${i}`} className="absolute font-bold text-zinc-900 dark:text-white" style={{ top: `${rand(i, 24) * 90}%`, left: `${rand(i, 25) * 88}%`, transform: `rotate(${rotate}deg)`, fontSize: `${size}px`, opacity }}>
+          <div key={`sur-${i}`} className="absolute font-bold text-zinc-900 dark:text-white" style={{ top: `${r * 9.2 + 4.6 + dy}%`, left: `${c * 14.5 + 6.5 + dx}%`, transform: `translate(-50%, -50%) rotate(${rotate}deg)`, fontSize: `${size}px`, opacity }}>
             {s}
           </div>
         );
       })}
-      {formulas.map((f, i) => {
-        const scale = 0.5 + rand(i, 31) * 0.8;
+
+      {/* LAYER 2: ICONS, DI ATAS SYMBOLS, SATU-SATU, GAK NUMPUK */}
+      {cells.map(({ r, c }, i) => {
+        const Shape = shapes[Math.floor(rand(i, 99) * shapes.length) % shapes.length];
+        // INI KUNCI "RANDOM TAPI GAK NUMPUK":
+        // scale random, tapi dibatasin 0.55 - 1.25 aja, biar muat di cell-nya sendiri
+        // dulu gue bikin 0.3 - 2.4, makanya numpuk. Sekarang gak bisa numpuk.
+        const scale = 0.55 + rand(i, 1) * 0.7;
+        // gesernya juga dikit aja, ±1.2%, bukan ±3% kayak tadi yang bikin numpuk
+        const jitterX = (rand(i, 2) - 0.5) * 2.4;
+        const jitterY = (rand(i, 3) - 0.5) * 1.6;
+        const rotate = (rand(i, 4) - 0.5) * 22; // rotasi juga kecil, -11° sampe +11°, biar gak nyenggol tetangga
+        const opacity = 0.08 + rand(i, 5) * 0.05;
+        const isMirror = rand(i, 6) > 0.5;
         return (
-          <div key={`f2-${i}`} className="absolute whitespace-nowrap text-[11px] text-zinc-900 dark:text-white" style={{ top: `${rand(i, 32) * 94}%`, left: `${rand(i, 33) * 62}%`, transform: `rotate(${(rand(i, 34) - 0.5) * 14}deg) scale(${scale}) scaleX(-1)`, opacity: 0.05 + rand(i, 35) * 0.05 }}>
+          <div key={`s-${i}`} className="absolute flex items-center justify-center text-zinc-900 dark:text-white" style={{ top: `${r * 9.2}%`, left: `${c * 14.5 - 1}%`, width: "14.5%", height: "9.2%", opacity }}>
+            <div style={{ transform: `translate(${jitterX}px, ${jitterY}px) rotate(${rotate}deg) scale(${scale}) scaleX(${isMirror ? -1 : 1})` }}>
+              <Shape />
+            </div>
+          </div>
+        );
+      })}
+
+      {/* LAYER 3: RUMUS, ditaro di celah antar baris, bukan di tengah icon */}
+      {formulas.map((f, i) => {
+        const top = (Math.floor(rand(i, 70) * ROWS) + 0.5) * 9.2 + (rand(i, 71) - 0.5) * 3;
+        const left = rand(i, 72) * 72;
+        const rotate = (rand(i, 73) - 0.5) * 8;
+        return (
+          <div key={`f-${i}`} className="absolute whitespace-nowrap text-[12px] font-medium text-zinc-900/[0.08] dark:text-white/[0.09]" style={{ top: `${top}%`, left: `${left}%`, transform: `rotate(${rotate}deg)` }}>
             {f}
           </div>
         );
