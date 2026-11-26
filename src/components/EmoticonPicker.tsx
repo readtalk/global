@@ -35,14 +35,11 @@ const FANTASY_BASE = ["👰‍♀️","👰","🤵","🤵‍♂️","👸","🫅
 const GESTURE_BASE = ["🙇‍♀️","🙇","🙇‍♂️","💁‍♀️","💁","💁‍♂️","🙅‍♀️","🙅","🙅‍♂️","🙆‍♀️","🙆","🙆‍♂️","🙋‍♀️","🙋","🙋‍♂️","🧏‍♀️","🧏","🧏‍♂️","🤦‍♀️","🤦","🤦‍♂️","🤷‍♀️","🤷","🤷‍♂️","🙎‍♀️","🙎","🙎‍♂️","🙍‍♀️","🙍","🙍‍♂️","💇‍♀️","💇","💇‍♂️","💆‍♀️","💆","💆‍♂️","🧖‍♀️","🧖","🧖‍♂️","💅","🤳","💃","🕺","🧑‍🩰","👯‍♀️","👯","👯‍♂️","🕴"];
 const ACTIVITY_PEOPLE_BASE = ["👩‍🦽","🧑‍🦽","👨‍🦽","👩‍🦼","🧑‍🦼","👨‍🦼","🚶‍♀️","🚶","🚶‍♂️","👩‍🦯","🧑‍🦯","👨‍🦯","🧎‍♀️","🧎","🧎‍♂️","🏃‍♀️","🏃","🏃‍♂️","🧍‍♀️","🧍","🧍‍♂️"];
 
-// INI YANG BENERIN TANDA TANYA - kalo ada ‍♀️/‍♂️ dan bukan profesi, jangan ditempel tone
 function applySkinTone(base: string, tone: SkinTone): string {
   const cleaned = base.replace(/[🏻🏼🏽🏾🏿]/g, "");
-  if (cleaned.includes("‍♀") || cleaned.includes("‍♂")) {
-    const isProfession = PROFESSION_BASE.some((p) => cleaned.startsWith(p.replace(/[🏻🏼🏽🏾🏿]/g, "")));
-    if (!isProfession) return cleaned;
-  }
-  if (["🧞","🧟","🧛","🧜","🧚","🧝","🧙","🦸","🦹"].some((p) => cleaned.startsWith(p)) && cleaned.includes("‍")) return cleaned;
+  // KALO ADA ZWJ ‍, JANGAN DITEMPEL TONE. Ini yang bikin ? dan kotak krem.
+  // 👩‍⚕️, 🧞‍♀️, 🧎‍♀️, 🧜‍♀️ biarin apa adanya.
+  if (cleaned.includes("‍")) return cleaned;
   const chars = Array.from(cleaned);
   if (chars.length === 0) return cleaned;
   const first = chars[0];
