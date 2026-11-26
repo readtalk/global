@@ -17,21 +17,22 @@ type AIChatsOverlayProps = {
 function consumeSseEvents(buffer: string): { events: string[]; buffer: string } {
 	let normalized = buffer.replace(/\r/g, "");
 	const events: string[] = [];
-	let eventEndIndex: number;
-	while ((eventEndIndex = normalized.indexOf("\n\n")) !== -1) {
-		const rawEvent = normalized.slice(0, eventEndIndex);
-		normalized = normalized.slice(eventEndIndex + 2);
-		const lines = rawEvent.split("\n");
-		const dataLines: string[] = [];
-		for (const line of lines) {
-			if (line.startsWith("data:")) {
-				dataLines.push(line.slice("data:".length).trimStart());
-			}
-		}
-		if (dataLines.length === 0) continue;
-		events.push(dataLines.join("\n"));
+	const lastNewline = normalized.lastIndexOf("\n");
+	if (lastNewline === -1) {
+		return { events, buffer: normalized };
 	}
-	return { events, buffer: normalized };
+	const complete = normalized.slice(0, lastNewline + 1);
+	const rest = normalized.slice(lastNewline + 1);
+	for (const line of complete.split("\n")) {
+		const trimmed = line.trim();
+		if (!trimmed) continue;
+		if (trimmed.startsWith("data:")) {
+			events.push(trimmed.slice("data:".length).trimStart());
+		} else if (trimmed === "[DONE]") {
+			events.push(trimmed);
+		}
+	}
+	return { events, buffer: rest };
 }
 
 function extractContent(data: string): string {
@@ -178,7 +179,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 			while (true) {
 				const { done, value } = await reader.read();
 				if (done) {
-					const parsed = consumeSseEvents(buffer + "\n\n");
+					const parsed = consumeSseEvents(buffer + "\n");
 					for (const data of parsed.events) {
 						if (data === "[DONE]") break;
 						const chunk = extractContent(data);
@@ -223,43 +224,55 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 					</button>
 					<h2 className="text-lg font-bold text-gray-900 dark:text-zinc-50">Anna Laura AI</h2>
 				</div>
-				<div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ backgroundImage: "url('/bg/anna-laura-ai.png')", backgroundSize: "75% auto", backgroundPosition: "center", backgroundRepeat: "no-repeat" }}>
-					{messages.length === 0 ? (
-						<div className="flex justify-center items-center h-full">
-							<p className="text-gray-500 dark:text-zinc-400 text-sm">Chat with Anna Laura AI</p>
-						</div>
-					) : (
-						messages.map((msg, index) => {
-							const isMe = msg.role === "user";
-							const isTyping = !isMe && !msg.content && isSending && index === messages.length - 1;
-							const prev = messages[index - 1];
-							const isNewDay = !prev || !isSameDay(prev.created_at, msg.created_at);
-							return (
-								<div key={index}>
-									{isNewDay && (
-										<div className="flex justify-center my-4">
-											<span className="px-3 py-1 text-xs rounded-full bg-gray-100 dark:bg-zinc-900 text-gray-500 dark:text-zinc-400 transition-colors">{formatDay(msg.created_at)}</span>
-										</div>
-									)}
-									<div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-										<div className={`max-w-[85%] px-4 py-2 rounded-2xl flex flex-col gap-1 transition-colors overflow-hidden ${isMe ? "bg-gray-200 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 rounded-br-sm" : "bg-gray-100 dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 rounded-bl-sm"}`}>
-											{isTyping ? (
-												<span className="text-xs text-gray-400 dark:text-zinc-500 animate-pulse py-0.5">Thinking...</span>
-											) : (
-												<MessageContent content={msg.content} />
-											)}
-											{!isTyping && (
-												<div className={`flex items-center justify-end gap-1 ${isMe ? "text-gray-500 dark:text-zinc-400" : "text-gray-400 dark:text-zinc-500"}`}>
-													<span className="text-[10px]">{formatTime(msg.created_at)}</span>
-												</div>
-											)}
+				<div className="flex-1 relative overflow-hidden">
+					<div
+						aria-hidden="true"
+						className="pointer-events-none absolute inset-0 z-0"
+						style={{
+							backgroundImage: "url('/bg/anna-laura-ai.png')",
+							backgroundSize: "75% auto",
+							backgroundPosition: "center",
+							backgroundRepeat: "no-repeat",
+						}}
+					/>
+					<div className="relative z-10 h-full overflow-y-auto p-4 space-y-4">
+						{messages.length === 0 ? (
+							<div className="flex justify-center items-center h-full">
+								<p className="text-gray-500 dark:text-zinc-400 text-sm">Chat with Anna Laura AI</p>
+							</div>
+						) : (
+							messages.map((msg, index) => {
+								const isMe = msg.role === "user";
+								const isTyping = !isMe && !msg.content && isSending && index === messages.length - 1;
+								const prev = messages[index - 1];
+								const isNewDay = !prev || !isSameDay(prev.created_at, msg.created_at);
+								return (
+									<div key={index}>
+										{isNewDay && (
+											<div className="flex justify-center my-4">
+												<span className="px-3 py-1 text-xs rounded-full bg-gray-100 dark:bg-zinc-900 text-gray-500 dark:text-zinc-400 transition-colors">{formatDay(msg.created_at)}</span>
+											</div>
+										)}
+										<div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+											<div className={`max-w-[85%] px-4 py-2 rounded-2xl flex flex-col gap-1 transition-colors overflow-hidden ${isMe ? "bg-gray-200 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 rounded-br-sm" : "bg-gray-100 dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 rounded-bl-sm"}`}>
+												{isTyping ? (
+													<span className="text-xs text-gray-400 dark:text-zinc-500 animate-pulse py-0.5">Thinking...</span>
+												) : (
+													<MessageContent content={msg.content} />
+												)}
+												{!isTyping && (
+													<div className={`flex items-center justify-end gap-1 ${isMe ? "text-gray-500 dark:text-zinc-400" : "text-gray-400 dark:text-zinc-500"}`}>
+														<span className="text-[10px]">{formatTime(msg.created_at)}</span>
+													</div>
+												)}
+											</div>
 										</div>
 									</div>
-								</div>
-							);
-						})
-					)}
-					<div ref={messagesEndRef} />
+								);
+							})
+						)}
+						<div ref={messagesEndRef} />
+					</div>
 				</div>
 				<div className="flex-none bg-white dark:bg-zinc-950 border-t border-gray-200 dark:border-zinc-800 p-3 flex gap-2 pb-safe pb-[max(12px,env(safe-area-inset-bottom))] transition-colors">
 					<input type="text" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Type a message..." className="flex-1 bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-zinc-400 transition-colors" onKeyDown={(e) => e.key === "Enter" && handleSend()} />
