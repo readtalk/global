@@ -145,7 +145,7 @@ export default function EmoticonPicker({ onSelect, onClose, defaultSkinTone = "ð
         {currentList.length === 0 && <div style={{ gridColumn: "span 8", textAlign: "center", padding: 20, fontSize: 12, color: "#999" }}>No emojis found.</div>}
       </div>
       <div style={{ padding: "8px 12px", borderTop: "1px solid #f0f0f0", fontSize: 11, color: "#888", textAlign: "center" }}>
-        READTalk
+        READTalk Messenger
       </div>
     </>
   );
