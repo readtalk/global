@@ -14,16 +14,23 @@ function SineGraph() { return (<svg width="88" height="44" viewBox="0 0 88 44" f
 function ParabolaGraph() { return (<svg width="72" height="56" viewBox="0 0 72 56" fill="none" stroke="currentColor" strokeWidth="1"><path d="M6 28 L66 28 M36 4 L36 52" /><path d="M10 6 C20 26 28 28 36 28 C44 28 52 26 62 6" /><path d="M10 28 L62 28" /></svg>); }
 function CoordGraph() { return (<svg width="72" height="56" viewBox="0 0 72 56" fill="none" stroke="currentColor" strokeWidth="1"><path d="M6 28 L66 28 M36 4 L36 52" /><circle cx="24" cy="18" r="2" fill="currentColor" /><circle cx="44" cy="34" r="2" fill="currentColor" /><circle cx="52" cy="14" r="2" fill="currentColor" /><circle cx="20" cy="38" r="2" fill="currentColor" /><path d="M24 18 L44 34 L52 14" strokeDasharray="2 2" /></svg>); }
 
-// random tapi stabil, biar gak kedip tiap render
-function rnd(seed: number) {
-  const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
-  return Math.abs(x - Math.floor(x));
+// --- INI YANG BEDA: MESIN ACAK BARU, BUKAN Math.sin LAGI ---
+// hash + mulberry32, biar nyebar beneran, gak ada gelombang tersembunyi
+function hash(seed: number) {
+  let t = seed + 0x6D2B79F5;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+// tiap properti pake seed beda, biar gak saling ngikutin
+function rand(seed: number, salt: number) {
+  return hash(seed * 1000 + salt * 7919 + 13);
 }
 
 export default function MathPattern() {
   const shapes = [Cube, Prism, Cylinder, Sphere, Pie, TriangleRuler, Ruler, SineGraph, ParabolaGraph, CoordGraph];
   const cells = [];
-  for (let r = 0; r < 11; r++) { // UDAH +2 BARIS, dari 9 jadi 11
+  for (let r = 0; r < 11; r++) {
     for (let c = 0; c < 7; c++) {
       cells.push({ r, c });
     }
@@ -31,37 +38,54 @@ export default function MathPattern() {
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
       {cells.map(({ r, c }, i) => {
-        const Shape = shapes[i % shapes.length];
-        const isMirror = (r + c) % 2 === 1;
-        // INI KUNCINYA, YANG TADI SALAH:
-        // dulu scale-nya seragam / ikut sinus, sekarang RANDOM per icon
-        // 0.45x sampe 2.1x, acak total dari kiri ke kanan
-        const scale = 0.45 + rnd(i * 3 + 7) * 1.65;
+        const Shape = shapes[Math.floor(rand(i, 99) * shapes.length) % shapes.length]; // shape-nya juga diacak, bukan urutan 0-9 terus
+        // SCALE: distribusi gak rata, biar ada yang kecil banget & gede banget, bukan cuma di tengah-tengah
+        // pake pangkat biar nyebar: ada yang 0.3x, ada yang 2.4x
+        const scaleRaw = rand(i, 1);
+        const scale = 0.3 + Math.pow(scaleRaw, 1.4) * 2.1; // 0.3 - 2.4, random beneran
+        // POSISI: tetep grid, tapi digeser acak ±3% biar gak lurus sempurna, ada yang numpuk
+        const jitterX = (rand(i, 2) - 0.5) * 6;
+        const jitterY = (rand(i, 3) - 0.5) * 4;
+        // ROTASI: -35° sampe +35°, acak total, bukan (i*31)%20 lagi yang ngulang tiap 20
+        const rotate = (rand(i, 4) - 0.5) * 70;
+        // OPACITY: 0.05 - 0.14 acak, biar ada yang samar banget, ada yang tegas
+        const opacity = 0.05 + rand(i, 5) * 0.09;
+        // MIRROR: acak 50/50, bukan (r+c)%2 lagi yang bikin pola catur
+        const isMirror = rand(i, 6) > 0.5;
         return (
-          <div key={`s-${i}`} className="absolute text-zinc-900/[0.09] dark:text-white/[0.10]" style={{ top: `${r * 9.2}%`, left: `${c * 14.5 - 1}%`, transform: `rotate(${((i * 31) % 20) - 10}deg) scale(${scale}) scaleX(${isMirror ? -1 : 1})` }}>
+          <div key={`s-${i}`} className="absolute text-zinc-900 dark:text-white" style={{ top: `${r * 9.2 + jitterY}%`, left: `${c * 14.5 - 1 + jitterX}%`, transform: `rotate(${rotate}deg) scale(${scale}) scaleX(${isMirror ? -1 : 1})`, opacity }}>
             <Shape />
           </div>
         );
       })}
-      {formulas.map((f, i) => (
-        <div key={`f-${i}`} className="absolute whitespace-nowrap text-[13px] font-medium text-zinc-900/[0.10] dark:text-white/[0.11]" style={{ top: `${(i * 17 + 8) % 92}%`, left: `${(i * 23 + 4) % 68}%`, transform: `rotate(${i % 2 === 0 ? -4 : 4}deg) scaleX(${i % 3 === 0 ? -1 : 1})` }}>
-          {f}
-        </div>
-      ))}
-      {symbols.map((s, i) => {
-        // simbol juga gue bikin random ukurannya, biar gak seragam
-        const size = 14 + rnd(i * 11 + 5) * 28; // 14px - 42px acak
+      {formulas.map((f, i) => {
+        const scale = 0.6 + rand(i, 11) * 0.9;
+        const rotate = (rand(i, 12) - 0.5) * 16;
+        const opacity = 0.07 + rand(i, 13) * 0.06;
         return (
-          <div key={`sym-${i}`} className="absolute font-bold text-zinc-900/[0.08] dark:text-white/[0.09]" style={{ top: `${(i * 19 + 4) % 90}%`, left: `${(i * 29 + 10) % 88}%`, transform: `rotate(${((i * 41) % 24) - 12}deg)`, fontSize: `${size}px` }}>
+          <div key={`f-${i}`} className="absolute whitespace-nowrap text-[13px] font-medium text-zinc-900 dark:text-white" style={{ top: `${rand(i, 14) * 92}%`, left: `${rand(i, 15) * 68}%`, transform: `rotate(${rotate}deg) scale(${scale})`, opacity }}>
+            {f}
+          </div>
+        );
+      })}
+      {symbols.map((s, i) => {
+        const size = 12 + Math.pow(rand(i, 21), 1.5) * 36; // 12px - 48px, acak gak rata
+        const rotate = (rand(i, 22) - 0.5) * 50;
+        const opacity = 0.05 + rand(i, 23) * 0.07;
+        return (
+          <div key={`sym-${i}`} className="absolute font-bold text-zinc-900 dark:text-white" style={{ top: `${rand(i, 24) * 90}%`, left: `${rand(i, 25) * 88}%`, transform: `rotate(${rotate}deg)`, fontSize: `${size}px`, opacity }}>
             {s}
           </div>
         );
       })}
-      {formulas.map((f, i) => (
-        <div key={`f2-${i}`} className="absolute whitespace-nowrap text-[11px] text-zinc-900/[0.07] dark:text-white/[0.08]" style={{ top: `${(i * 23 + 48) % 94}%`, left: `${(i * 31 + 38) % 62}%`, transform: `rotate(${i % 2 === 0 ? 5 : -5}deg) scaleX(-1)` }}>
-          {f}
-        </div>
-      ))}
+      {formulas.map((f, i) => {
+        const scale = 0.5 + rand(i, 31) * 0.8;
+        return (
+          <div key={`f2-${i}`} className="absolute whitespace-nowrap text-[11px] text-zinc-900 dark:text-white" style={{ top: `${rand(i, 32) * 94}%`, left: `${rand(i, 33) * 62}%`, transform: `rotate(${(rand(i, 34) - 0.5) * 14}deg) scale(${scale}) scaleX(-1)`, opacity: 0.05 + rand(i, 35) * 0.05 }}>
+            {f}
+          </div>
+        );
+      })}
     </div>
   );
 }
