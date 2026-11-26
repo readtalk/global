@@ -12,52 +12,50 @@ function TriangleRuler() { return (<svg width="56" height="48" viewBox="0 0 56 4
 function Ruler() { return (<svg width="64" height="20" viewBox="0 0 64 20" fill="none" stroke="currentColor" strokeWidth="1"><rect x="2" y="2" width="60" height="16" /><path d="M10 2 L10 10 M18 2 L18 8 M26 2 L26 10 M34 2 L34 8 M42 2 L42 10 M50 2 L50 8" /></svg>); }
 function SineGraph() { return (<svg width="88" height="44" viewBox="0 0 88 44" fill="none" stroke="currentColor" strokeWidth="1"><path d="M4 22 L84 22 M44 4 L44 40" /><path d="M4 22 C14 2 22 42 32 22 C42 2 50 42 60 22 C70 2 78 42 84 22" /></svg>); }
 function ParabolaGraph() { return (<svg width="72" height="56" viewBox="0 0 72 56" fill="none" stroke="currentColor" strokeWidth="1"><path d="M6 28 L66 28 M36 4 L36 52" /><path d="M10 6 C20 26 28 28 36 28 C44 28 52 26 62 6" /></svg>); }
-function CoordGraph() { return (<svg width="72" height="56" viewBox="0 0 72 56" fill="none" stroke="currentColor" strokeWidth="1"><path d="M6 28 L66 28 M36 4 L36 52" /><circle cx="24" cy="18" r="2" fill="currentColor" /><circle cx="44" cy="34" r="2" fill="currentColor" /><circle cx="52" cy="14" r="2" fill="currentColor" /><path d="M24 18 L44 34 L52 14" strokeDasharray="2 2" /></svg>); }
-
-const shapes = [Cube, Prism, Cylinder, Sphere, Pie, TriangleRuler, Ruler, SineGraph, ParabolaGraph, CoordGraph];
-
-// pseudo-random biar gak berubah tiap render, tapi keliatan acak
-function rnd(seed: number, max: number) {
-	const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
-	return Math.abs(x - Math.floor(x)) * max;
-}
+function CoordGraph() { return (<svg width="72" height="56" viewBox="0 0 72 56" fill="none" stroke="currentColor" strokeWidth="1"><path d="M6 28 L66 28 M36 4 L36 52" /><circle cx="24" cy="18" r="2" fill="currentColor" /><circle cx="44" cy="34" r="2" fill="currentColor" /><circle cx="52" cy="14" r="2" fill="currentColor" /><circle cx="20" cy="38" r="2" fill="currentColor" /><path d="M24 18 L44 34 L52 14" strokeDasharray="2 2" /></svg>); }
 
 export default function MathPattern() {
-	const items = Array.from({ length: 110 }, (_, i) => i);
+	const shapes = [Cube, Prism, Cylinder, Sphere, Pie, TriangleRuler, Ruler, SineGraph, ParabolaGraph, CoordGraph];
+	const ROWS = 11;
+	const COLS = 7;
+	const cells = [];
+	for (let r = 0; r < ROWS; r++) {
+		for (let c = 0; c < COLS; c++) {
+			cells.push({ r, c });
+		}
+	}
 	return (
 		<div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-			{items.map((i) => {
+			{cells.map(({ r, c }, i) => {
 				const Shape = shapes[i % shapes.length];
-				const top = rnd(i + 1, 96);
-				const left = rnd(i + 101, 92);
-				const rotate = rnd(i + 201, 70) - 35;
-				const scale = 0.55 + rnd(i + 301, 1.6);
-				const mirror = i % 3 === 0 ? -1 : 1;
-				const opacity = 0.05 + rnd(i + 401, 0.07);
+				const isMirror = (r + c) % 2 === 1;
+				// INI KUNCINYA: ukuran ngikutin gelombang sinus dari kiri ke kanan
+				// c = 0 kecil, c = 2 gede, c = 4 kecil lagi, c = 6 gede lagi
+				const wave = Math.sin((c / COLS) * Math.PI * 2 + r * 0.7);
+				const wave2 = Math.sin((c / COLS) * Math.PI * 2 + r * 0.7 + Math.PI / 2);
+				const scale = 0.6 + (wave + 1) * 0.65;
+				const top = r * 9.2 + wave2 * 1.8;
+				const left = c * 14.5 - 1 + wave * 1.2;
 				return (
-					<div key={i} className="absolute text-white" style={{ top: `${top}%`, left: `${left}%`, transform: `rotate(${rotate}deg) scale(${scale}) scaleX(${mirror})`, opacity }}>
+					<div key={`s-${i}`} className="absolute text-white/[0.10]" style={{ top: `${top}%`, left: `${left}%`, transform: `rotate(${((i * 31) % 20) - 10}deg) scale(${scale}) scaleX(${isMirror ? -1 : 1})` }}>
 						<Shape />
 					</div>
 				);
 			})}
 			{formulas.map((f, i) => {
-				const top = rnd(i + 501, 94);
-				const left = rnd(i + 601, 70);
-				const rotate = rnd(i + 701, 16) - 8;
-				const scale = 0.7 + rnd(i + 801, 0.9);
+				const wave = Math.sin((i / formulas.length) * Math.PI * 2);
+				const scale = 0.75 + (wave + 1) * 0.35;
 				return (
-					<div key={`f-${i}`} className="absolute whitespace-nowrap text-[13px] font-medium text-white" style={{ top: `${top}%`, left: `${left}%`, transform: `rotate(${rotate}deg) scale(${scale})`, opacity: 0.07 + rnd(i + 901, 0.05) }}>
+					<div key={`f-${i}`} className="absolute whitespace-nowrap text-[13px] font-medium text-white/[0.11]" style={{ top: `${(i * 15 + 8) % 92}%`, left: `${(i * 23 + 4) % 68}%`, transform: `rotate(${i % 2 === 0 ? -4 : 4}deg) scale(${scale})` }}>
 						{f}
 					</div>
 				);
 			})}
 			{symbols.map((s, i) => {
-				const top = rnd(i + 1001, 94);
-				const left = rnd(i + 1101, 88);
-				const rotate = rnd(i + 1201, 50) - 25;
-				const size = 18 + rnd(i + 1301, 34);
+				const wave = Math.sin((i / symbols.length) * Math.PI * 2);
+				const size = 20 + (wave + 1) * 18;
 				return (
-					<div key={`s-${i}`} className="absolute font-bold text-white" style={{ top: `${top}%`, left: `${left}%`, transform: `rotate(${rotate}deg)`, fontSize: `${size}px`, opacity: 0.06 + rnd(i + 1401, 0.06) }}>
+					<div key={`sym-${i}`} className="absolute font-bold text-white/[0.09]" style={{ top: `${(i * 19 + 4) % 90}%`, left: `${(i * 29 + 10) % 88}%`, transform: `rotate(${((i * 41) % 24) - 12}deg)`, fontSize: `${size}px` }}>
 						{s}
 					</div>
 				);
