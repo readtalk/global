@@ -14,87 +14,63 @@ function SineGraph() { return (<svg width="88" height="44" viewBox="0 0 88 44" f
 function ParabolaGraph() { return (<svg width="72" height="56" viewBox="0 0 72 56" fill="none" stroke="currentColor" strokeWidth="1"><path d="M6 28 L66 28 M36 4 L36 52" /><path d="M10 6 C20 26 28 28 36 28 C44 28 52 26 62 6" /><path d="M10 28 L62 28" /></svg>); }
 function CoordGraph() { return (<svg width="72" height="56" viewBox="0 0 72 56" fill="none" stroke="currentColor" strokeWidth="1"><path d="M6 28 L66 28 M36 4 L36 52" /><circle cx="24" cy="18" r="2" fill="currentColor" /><circle cx="44" cy="34" r="2" fill="currentColor" /><circle cx="52" cy="14" r="2" fill="currentColor" /><circle cx="20" cy="38" r="2" fill="currentColor" /><path d="M24 18 L44 34 L52 14" strokeDasharray="2 2" /></svg>); }
 
-function hash(seed: number) {
-  let t = seed + 0x6D2B79F5;
-  t = Math.imul(t ^ (t >>> 15), t | 1);
-  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+function rnd(seed: number) {
+  const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+  return Math.abs(x - Math.floor(x));
 }
-function rand(seed: number, salt: number) { return hash(seed * 1000 + salt * 7919 + 13); }
 
 export default function MathPattern() {
   const shapes = [Cube, Prism, Cylinder, Sphere, Pie, TriangleRuler, Ruler, SineGraph, ParabolaGraph, CoordGraph];
-  const ROWS = 11;
-  const COLS = 7;
-
-  // 1. ICONS: 1 cell 1 icon, gak numpuk
   const cells = [];
-  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) cells.push({ r, c });
+  for (let r = 0; r < 11; r++) for (let c = 0; c < 7; c++) cells.push({ r, c });
 
-  // 2. SYMBOLS: ditaro di pojok-pojok cell, ngelilingin icon, BUKAN di tengah cell
-  // jadi symbol gak pernah nimpa icon
-  const surround = [];
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      // tiap icon dikelilingi 3-4 symbol di sekelilingnya: atas-kiri, atas-kanan, bawah-kiri, bawah-kanan
-      const corners = [
-        { dx: -4.5, dy: -2.2 }, { dx: 4.8, dy: -2.4 },
-        { dx: -4.8, dy: 2.6 }, { dx: 4.5, dy: 2.4 },
-      ];
-      corners.forEach((pos, k) => {
-        surround.push({ r, c, ...pos, k });
-      });
-    }
-  }
+  // BINTANG KAWIN: cuma 2 pasang yang sengaja dibikin nempel. Sisanya GAK BOLEH nempel.
+  // Ini yang bikin langit lu hidup, bukan berantakan.
+  const kawinSet = new Set([12, 47]); // index cell yang jadi bintang kawin
 
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      {/* LAYER 1: SYMBOLS DULU, DI BELAKANG, JADI KALO KEPEPET PUN ICON YANG MENANG */}
-      {surround.map(({ r, c, dx, dy, k }, i) => {
-        const s = symbols[Math.floor(rand(i, 50) * symbols.length)];
-        const size = 10 + rand(i, 51) * 14; // kecil aja, 10-24px, biar jadi pengawal, bukan raja
-        const rotate = (rand(i, 52) - 0.5) * 40;
-        const opacity = 0.06 + rand(i, 53) * 0.06;
+      {/* BINTANG KECIL DULU = sin-cos-tan, di belakang, ngelilingin bulan */}
+      {symbols.map((s, i) => {
+        const size = 14 + rnd(i * 11 + 5) * 28;
         return (
-          <div key={`sur-${i}`} className="absolute font-bold text-zinc-900 dark:text-white" style={{ top: `${r * 9.2 + 4.6 + dy}%`, left: `${c * 14.5 + 6.5 + dx}%`, transform: `translate(-50%, -50%) rotate(${rotate}deg)`, fontSize: `${size}px`, opacity }}>
+          <div key={`sym-${i}`} className="absolute font-bold text-zinc-900/[0.08] dark:text-white/[0.09]" style={{ top: `${(i * 19 + 4) % 90}%`, left: `${(i * 29 + 10) % 88}%`, transform: `rotate(${((i * 41) % 24) - 12}deg)`, fontSize: `${size}px` }}>
             {s}
           </div>
         );
       })}
 
-      {/* LAYER 2: ICONS, DI ATAS SYMBOLS, SATU-SATU, GAK NUMPUK */}
+      {/* BULAN + BINTANG GEDE = icon, tapi BULAN GAK NINDIH BINTANG */}
       {cells.map(({ r, c }, i) => {
-        const Shape = shapes[Math.floor(rand(i, 99) * shapes.length) % shapes.length];
-        // INI KUNCI "RANDOM TAPI GAK NUMPUK":
-        // scale random, tapi dibatasin 0.55 - 1.25 aja, biar muat di cell-nya sendiri
-        // dulu gue bikin 0.3 - 2.4, makanya numpuk. Sekarang gak bisa numpuk.
-        const scale = 0.55 + rand(i, 1) * 0.7;
-        // gesernya juga dikit aja, ±1.2%, bukan ±3% kayak tadi yang bikin numpuk
-        const jitterX = (rand(i, 2) - 0.5) * 2.4;
-        const jitterY = (rand(i, 3) - 0.5) * 1.6;
-        const rotate = (rand(i, 4) - 0.5) * 22; // rotasi juga kecil, -11° sampe +11°, biar gak nyenggol tetangga
-        const opacity = 0.08 + rand(i, 5) * 0.05;
-        const isMirror = rand(i, 6) > 0.5;
+        const Shape = shapes[i % shapes.length];
+        const isMirror = (r + c) % 2 === 1;
+        const isKawin = kawinSet.has(i);
+        // VISION LU: scale random kayak bintang, 0.45x - 2.1x, TAPI...
+        // kalau dia gede, dia tetep di cell-nya sendiri, gak meluber ke cell tetangga
+        // caranya: kita bungkus di cell 14.5% x 9.2% yang flex center, jadi mau 2.1x pun dia tetep di tengah cell-nya
+        // kecuali 2 yang bintang kawin, itu sengaja digeser biar nempel
+        const scale = 0.45 + rnd(i * 3 + 7) * 1.65;
+        const kawinShiftX = isKawin ? 22 : 0;
+        const kawinShiftY = isKawin ? -10 : 0;
         return (
-          <div key={`s-${i}`} className="absolute flex items-center justify-center text-zinc-900 dark:text-white" style={{ top: `${r * 9.2}%`, left: `${c * 14.5 - 1}%`, width: "14.5%", height: "9.2%", opacity }}>
-            <div style={{ transform: `translate(${jitterX}px, ${jitterY}px) rotate(${rotate}deg) scale(${scale}) scaleX(${isMirror ? -1 : 1})` }}>
+          <div key={`s-${i}`} className="absolute flex items-center justify-center text-zinc-900/[0.09] dark:text-white/[0.10]" style={{ top: `${r * 9.2}%`, left: `${c * 14.5 - 1}%`, width: "14.5%", height: "9.2%" }}>
+            <div style={{ transform: `translate(${kawinShiftX}px, ${kawinShiftY}px) rotate(${((i * 31) % 20) - 10}deg) scale(${scale}) scaleX(${isMirror ? -1 : 1})` }}>
               <Shape />
             </div>
           </div>
         );
       })}
 
-      {/* LAYER 3: RUMUS, ditaro di celah antar baris, bukan di tengah icon */}
-      {formulas.map((f, i) => {
-        const top = (Math.floor(rand(i, 70) * ROWS) + 0.5) * 9.2 + (rand(i, 71) - 0.5) * 3;
-        const left = rand(i, 72) * 72;
-        const rotate = (rand(i, 73) - 0.5) * 8;
-        return (
-          <div key={`f-${i}`} className="absolute whitespace-nowrap text-[12px] font-medium text-zinc-900/[0.08] dark:text-white/[0.09]" style={{ top: `${top}%`, left: `${left}%`, transform: `rotate(${rotate}deg)` }}>
-            {f}
-          </div>
-        );
-      })}
+      {formulas.map((f, i) => (
+        <div key={`f-${i}`} className="absolute whitespace-nowrap text-[13px] font-medium text-zinc-900/[0.10] dark:text-white/[0.11]" style={{ top: `${(i * 17 + 8) % 92}%`, left: `${(i * 23 + 4) % 68}%`, transform: `rotate(${i % 2 === 0 ? -4 : 4}deg) scaleX(${i % 3 === 0 ? -1 : 1})` }}>
+          {f}
+        </div>
+      ))}
+      {formulas.map((f, i) => (
+        <div key={`f2-${i}`} className="absolute whitespace-nowrap text-[11px] text-zinc-900/[0.07] dark:text-white/[0.08]" style={{ top: `${(i * 23 + 48) % 94}%`, left: `${(i * 31 + 38) % 62}%`, transform: `rotate(${i % 2 === 0 ? 5 : -5}deg) scaleX(-1)` }}>
+          {f}
+        </div>
+      ))}
     </div>
   );
 }
