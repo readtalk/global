@@ -5,13 +5,11 @@ import React, { useMemo, useState } from "react";
 type Props = {
   onSelect: (emoji: string) => void;
   onClose?: () => void;
-  defaultSkinTone?: SkinTone;
   mode?: "popover" | "bottom-sheet";
 };
 
-type SkinTone = "🏻" | "🏼" | "🏽" | "🏾" | "🏿";
-
-const SKIN_TONES: SkinTone[] = ["🏻", "🏼", "🏽", "🏾", "🏿"];
+// Kunci ke putih, tidak bisa diganti user
+const FIXED_TONE = "🏻";
 
 const BLOCKED_SUBSTRINGS = [
   "🏳️‍🌈",
@@ -61,22 +59,26 @@ const FANTASY_BASE = ["👰‍♀️","👰","🤵","🤵‍♂️","👸","🫅
 const GESTURE_BASE = ["🙇‍♀️","🙇","🙇‍♂️","💁‍♀️","💁","💁‍♂️","🙅‍♀️","🙅","🙅‍♂️","🙆‍♀️","🙆","🙆‍♂️","🙋‍♀️","🙋","🙋‍♂️","🧏‍♀️","🧏","🧏‍♂️","🤦‍♀️","🤦","🤦‍♂️","🤷‍♀️","🤷","🤷‍♂️","🙎‍♀️","🙎","🙎‍♂️","🙍‍♀️","🙍","🙍‍♂️","💇‍♀️","💇","💇‍♂️","💆‍♀️","💆","💆‍♂️","🧖‍♀️","🧖","🧖‍♂️","💅","🤳","💃","🕺","🧑‍🩰","👯‍♀️","👯","👯‍♂️","🕴"];
 const ACTIVITY_PEOPLE_BASE = ["👩‍🦽","🧑‍🦽","👨‍🦽","👩‍🦼","🧑‍🦼","👨‍🦼","🚶‍♀️","🚶","🚶‍♂️","👩‍🦯","🧑‍🦯","👨‍🦯","🧎‍♀️","🧎","🧎‍♂️","🏃‍♀️","🏃","🏃‍♂️","🧍‍♀️","🧍","🧍‍♂️"];
 
-function applySkinTone(base: string, tone: SkinTone): string {
+function applyFixedTone(base: string): string {
   const cleaned = base.replace(/[🏻🏼🏽🏾🏿]/g, "");
+  // Emoji yang gak punya varian tone + gender di Unicode, jangan ditempel
+  // kalau dipaksain jadi tofu [STRIPPED 3 bytes] seperti kemarin
+  if (cleaned.includes("‍♀") || cleaned.includes("‍♂")) {
+    const isProfession = ["👮", "👷", "💂", "🕵", "👩‍⚕", "🧑‍⚕", "👨‍⚕", "👩‍🌾", "🧑‍🌾", "👨‍🌾", "👩‍🍳", "🧑‍🍳", "👨‍🍳", "👩‍🎓", "🧑‍🎓", "👨‍🎓", "👩‍🎤", "🧑‍🎤", "👨‍🎤", "👩‍🏫", "🧑‍🏫", "👨‍🏫", "👩‍🏭", "🧑‍🏭", "👨‍🏭", "👩‍💻", "🧑‍💻", "👨‍💻", "👩‍💼", "🧑‍💼", "👨‍💼", "👩‍🔧", "🧑‍🔧", "👨‍🔧", "👩‍🔬", "🧑‍🔬", "👨‍🔬", "👩‍🎨", "🧑‍🎨", "👨‍🎨", "👩‍🚒", "🧑‍🚒", "👨‍🚒", "👩‍✈", "🧑‍✈", "👨‍✈", "👩‍🚀", "🧑‍🚀", "👨‍🚀", "👩‍⚖", "🧑‍⚖", "👨‍⚖"].some((p) => cleaned.startsWith(p));
+    if (!isProfession) return cleaned;
+  }
+  if (["🧞", "🧟", "🧛", "🧜", "🧚", "🧝", "🧙", "🦸", "🦹"].some((p) => cleaned.startsWith(p)) && cleaned.includes("‍")) {
+    return cleaned;
+  }
   const chars = Array.from(cleaned);
   if (chars.length === 0) return cleaned;
   const first = chars[0];
   const needsTone = ["👶","👧","🧒","👦","👩","🧑","👨","👱","🧔","👵","🧓","👴","👲","👳","🧕","👮","👷","💂","🕵","👰","🤵","👸","🫅","🤴","🥷","🦸","🦹","🤶","🎅","🧙","🧝","🧛","🧟","🧞","🧜","🧚","👼","🤰","🙇","💁","🙅","🙆","🙋","🧏","🤦","🤷","🙎","🙍","💇","💆","🧖","💅","🤳","💃","🕺","👯","🕴","🚶","🧎","🏃","🧍"].includes(first);
   if (!needsTone) return cleaned;
-  return first + tone + chars.slice(1).join("");
+  return first + FIXED_TONE + chars.slice(1).join("");
 }
 
-function getCouples(tone: SkinTone) {
-  return [`👩${tone}‍❤️‍👨${tone}`, `👩${tone}‍❤️‍💋‍👨${tone}`];
-}
-
-export default function EmoticonPicker({ onSelect, onClose, defaultSkinTone = "🏻", mode = "popover" }: Props) {
-  const [skinTone, setSkinTone] = useState<SkinTone>(defaultSkinTone);
+export default function EmoticonPicker({ onSelect, onClose, mode = "popover" }: Props) {
   const [tab, setTab] = useState<string>("smiley");
   const [recent, setRecent] = useState<string[]>([]);
 
@@ -84,20 +86,20 @@ export default function EmoticonPicker({ onSelect, onClose, defaultSkinTone = "�
     const map: Record<string, string[]> = {
       recent: recent,
       smiley: SMILEYS.filter((e) => !isBlocked(e)),
-      people: PEOPLE_BASE.map((e) => applySkinTone(e, skinTone)).filter((e) => !isBlocked(e)),
-      profession: PROFESSION_BASE.map((e) => applySkinTone(e, skinTone)).filter((e) => !isBlocked(e)),
-      fantasy: FANTASY_BASE.map((e) => applySkinTone(e, skinTone)).filter((e) => !isBlocked(e)),
-      gestures: GESTURE_BASE.map((e) => applySkinTone(e, skinTone)).filter((e) => !isBlocked(e)),
-      activity: [...ACTIVITY_PEOPLE_BASE.map((e) => applySkinTone(e, skinTone)), ...ACTIVITIES].filter((e) => !isBlocked(e)),
+      people: PEOPLE_BASE.map((e) => applyFixedTone(e)).filter((e) => !isBlocked(e)),
+      profession: PROFESSION_BASE.map((e) => applyFixedTone(e)).filter((e) => !isBlocked(e)),
+      fantasy: FANTASY_BASE.map((e) => applyFixedTone(e)).filter((e) => !isBlocked(e)),
+      gestures: GESTURE_BASE.map((e) => applyFixedTone(e)).filter((e) => !isBlocked(e)),
+      activity: [...ACTIVITY_PEOPLE_BASE.map((e) => applyFixedTone(e)), ...ACTIVITIES].filter((e) => !isBlocked(e)),
       animals: ANIMALS.filter((e) => !isBlocked(e)),
       food: FOOD.filter((e) => !isBlocked(e)),
       travel: TRAVEL.filter((e) => !isBlocked(e)),
       objects: OBJECTS.filter((e) => !isBlocked(e)),
       symbols: SYMBOLS.filter((e) => !isBlocked(e)),
-      couples: getCouples(skinTone),
+      couples: [`👩${FIXED_TONE}‍❤️‍👨${FIXED_TONE}`, `👩${FIXED_TONE}‍❤️‍💋‍👨${FIXED_TONE}`],
     };
     return map;
-  }, [skinTone, recent]);
+  }, [recent]);
 
   const currentList = categories[tab] || [];
 
@@ -126,12 +128,6 @@ export default function EmoticonPicker({ onSelect, onClose, defaultSkinTone = "�
     <>
       <div style={{ display: "flex", justifyContent: "flex-end", padding: "8px 12px 0" }}>
         <button onClick={onClose} style={{ border: "none", background: "#f5f5f5", width: 28, height: 28, borderRadius: 999, cursor: "pointer" }}>✕</button>
-      </div>
-      <div style={{ display: "flex", gap: 6, padding: "8px 12px", borderBottom: "1px solid #f0f0f0", alignItems: "center" }}>
-        <span style={{ fontSize: 11, color: "#888" }}>Skin tone:</span>
-        {SKIN_TONES.map((t) => (
-          <button key={t} onClick={() => setSkinTone(t)} style={{ width: 26, height: 26, borderRadius: 999, cursor: "pointer", border: skinTone === t ? "2px solid #111" : "1px solid #ddd", background: "transparent", fontSize: 16 }}>👋{t}</button>
-        ))}
       </div>
       <div style={{ display: "flex", gap: 4, padding: "8px 12px", overflowX: "auto", whiteSpace: "nowrap" }}>
         {tabs.map(([key, label]) => (
