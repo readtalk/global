@@ -94,6 +94,6 @@ export default function EmoticonPicker({ onSelect, onClose, defaultSkinTone = "ð
     </>
   );
 
-  if (mode === "bottom-sheet") return <div style={{ width: "100%", background: "#fff", borderTop: "1px solid #e5e5e5", overflow: "hidden", flexShrink: 0 }}>{content}</div>;
-  return <div style={{ position: "absolute", bottom: "100%", left: 0, width: 360, maxWidth: "92vw", background: "#fff", border: "1px solid #e5e5e5", borderRadius: 16, boxShadow: "0 12px 32px rgba(0,0,0,0.15)", overflow: "hidden", zIndex: 50 }}>{content}</div>;
+  if (mode === "bottom-sheet") return <div className="w-full bg-white dark:bg-zinc-900 text-black dark:text-white border-t border-neutral-200 dark:border-zinc-800 overflow-hidden shrink-0">{content}</div>;
+return <div className="absolute bottom-full left-0 w-[360px] max-w-[92vw] bg-white dark:bg-zinc-900 text-black dark:text-white border border-neutral-200 dark:border-zinc-800 rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.15)] overflow-hidden z-50">{content}</div>;
 }
