@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, PaperPlaneRight, Copy, Check, CodeSimple } from "@phosphor-icons/react/dist/ssr";
+import MathPattern from "./MathPattern";
 
 type ChatMessage = {
 	role: "user" | "assistant";
@@ -225,16 +226,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 					<h2 className="text-lg font-bold text-gray-900 dark:text-zinc-50">Anna Laura AI</h2>
 				</div>
 				<div className="flex-1 relative overflow-hidden">
-					<div
-						aria-hidden="true"
-						className="pointer-events-none absolute inset-0 z-0"
-						style={{
-							backgroundImage: "url('/bg/laura-bg.png')",
-							backgroundSize: "100% auto",
-							backgroundPosition: "center",
-							backgroundRepeat: "no-repeat",
-						}}
-					/>
+					<MathPattern />
 					<div className="relative z-10 h-full overflow-y-auto p-4 space-y-4">
 						{messages.length === 0 ? (
 							<div className="flex justify-center items-center h-full">
