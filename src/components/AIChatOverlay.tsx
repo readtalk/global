@@ -315,28 +315,26 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 						<div ref={messagesEndRef} />
 					</div>
 				</div>
-			      <div className="flex-none relative bg-white dark:bg-zinc-950 border-t border-gray-200 dark:border-zinc-800 transition-colors">
-					<div className="relative">
-						<div className="p-3 flex gap-2 pb-[max(12px,env(safe-area-inset-bottom))]">
-							<button onClick={toggleEmoticon} className="bg-gray-100 dark:bg-zinc-900 p-2.5 rounded-full hover:bg-gray-200 dark:hover:bg-zinc-800 transition flex items-center justify-center">
-								{showEmoticon ? <Keyboard size={20} className="text-gray-600 dark:text-zinc-300" /> : <Smiley size={20} className="text-gray-600 dark:text-zinc-300" />}
-							</button>
-							<input ref={inputRef} type="text" value={content} onChange={(e) => { setContent(e.target.value); cursorRef.current = e.target.selectionStart ?? e.target.value.length; }} onSelect={(e) => { cursorRef.current = e.currentTarget.selectionStart ?? content.length; }} placeholder="Type a message..." className="flex-1 bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-zinc-400 transition-colors" onFocus={() => setShowEmoticon(false)} onKeyDown={(e) => e.key === "Enter" && handleSend()} />
-							<button onClick={handleSend} disabled={isSending || !content.trim()} className="bg-black dark:bg-white text-white dark:text-black p-2.5 rounded-full hover:bg-gray-800 dark:hover:bg-gray-200 transition disabled:opacity-50 flex items-center justify-center">
-								<PaperPlaneRight size={20} weight="fill" />
-							</button>
-						</div>
-						{showEmoticon && (
-							<EmoticonPicker
-								mode="popover"
-								onSelect={handleInsertEmoji}
-								onClose={closeEmoticonAndFocus}
-								onBackspace={handleBackspace}
-							/>
-						)}
-					</div>
-				</div>
-			</div>
-		</>
-	);
+			<div className="flex-none bg-white dark:bg-zinc-950 border-t border-gray-200 dark:border-zinc-800 transition-colors">
+	{showEmoticon && (
+		<EmoticonPicker
+			mode="popover"
+			onSelect={handleInsertEmoji}
+			onClose={closeEmoticonAndFocus}
+			onBackspace={handleBackspace}
+		/>
+	)}
+	<div className="p-3 flex gap-2 pb-[max(12px,env(safe-area-inset-bottom))]">
+		<button onClick={toggleEmoticon} className="bg-gray-100 dark:bg-zinc-900 p-2.5 rounded-full hover:bg-gray-200 dark:hover:bg-zinc-800 transition flex items-center justify-center">
+			{showEmoticon ? <Keyboard size={20} className="text-gray-600 dark:text-zinc-300" /> : <Smiley size={20} className="text-gray-600 dark:text-zinc-300" />}
+		</button>
+		<input ref={inputRef} type="text" value={content} onChange={(e) => { setContent(e.target.value); cursorRef.current = e.target.selectionStart ?? e.target.value.length; }} onSelect={(e) => { cursorRef.current = e.currentTarget.selectionStart ?? content.length; }} placeholder="Type a message..." className="flex-1 bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-zinc-400 transition-colors" onFocus={() => setShowEmoticon(false)} onKeyDown={(e) => e.key === "Enter" && handleSend()} />
+		<button onClick={handleSend} disabled={isSending || !content.trim()} className="bg-black dark:bg-white text-white dark:text-black p-2.5 rounded-full hover:bg-gray-800 dark:hover:bg-gray-200 transition disabled:opacity-50 flex items-center justify-center">
+			<PaperPlaneRight size={20} weight="fill" />
+		</button>
+	</div>
+</div>
+</div>
+</>
+);
 }
