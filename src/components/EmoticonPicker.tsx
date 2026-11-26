@@ -77,10 +77,10 @@ export default function EmoticonPicker({ onSelect, onClose, onBackspace, default
   const content = (
     <>
       <div style={{ display: "flex", justifyContent: "flex-end", padding: "8px 12px 0" }}>
-        <button onClick={onBackspace} style={{ border: "none", background: "#f5f5f5", width: 36, height: 28, borderRadius: 999, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Backspace size={20} weight="regular" />
-        </button>
-      </div>
+  <button onClick={onBackspace} style={{ border: "1px solid #e5e5e5", background: "#f5f5f5", width: 36, height: 28, borderRadius: 999, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <Backspace size={22} weight="regular" color="#111" />
+  </button>
+</div>
       <div style={{ display: "flex", gap: 6, padding: "8px 12px", borderBottom: "1px solid #f0f0f0", alignItems: "center" }}>
         <span style={{ fontSize: 11, color: "#888" }}>Skin tone:</span>
         {SKIN_TONES.map((t) => (<button key={t} onClick={() => setSkinTone(t)} style={{ width: 26, height: 26, borderRadius: 999, cursor: "pointer", border: skinTone === t ? "2px solid #111" : "1px solid #ddd", background: "transparent", fontSize: 16 }}>👋{t}</button>))}
