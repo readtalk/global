@@ -14,19 +14,7 @@ type ChatMessage = {
 type AIChatsOverlayProps = {
 	isOpen: boolean;
 	onClose: () => void;
-	userId?: string | null;
 };
-
-function getAgeFromDob(date_of_birth?: string | null): number | null {
-	if (!date_of_birth) return null;
-	const birth = new Date(date_of_birth);
-	if (isNaN(birth.getTime())) return null;
-	const now = new Date();
-	let age = now.getFullYear() - birth.getFullYear();
-	const m = now.getMonth() - birth.getMonth();
-	if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
-	return age;
-}
 
 function consumeSseEvents(buffer: string): { events: string[]; buffer: string } {
 	let normalized = buffer.replace(/\r/g, "");
@@ -147,21 +135,16 @@ function MessageContent({ content }: { content: string }) {
 	);
 }
 
-export default function AIChatsOverlay({ isOpen, onClose, userId }: AIChatsOverlayProps) {
+export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps) {
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
 	const [content, setContent] = useState("");
 	const [isSending, setIsSending] = useState(false);
 	const [isAnimating, setIsAnimating] = useState(false);
 	const [showEmoticon, setShowEmoticon] = useState(false);
 	const [isMobile, setIsMobile] = useState(false);
-	const [userAge, setUserAge] = useState<number | null>(null);
-	const [userDob, setUserDob] = useState<string | null>(null);
-	const [isLoaded, setIsLoaded] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const cursorRef = useRef(0);
-
-	const effectiveUserId = userId || "guest";
 
 	useEffect(() => {
 		const update = () => setIsMobile(window.innerWidth < 768);
@@ -169,38 +152,6 @@ export default function AIChatsOverlay({ isOpen, onClose, userId }: AIChatsOverl
 		window.addEventListener("resize", update);
 		return () => window.removeEventListener("resize", update);
 	}, []);
-
-	useEffect(() => {
-		if (!userId) return;
-		const saved = localStorage.getItem(`readtalk_ai_chat_${userId}`);
-		if (saved) {
-			try {
-				const parsed = JSON.parse(saved);
-				if (Array.isArray(parsed)) setMessages(parsed);
-			} catch {}
-		}
-		setIsLoaded(true);
-
-		const token = localStorage.getItem("session") || "";
-		if (token) {
-			fetch("/api/settings", {
-				headers: { Authorization: `Bearer ${token}` },
-			})
-				.then((r) => r.json())
-				.then((d) => {
-					if (d.success && d.user?.date_of_birth) {
-						setUserDob(d.user.date_of_birth);
-						setUserAge(getAgeFromDob(d.user.date_of_birth));
-					}
-				})
-				.catch(() => {});
-		}
-	}, [userId]);
-
-	useEffect(() => {
-		if (!isLoaded || !userId) return;
-		localStorage.setItem(`readtalk_ai_chat_${userId}`, JSON.stringify(messages));
-	}, [messages, userId, isLoaded]);
 
 	useEffect(() => {
 		if (isOpen) {
@@ -268,12 +219,7 @@ export default function AIChatsOverlay({ isOpen, onClose, userId }: AIChatsOverl
 			const res = await fetch("/api/ai/chat", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-				body: JSON.stringify({
-					messages: history.map(({ role, content }) => ({ role, content })),
-					age: userAge,
-					date_of_birth: userDob,
-					user_id: effectiveUserId,
-				}),
+				body: JSON.stringify({ messages: history.map(({ role, content }) => ({ role, content })) }),
 			});
 			if (!res.ok || !res.body) throw new Error("Failed to get response");
 			const reader = res.body.getReader();
