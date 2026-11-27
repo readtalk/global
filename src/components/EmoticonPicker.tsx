@@ -39,13 +39,14 @@ const ACTIVITY_PEOPLE_BASE = ["👩‍🦽","🧑‍🦽","👨‍🦽","👩‍
 
 function applySkinTone(base: string, tone: SkinTone): string {
   const cleaned = base.replace(/[🏻🏼🏽🏾🏿]/g, "");
-  if (cleaned.includes("‍")) return cleaned;
-  const chars = Array.from(cleaned);
-  if (chars.length === 0) return cleaned;
-  const first = chars[0];
-  const needsTone = ["👶","👧","🧒","👦","👩","🧑","👨","👱","🧔","👵","🧓","👴","👲","👳","🧕","👮","👷","💂","🕵","👰","🤵","👸","🫅","🤴","🥷","🦸","🦹","🤶","🎅","🧙","🧝","🧛","🧟","🧞","🧜","🧚","👼","🤰","🙇","💁","🙅","🙆","🙋","🧏","🤦","🤷","🙎","🙍","💇","💆","🧖","💅","🤳","💃","🕺","👯","🕴","🚶","🧎","🏃","🧍"].includes(first);
+  const parts = cleaned.split("\u200d");
+  const firstPart = parts[0];
+  const firstChar = Array.from(firstPart)[0];
+  const needsTone = ["👶","👧","🧒","👦","👩","🧑","👨","👱","🧔","👵","🧓","👴","👲","👳","🧕","👮","👷","💂","🕵","👰","🤵","👸","🫅","🤴","🥷","🦸","🦹","🤶","🎅","🧙","🧝","🧛","🧟","🧞","🧜","🧚","👼","🤰","🙇","💁","🙅","🙆","🙋","🧏","🤦","🤷","🙎","🙍","💇","💆","🧖","💅","🤳","💃","🕺","👯","🕴","🚶","🧎","🏃","🧍"].includes(firstChar);
   if (!needsTone) return cleaned;
-  return first + tone + chars.slice(1).join("");
+  const restOfFirst = firstPart.slice(firstChar.length);
+  const newFirst = firstChar + tone + restOfFirst;
+  return [newFirst, ...parts.slice(1)].join("\u200d");
 }
 
 export default function EmoticonPicker({ onSelect, onClose, onBackspace, defaultSkinTone = "🏻", mode = "popover" }: Props) {
