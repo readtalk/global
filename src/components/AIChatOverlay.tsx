@@ -98,7 +98,17 @@ function CodeBlock({ lang, code }: { lang: string; code: string }) {
 	);
 }
 
+function isSingleEmoji(text: string) {
+	const trimmed = text.trim();
+	if (!trimmed) return false;
+	const graphemes = [...new Intl.Segmenter("en", { granularity: "grapheme" }).segment(trimmed)];
+	return graphemes.length === 1 && /\p{Extended_Pictographic}/u.test(trimmed);
+}
+
 function MessageContent({ content }: { content: string }) {
+	if (isSingleEmoji(content)) {
+		return <div className="text-[52px] leading-none py-1">{content.trim()}</div>;
+	}
 	const parts = content.split(/(```[\s\S]*?(?:```|$))/g);
 	return (
 		<div className="text-[15px] leading-relaxed break-words space-y-1.5 w-full min-w-0">
@@ -287,6 +297,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 								const isTyping = !isMe && !msg.content && isSending && index === messages.length - 1;
 								const prev = messages[index - 1];
 								const isNewDay = !prev || !isSameDay(prev.created_at, msg.created_at);
+								const singleEmoji = isSingleEmoji(msg.content);
 								return (
 									<div key={index}>
 										{isNewDay && (
@@ -295,13 +306,13 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 											</div>
 										)}
 										<div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-											<div className={`max-w-[85%] px-4 py-2 rounded-2xl flex flex-col gap-1 transition-colors overflow-hidden ${isMe ? "bg-gray-200 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 rounded-br-sm" : "bg-gray-100 dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 rounded-bl-sm"}`}>
+											<div className={`max-w-[85%] rounded-2xl flex flex-col gap-1 transition-colors overflow-hidden ${singleEmoji ? "bg-transparent px-1 py-1 shadow-none" : `px-4 py-2 ${isMe ? "bg-gray-200 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 rounded-br-sm" : "bg-gray-100 dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 rounded-bl-sm"}`}`}>
 												{isTyping ? (
 													<span className="text-xs text-gray-400 dark:text-zinc-500 animate-pulse py-0.5">Thinking...</span>
 												) : (
 													<MessageContent content={msg.content} />
 												)}
-												{!isTyping && (
+												{!isTyping && !singleEmoji && (
 													<div className={`flex items-center justify-end gap-1 ${isMe ? "text-gray-500 dark:text-zinc-400" : "text-gray-400 dark:text-zinc-500"}`}>
 														<span className="text-[10px]">{formatTime(msg.created_at)}</span>
 													</div>
