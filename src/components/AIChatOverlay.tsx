@@ -318,7 +318,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 			<div className="flex-none bg-white dark:bg-zinc-950 border-t border-gray-200 dark:border-zinc-800 transition-colors">
 	{showEmoticon && (
 		<EmoticonPicker
-			mode="popover"
+			mode="bottom-sheet"
 			onSelect={handleInsertEmoji}
 			onClose={closeEmoticonAndFocus}
 			onBackspace={handleBackspace}
