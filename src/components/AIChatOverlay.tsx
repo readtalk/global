@@ -14,18 +14,8 @@ type ChatMessage = {
 type AIChatsOverlayProps = {
 	isOpen: boolean;
 	onClose: () => void;
+	userId?: string | null;
 };
-
-function getUserIdFromSession(): string {
-	try {
-		const token = localStorage.getItem("session") || "";
-		if (!token) return "guest";
-		const payload = JSON.parse(atob(token.split(".")[1]));
-		return payload.properties?.id || payload.sub || "guest";
-	} catch {
-		return "guest";
-	}
-}
 
 function getAgeFromDob(date_of_birth?: string | null): number | null {
 	if (!date_of_birth) return null;
@@ -157,20 +147,21 @@ function MessageContent({ content }: { content: string }) {
 	);
 }
 
-export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps) {
+export default function AIChatsOverlay({ isOpen, onClose, userId }: AIChatsOverlayProps) {
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
 	const [content, setContent] = useState("");
 	const [isSending, setIsSending] = useState(false);
 	const [isAnimating, setIsAnimating] = useState(false);
 	const [showEmoticon, setShowEmoticon] = useState(false);
 	const [isMobile, setIsMobile] = useState(false);
-	const [userId, setUserId] = useState<string>("guest");
 	const [userAge, setUserAge] = useState<number | null>(null);
 	const [userDob, setUserDob] = useState<string | null>(null);
 	const [isLoaded, setIsLoaded] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const cursorRef = useRef(0);
+
+	const effectiveUserId = userId || "guest";
 
 	useEffect(() => {
 		const update = () => setIsMobile(window.innerWidth < 768);
@@ -180,9 +171,8 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 	}, []);
 
 	useEffect(() => {
-		const id = getUserIdFromSession();
-		setUserId(id);
-		const saved = localStorage.getItem(`readtalk_ai_chat_${id}`);
+		if (!userId) return;
+		const saved = localStorage.getItem(`readtalk_ai_chat_${userId}`);
 		if (saved) {
 			try {
 				const parsed = JSON.parse(saved);
@@ -205,10 +195,10 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 				})
 				.catch(() => {});
 		}
-	}, []);
+	}, [userId]);
 
 	useEffect(() => {
-		if (!isLoaded) return;
+		if (!isLoaded || !userId) return;
 		localStorage.setItem(`readtalk_ai_chat_${userId}`, JSON.stringify(messages));
 	}, [messages, userId, isLoaded]);
 
@@ -282,7 +272,7 @@ export default function AIChatsOverlay({ isOpen, onClose }: AIChatsOverlayProps)
 					messages: history.map(({ role, content }) => ({ role, content })),
 					age: userAge,
 					date_of_birth: userDob,
-					user_id: userId,
+					user_id: effectiveUserId,
 				}),
 			});
 			if (!res.ok || !res.body) throw new Error("Failed to get response");
